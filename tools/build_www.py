@@ -11,9 +11,12 @@
   - canvas-confetti 를 CDN 대신 앱 안에 넣는다 (오프라인에서도 동작)
 
   옵션 (환경 변수로도 줄 수 있음 — npm run sync 가 그대로 넘겨받는다)
-    --cdn <version.json 주소>   (TP_CDN_URL)  에피소드 그림(episodes/ep_bg · portraits · ep_thumb · clue, 약 100MB)을
-                                APK 에서 빼고 첫 실행 때 받게 한다: www/js/cdn-config.js 를 켜고 vendor/fflate.js 를 넣는다.
-                                묶음 · version.json 은 tools/build_cdn_pack.py 로 만들어 버킷에 올린다.
+    --cdn <version.json 주소>   (TP_CDN_URL)  에피소드 그림(약 98MB)과 사운드(sounds/sfx · bgm_mp3)를 APK 에서 빼고
+                                첫 실행 때 받게 한다: www/js/cdn-config.js 를 켜고 vendor/fflate.js 를 넣는다.
+                                묶음 · version.json 은 tools/build_cdn_pack.py 로 만들어 버킷에 올린다
+                                (사운드는 기기별 묶음: 안드로이드 OGG / iOS MP3).
+    --cdn-no-audio              (TP_CDN_NO_AUDIO=1)  사운드는 APK 에 그대로 두고 그림만 CDN 으로
+                                (build_cdn_pack.py --no-audio 로 묶었을 때)
     --platform ios              (TP_PLATFORM)  OGG 대신 백업(../assets_original_backup)의 MP3 를 같은 경로에 넣는다
                                 (iOS WebKit 은 OGG Vorbis 재생이 불완전 — js/audio-helper.js 가 .mp3 를 고른다)
 """
@@ -31,7 +34,8 @@ SKIP_ASSET_DIRS = {'characters_background', '_replaced', 'sheets', 'background',
 CONFETTI_CDN = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js'
 CONFETTI_LOCAL = os.path.join(ROOT, 'mobile', 'node_modules', 'canvas-confetti', 'dist', 'confetti.browser.js')
 FFLATE_LOCAL = os.path.join(ROOT, 'mobile', 'node_modules', 'fflate', 'umd', 'index.js')
-CDN_PATHS = {'episodes/ep_bg', 'episodes/portraits', 'episodes/ep_thumb', 'episodes/clue'}   # tools/build_cdn_pack.py 의 DIRS 와 같다
+CDN_IMAGE_PATHS = {'episodes/ep_bg', 'episodes/portraits', 'episodes/ep_thumb', 'episodes/clue'}   # tools/build_cdn_pack.py 의 IMAGE_DIRS
+CDN_AUDIO_PATHS = {'sounds/sfx', 'sounds/bgm_mp3'}                                                  # tools/build_cdn_pack.py 의 AUDIO_DIRS
 BACKUP = os.path.join(os.path.dirname(ROOT), 'assets_original_backup')
 
 
@@ -40,10 +44,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--cdn', default=os.environ.get('TP_CDN_URL', ''))
     ap.add_argument('--platform', default=os.environ.get('TP_PLATFORM', 'android'), choices=['android', 'ios'])
+    ap.add_argument('--cdn-no-audio', action='store_true', default=os.environ.get('TP_CDN_NO_AUDIO') == '1')
     a = ap.parse_args()
+    cdn_paths = CDN_IMAGE_PATHS | (set() if a.cdn_no_audio else CDN_AUDIO_PATHS)
     if a.cdn and not os.path.exists(FFLATE_LOCAL):
         sys.exit('--cdn 에는 fflate 가 필요합니다:  cd mobile && npm install fflate')
-    skip_paths = SKIP_ASSET_PATHS | (CDN_PATHS if a.cdn else set())
+    skip_paths = SKIP_ASSET_PATHS | (cdn_paths if a.cdn else set())
     if os.path.isdir(OUT):
         shutil.rmtree(OUT)
     os.makedirs(OUT)
@@ -70,7 +76,7 @@ def main():
         html = html.replace('<!-- CDN_VENDOR -->', '<script src="vendor/fflate.js"></script>')
         with open(os.path.join(OUT, 'js', 'cdn-config.js'), 'w', encoding='utf-8', newline='\n') as fp:
             fp.write(f"(globalThis.TP ??= {{}}).CDN_CONFIG = {{ enabled: true, versionUrl: {a.cdn!r} }};\n")
-        print(f'CDN 에셋: 켜짐 ({a.cdn}) — {", ".join(sorted(CDN_PATHS))} 는 APK 에서 뺌')
+        print(f'CDN 에셋: 켜짐 ({a.cdn}) — {", ".join(sorted(cdn_paths))} 는 APK 에서 뺌')
     if a.platform == 'ios':                       # OGG → 백업의 MP3 (js/audio-helper.js 가 iOS 에서 .mp3 를 고름)
         n = 0
         for base, _, fs in os.walk(os.path.join(OUT, 'game_assets')):

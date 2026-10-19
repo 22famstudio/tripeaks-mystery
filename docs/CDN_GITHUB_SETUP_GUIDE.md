@@ -24,7 +24,8 @@
 | | 지금 (기본 빌드) | CDN 빌드 |
 |---|---|---|
 | 에피소드 그림 약 98MB<br>(`episodes/ep_bg` · `portraits` · `ep_thumb` · `clue`) | APK 안에 포함 | APK 에서 빠짐 → 첫 실행 때 버킷에서 받음 |
-| APK 크기 | 약 136MB | 약 40MB 예상 |
+| 사운드 (`sounds/sfx` · `bgm_mp3`) | APK 안에 OGG | APK 에서 빠짐 → 안드로이드는 OGG 묶음, iOS 는 MP3 묶음을 받음 |
+| APK 크기 | 약 136MB | 약 27MB 예상 (그림 · 사운드 약 109MB 가 빠짐) |
 | 첫 실행 | 바로 시작 | "사건 파일을 준비하고 있어요" 진행 막대 → 끝나면 자동 새로 고침 |
 | 이후 실행 · 오프라인 | — | 받아 둔 파일 사용 (오프라인 OK) |
 
@@ -65,7 +66,7 @@ npx cap sync android
    | 항목 | 값 |
    |---|---|
    | 이름 | 전 세계에서 유일해야 함. 예: `tripeaks-mystery-assets` |
-   | 위치 유형 | **Region** — `asia-northeast3`(서울). 사용자가 해외 위주라면 Multi-region `asia` / `us` |
+   | 위치 유형 | **Region — `us-central1`(아이오와) 권장.** Cloud Storage 의 항상 무료(Always Free) 등급은 미국 리전(`us-east1` · `us-west1` · `us-central1`) 버킷에만 적용됩니다. 서울(`asia-northeast3`)이 한국 사용자에게 더 빠르지만 무료 등급이 없습니다. 첫 실행 1회 다운로드라 속도 차이는 크지 않습니다 |
    | 스토리지 클래스 | **Standard** |
    | 액세스 제어 | **균일(Uniform)** |
    | 공개 액세스 방지 | **체크 해제** ("이 버킷에 공개 액세스 방지 적용"을 끔) |
@@ -88,7 +89,8 @@ python tools/build_cdn_pack.py
 
 `dist/cdn/` 에 두 종류의 파일이 생깁니다 (`dist/` 는 Git 제외).
 - `version.json`
-- `game_assets-<버전>-1.zip` ~ `-3.zip` (약 98MB)
+- `game_assets-<버전>-img-1.zip` ~ `-img-3.zip` (그림 98MB)
+- `game_assets-<버전>-snd-android-1.zip` (OGG 10.7MB), `game_assets-<버전>-snd-ios-1.zip` (MP3 12.8MB — 백업 폴더에서 읽음)
 
 **올리기 — 콘솔에서:**
 - 버킷 → **파일 업로드** → `dist/cdn/` 의 파일 전부를 올립니다.
@@ -173,11 +175,27 @@ cd android && ./gradlew.bat clean assembleDebug
 
 ### 1-9. 비용 · 대안 · 테스트 상태
 
-**비용:**
-- 설치 1회당 약 98MB 가 나갑니다.
-- GCS 인터넷 전송 요금은 지역 · 사용량에 따라 다르지만 대략 GB 당 0.1달러대이고, 크레딧에서 빠집니다.
-  - 설치 1만 건 ≈ 1TB 전송입니다.
-- 콘솔 **결제 → 예산 및 알림** 에 월 예산 알림을 꼭 걸어 두세요.
+**비용 — 무료 체험 크레딧 → 그 뒤 항상 무료 등급:**
+- 설치 1회당 약 109MB 가 나갑니다 (안드로이드 108.7MB · iOS 110.8MB). 50MB 가 아닙니다.
+- **무료 체험 기간:** 저장 · 전송 요금이 모두 크레딧에서 빠지고, 카드로 청구되지 않습니다.
+- **체험이 끝날 때:** 결제 계정을 **유료로 업그레이드해야** 버킷이 계속 동작합니다.
+  - 업그레이드하지 않으면 리소스가 중지되고, 일정 기간 뒤 삭제될 수 있습니다.
+  - 업그레이드 후에도 항상 무료 등급은 그대로 적용됩니다.
+- **항상 무료 등급 (Cloud Storage, 미국 리전 버킷 기준 · 월 단위):**
+  - Standard 저장 5GB — 이 게임은 약 120MB 라 저장 비용은 0
+  - 북미 → 인터넷 전송 100GB (중국 · 호주 목적지 제외) — 설치 약 900회분
+  - 읽기 요청 5만 회 · 쓰기 요청 5천 회
+- **넘으면:** 인터넷 전송이 대략 GB 당 0.1달러대 (목적지 · 사용량에 따라 다름).
+  - 월 설치 1만 건 ≈ 1.1TB ≈ 1.0TB 유료분 → 대략 100달러대 예상
+- **정확한 수치는 바뀔 수 있습니다.** 버킷을 만들기 전에 공식 가격표(cloud.google.com/storage/pricing, cloud.google.com/free)에서 꼭 확인하세요.
+- 콘솔 **결제 → 예산 및 알림** 에 월 예산 알림(예: 1만 원 · 3만 원)을 꼭 걸어 두세요.
+  - 예산 알림은 메일만 보내고 **자동으로 멈추지는 않습니다.**
+
+**전송량이 커지면 (Plan B):**
+- 앱 안의 로직은 그대로 두고, 빌드할 때 `--cdn` 의 `version.json` 주소만 바꾸면 됩니다 (`version.json` 기준 상대 경로로 묶음을 찾음).
+- **Cloudflare R2:** 인터넷 전송 요금이 없음, 저장 10GB 무료
+- **Firebase Storage:** 일일 무료 전송량 있음
+- 이미 설치된 앱은 예전 주소를 계속 보므로, 옮길 때는 한동안 두 곳에 같은 묶음을 두세요.
 
 **대안:**
 - **Google Play Asset Delivery** 는 Play 스토어가 무료로 배포합니다 (AAB 빌드, install-time / fast-follow 팩).
@@ -295,11 +313,25 @@ git commit -m "줄바꿈 규칙(.gitattributes) 추가"
 
 **동작:**
 - `settings.js` 바로 뒤에 읽혀 `TP.AUDIO_FILES` 의 모든 경로를 한 번에 바꿉니다.
+- 확장자를 고른 뒤 `TP.AssetManager.url()` 을 거칩니다. CDN 으로 받아 둔 사운드면 기기 저장소 주소가 됩니다.
 - 새 사운드도 `TP.AUDIO_FILES` 에 넣기만 하면 자동으로 따라옵니다.
 - 코드에서 직접 경로를 쓸 때는 `TP.audioHelper.url('game_assets/sounds/sfx/x.ogg')` 로 감싸세요.
 
-**iOS 빌드:**
-- 백업의 MP3 를 같은 경로에 넣고 OGG 는 뺍니다.
+**CDN 빌드 (권장) — 다운로드 매니저가 기기에 맞는 사운드 묶음을 받음:**
+
+| 버킷의 묶음 | 내용 | 받는 기기 |
+|---|---|---|
+| `…-img-1~3.zip` | 에피소드 그림 98MB | 모두 |
+| `…-snd-android-1.zip` | 사운드 OGG 10.7MB (`game_assets/sounds`) | 안드로이드 |
+| `…-snd-ios-1.zip` | 사운드 MP3 12.8MB (`../assets_original_backup/game_assets/sounds`) | iOS |
+
+- `version.json` 의 `packs[].platform` 으로 구분합니다. 매니저는 `all` + 자기 플랫폼 묶음만 받습니다.
+- 앱 안에는 사운드가 없습니다.
+- `build_cdn_pack.py` 는 OGG 와 MP3 목록이 정확히 같은지 검사합니다. 하나라도 빠지면 묶지 않고 멈춥니다.
+- 사운드는 앱에 두고 그림만 CDN 으로 하려면 `build_cdn_pack.py --no-audio` + `build_www.py --cdn … --cdn-no-audio` 를 씁니다.
+
+**CDN 없는 iOS 빌드:**
+- 백업의 MP3 를 앱 안 같은 경로에 넣고 OGG 는 뺍니다.
 
 ```bash
 python tools/build_www.py --platform ios

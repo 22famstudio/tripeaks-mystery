@@ -1,52 +1,63 @@
 // =====================================================================
-// CDN 에셋 다운로드 매니저 — 에피소드 그림(배경 · 초상화 · 썸네일 · 단서, 약 100MB)을 APK 에서 빼고
+// CDN 에셋 다운로드 매니저 — 에피소드 그림(약 98MB)과 사운드를 APK 에서 빼고
 //   첫 실행 때 Google Cloud Storage 버킷에서 내려받아 기기 저장소(Directory.DATA)에 풀어 둔다.
+//   사운드는 기기별 묶음: 안드로이드 = OGG, iOS = MP3 (iOS WebKit 은 OGG Vorbis 재생이 불완전 — js/audio-helper.js 참고)
 // =====================================================================
 //   켜기: tools/build_www.py --cdn <version.json 주소>  (js/cdn-config.js 를 enabled: true 로 바꿔 넣고
-//         APK 에서 game_assets/episodes/{ep_bg,portraits,ep_thumb,clue} 를 뺀다 · vendor/fflate.js 를 넣는다)
+//         APK 에서 CDN 경로(version.json 의 prefixes)를 뺀다 · vendor/fflate.js 를 넣는다)
 //   꺼져 있거나(기본) 브라우저에서 열면 아무것도 하지 않는다 → 지금까지처럼 앱에 들어 있는 파일을 쓴다.
 //
 //   흐름
 //     1) 스크립트가 읽히는 즉시(동기): 이미 받아 둔 버전이 있으면 TP.EPISODES 의 그림 경로를
 //        'game_assets/episodes/…' → 기기 저장소 주소(Capacitor.convertFileSrc)로 바꾼다.
+//        사운드 경로는 js/audio-helper.js 가 TP.AssetManager.url() 로 같은 방식으로 바꾼다.
 //     2) TP.AssetManager.ensure(): version.json 을 확인해 새 버전이면 로딩 화면(진행 막대)을 띄우고
-//        zip 묶음을 스트리밍으로 받으면서 바로 풀어(fflate) 파일로 쓴다 — zip 전체를 메모리 · 디스크에 두지 않음.
-//        다 받으면 저장 정보(버전 · 경로)를 남기고 새로 고침 → 1) 이 새 경로로 바꿔 끼운다.
+//        이 기기에 맞는 zip 묶음(platform 'all' + 'android' 또는 'ios')을 스트리밍으로 받으면서 바로 풀어(fflate)
+//        파일로 쓴다 — zip 전체를 메모리 · 디스크에 두지 않음. 다 받으면 저장 정보를 남기고 새로 고침.
 //     3) 오프라인: 받아 둔 버전이 있으면 그대로 쓰고, 처음 실행인데 받을 수 없으면 [다시 시도] 를 보여 준다.
 //
 //   version.json (tools/build_cdn_pack.py 가 만든다)
-//     { "version": "20261020-1", "packs": [{ "url": "game_assets-20261020-1-1.zip", "size": 52428800, "files": 1400 }, …] }
-//     pack.url 은 version.json 기준 상대 경로. 버전마다 파일 이름이 달라 캐시가 섞이지 않는다.
+//     { "version": "20261020-1",
+//       "prefixes": ["episodes/ep_bg", …, "sounds/sfx", "sounds/bgm_mp3"],     ← game_assets/ 아래에서 CDN 으로 받는 폴더
+//       "packs": [{ "url": "game_assets-20261020-1-img-1.zip", "platform": "all", "size": 41897819, "files": 201 },
+//                 { "url": "game_assets-20261020-1-snd-ios-1.zip", "platform": "ios", … }, …] }
+//     pack.url 은 version.json 기준 상대 경로. zip 안의 경로는 game_assets/ 아래 기준 (episodes/ep_bg/ep001.jpg).
 //
 //   필요: @capacitor/filesystem (네이티브 플러그인 — Capacitor.Plugins.Filesystem 으로 부름) · fflate (vendor/fflate.js)
 // =====================================================================
 (function () {
   const TP = (globalThis.TP ??= {});
   const CFG = TP.CDN_CONFIG || { enabled: false };
-  const LS_KEY = 'tp.cdnAssets.v1';                 // { version, dir, webBase }
-  const PREFIX = 'game_assets/episodes/';            // 이 접두사로 시작하는 그림만 CDN 에서 받는다
+  const LS_KEY = 'tp.cdnAssets.v2';                 // { version, dir, webBase, prefixes, platform }
+  const ROOT = 'game_assets/';                       // zip 안의 경로 기준
   const DATA = 'DATA';                               // Filesystem Directory.Data (앱 전용 · 지우기 전까지 유지)
   const MAX_INFLIGHT = 6;                            // 동시에 기록하는 파일 수 (메모리 상한)
 
   const cap = globalThis.Capacitor;
   const isNative = !!(cap && cap.isNativePlatform && cap.isNativePlatform());
+  const platform = cap && cap.getPlatform ? cap.getPlatform() : 'web';     // 'android' | 'ios' | 'web'
   const FS = isNative ? cap.Plugins && cap.Plugins.Filesystem : null;
 
   const readState = () => { try { return JSON.parse(localStorage.getItem(LS_KEY)) || null; } catch { return null; } };
   const writeState = s => { try { localStorage.setItem(LS_KEY, JSON.stringify(s)); } catch { /* 저장 공간 없음: 다음 실행 때 다시 받음 */ } };
 
   // ---------- 1) 받아 둔 버전으로 경로 바꿔 끼우기 (동기) ----------
-  function rebase(webBase) {
-    const swap = p => (typeof p === 'string' && p.startsWith(PREFIX) ? webBase + p.slice(PREFIX.length) : p);
+  const installed = CFG.enabled && isNative ? readState() : null;
+  // 'game_assets/<CDN 폴더>/…' → 기기 저장소 주소. CDN 으로 받지 않는 경로 · 꺼져 있을 때는 그대로
+  function url(p) {
+    if (!installed || typeof p !== 'string' || !p.startsWith(ROOT)) return p;
+    const rel = p.slice(ROOT.length);
+    return (installed.prefixes || []).some(d => rel.startsWith(d + '/')) ? installed.webBase + rel : p;
+  }
+  function rebase() {
     for (const ep of TP.EPISODES || []) {
-      ep.background = swap(ep.background);
-      ep.thumb = swap(ep.thumb);
-      for (const s of ep.suspects || []) s.portrait = swap(s.portrait);
-      for (const c of ep.clues || []) c.prop = swap(c.prop);
+      ep.background = url(ep.background);
+      ep.thumb = url(ep.thumb);
+      for (const s of ep.suspects || []) s.portrait = url(s.portrait);
+      for (const c of ep.clues || []) c.prop = url(c.prop);
     }
   }
-  const installed = CFG.enabled && isNative ? readState() : null;
-  if (installed && installed.webBase) rebase(installed.webBase);
+  if (installed && installed.webBase) rebase();
 
   // ---------- 로딩 화면 (진행 막대) ----------
   function overlay() {
@@ -157,18 +168,22 @@
       if (installed) return { status: 'offline', version: installed.version };   // 받아 둔 것으로 계속
       return new Promise(resolve => overlay().fail('인터넷 연결을 확인한 뒤 다시 시도해 주세요.', () => resolve(ensure())));
     }
-    if (installed && installed.version === remote.version) return { status: 'ready', version: installed.version };
+    if (installed && installed.version === remote.version && installed.platform === platform) {
+      return { status: 'ready', version: installed.version };
+    }
 
+    // 이 기기에 맞는 묶음만: 공통(all) + 안드로이드(OGG) 또는 iOS(MP3)
+    const packs = remote.packs.filter(p => !p.platform || p.platform === 'all' || p.platform === platform);
     const ui = overlay();
     const dir = `cdn_assets/${remote.version}`;
-    const total = remote.packs.reduce((n, p) => n + (p.size || 0), 0);
+    const total = packs.reduce((n, p) => n + (p.size || 0), 0);
     let done = 0;
     ui.progress(0, total);
     try {
       await removeDir(dir);                                    // 지난번에 받다 만 같은 버전 정리
-      for (const pack of remote.packs) {
-        const url = new URL(pack.url, CFG.versionUrl).href;
-        await streamPack(url, dir, n => { done += n; ui.progress(done, total); });
+      for (const pack of packs) {
+        const packUrl = new URL(pack.url, CFG.versionUrl).href;
+        await streamPack(packUrl, dir, n => { done += n; ui.progress(done, total); });
       }
     } catch (e) {
       return new Promise(resolve => ui.fail(`받는 중 문제가 생겼어요 (${e.message || e}). 다시 시도해 주세요.`, () => resolve(ensure())));
@@ -176,12 +191,12 @@
     const { uri } = await FS.getUri({ path: dir, directory: DATA });
     const webBase = cap.convertFileSrc(uri).replace(/\/?$/, '/');
     const old = installed && installed.dir;
-    writeState({ version: remote.version, dir, webBase });
+    writeState({ version: remote.version, dir, webBase, platform, prefixes: remote.prefixes || ['episodes/ep_bg', 'episodes/portraits', 'episodes/ep_thumb', 'episodes/clue'] });
     if (old && old !== dir) await removeDir(old);              // 예전 버전 지우기
     ui.done();
     setTimeout(() => location.reload(), 400);                 // 새 경로로 다시 시작
     return { status: 'updated', version: remote.version };
   }
 
-  TP.AssetManager = { ensure, rebase, state: readState, isEnabled: () => !!(CFG.enabled && isNative) };
+  TP.AssetManager = { ensure, rebase, url, platform, state: readState, isEnabled: () => !!(CFG.enabled && isNative) };
 })();
