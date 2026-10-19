@@ -9,7 +9,15 @@
       game_assets/_replaced (교체 전 원본) · game_assets/sheets (시트 원본)
       game_assets/background (에피소드 배경 원본 295MB — 게임은 압축본 game_assets/episodes/ep_bg 사용)
   - canvas-confetti 를 CDN 대신 앱 안에 넣는다 (오프라인에서도 동작)
+
+  옵션 (환경 변수로도 줄 수 있음 — npm run sync 가 그대로 넘겨받는다)
+    --cdn <version.json 주소>   (TP_CDN_URL)  에피소드 그림(episodes/ep_bg · portraits · ep_thumb · clue, 약 100MB)을
+                                APK 에서 빼고 첫 실행 때 받게 한다: www/js/cdn-config.js 를 켜고 vendor/fflate.js 를 넣는다.
+                                묶음 · version.json 은 tools/build_cdn_pack.py 로 만들어 버킷에 올린다.
+    --platform ios              (TP_PLATFORM)  OGG 대신 백업(../assets_original_backup)의 MP3 를 같은 경로에 넣는다
+                                (iOS WebKit 은 OGG Vorbis 재생이 불완전 — js/audio-helper.js 가 .mp3 를 고른다)
 """
+import argparse
 import os
 import re
 import shutil
@@ -22,10 +30,20 @@ SKIP_ASSET_PATHS = {'episodes/bg', 'episodes/suspect', 'sounds/bgm'}   # 안 쓰
 SKIP_ASSET_DIRS = {'characters_background', '_replaced', 'sheets', 'background', 'characters'}   # characters = 용의자 초상화 원본 777MB (압축본은 episodes/portraits)   # background = 에피소드 배경 원본 (압축본은 episodes/ep_bg)
 CONFETTI_CDN = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js'
 CONFETTI_LOCAL = os.path.join(ROOT, 'mobile', 'node_modules', 'canvas-confetti', 'dist', 'confetti.browser.js')
+FFLATE_LOCAL = os.path.join(ROOT, 'mobile', 'node_modules', 'fflate', 'umd', 'index.js')
+CDN_PATHS = {'episodes/ep_bg', 'episodes/portraits', 'episodes/ep_thumb', 'episodes/clue'}   # tools/build_cdn_pack.py 의 DIRS 와 같다
+BACKUP = os.path.join(os.path.dirname(ROOT), 'assets_original_backup')
 
 
 def main():
     sys.stdout.reconfigure(encoding='utf-8')
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--cdn', default=os.environ.get('TP_CDN_URL', ''))
+    ap.add_argument('--platform', default=os.environ.get('TP_PLATFORM', 'android'), choices=['android', 'ios'])
+    a = ap.parse_args()
+    if a.cdn and not os.path.exists(FFLATE_LOCAL):
+        sys.exit('--cdn 에는 fflate 가 필요합니다:  cd mobile && npm install fflate')
+    skip_paths = SKIP_ASSET_PATHS | (CDN_PATHS if a.cdn else set())
     if os.path.isdir(OUT):
         shutil.rmtree(OUT)
     os.makedirs(OUT)
@@ -34,7 +52,7 @@ def main():
         shutil.copytree(os.path.join(ROOT, d), os.path.join(OUT, d))
     def ignore(src, names):
         rel = os.path.relpath(src, os.path.join(ROOT, 'game_assets')).replace(os.sep, '/')
-        return [n for n in names if (rel == '.' and n in SKIP_ASSET_DIRS) or f'{rel}/{n}' in SKIP_ASSET_PATHS]
+        return [n for n in names if (rel == '.' and n in SKIP_ASSET_DIRS) or f'{rel}/{n}' in skip_paths]
     shutil.copytree(os.path.join(ROOT, 'game_assets'), os.path.join(OUT, 'game_assets'), ignore=ignore)
 
     html = open(os.path.join(ROOT, 'tripeaks.html'), encoding='utf-8').read()
@@ -45,6 +63,28 @@ def main():
         html = html.replace(CONFETTI_CDN, 'vendor/confetti.browser.js')
     else:
         print('경고: canvas-confetti 로컬 파일이 없어 CDN을 그대로 씀 (mobile 폴더에서 npm install 먼저)')
+    if a.cdn:                                     # CDN 에셋 켜기: fflate 를 넣고 설정을 켠다
+        os.makedirs(os.path.join(OUT, 'vendor'), exist_ok=True)
+        shutil.copy(FFLATE_LOCAL, os.path.join(OUT, 'vendor', 'fflate.js'))
+        assert '<!-- CDN_VENDOR -->' in html, 'tripeaks.html 에 <!-- CDN_VENDOR --> 자리가 없습니다'
+        html = html.replace('<!-- CDN_VENDOR -->', '<script src="vendor/fflate.js"></script>')
+        with open(os.path.join(OUT, 'js', 'cdn-config.js'), 'w', encoding='utf-8', newline='\n') as fp:
+            fp.write(f"(globalThis.TP ??= {{}}).CDN_CONFIG = {{ enabled: true, versionUrl: {a.cdn!r} }};\n")
+        print(f'CDN 에셋: 켜짐 ({a.cdn}) — {", ".join(sorted(CDN_PATHS))} 는 APK 에서 뺌')
+    if a.platform == 'ios':                       # OGG → 백업의 MP3 (js/audio-helper.js 가 iOS 에서 .mp3 를 고름)
+        n = 0
+        for base, _, fs in os.walk(os.path.join(OUT, 'game_assets')):
+            for f in fs:
+                if not f.endswith('.ogg'):
+                    continue
+                rel = os.path.relpath(os.path.join(base, f[:-4] + '.mp3'), OUT)
+                mp3 = os.path.join(BACKUP, rel)
+                if not os.path.exists(mp3):
+                    sys.exit(f'iOS 빌드: 백업에 MP3 가 없습니다 → {mp3}')
+                shutil.copy(mp3, os.path.join(base, f[:-4] + '.mp3'))
+                os.remove(os.path.join(base, f))
+                n += 1
+        print(f'iOS: OGG {n}개 → 백업의 MP3 로 교체')
     open(os.path.join(OUT, 'index.html'), 'w', encoding='utf-8', newline='\n').write(html)
 
     total = sum(os.path.getsize(os.path.join(d, f)) for d, _, fs in os.walk(OUT) for f in fs)

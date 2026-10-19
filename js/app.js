@@ -1543,6 +1543,9 @@
     });
   }
 
+  // CDN 에셋(에피소드 그림): 새 버전이면 진행 막대 화면에서 받고 새로 고침 (꺼져 있거나 웹이면 아무것도 안 함)
+  TP.AssetManager?.ensure();
+
   // 시작 화면: 스튜디오 로고(logo_studio.webp, 원본 game_assets/sheets/logo.webp) 1.6초 → 로딩 화면(ui_loading.webp)
   //   로딩 화면은 자주 쓰는 이미지를 미리 불러오는 동안 (로고 뒤 최소 0.9초, 최대 6초)
   (function bootSplash() {

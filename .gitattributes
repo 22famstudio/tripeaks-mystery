@@ -1,0 +1,54 @@
+# 기본적으로 모든 텍스트 파일의 줄바꿈을 LF로 통일
+* text=auto eol=lf
+
+# ---- 코드 · 문서 (명시) ----
+*.js        text eol=lf
+*.mjs       text eol=lf
+*.json      text eol=lf
+*.html      text eol=lf
+*.css       text eol=lf
+*.md        text eol=lf
+*.py        text eol=lf
+*.csv       text eol=lf
+*.txt       text eol=lf
+*.xml       text eol=lf
+*.svg       text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.gradle    text eol=lf
+*.properties text eol=lf
+*.java      text eol=lf
+*.kt        text eol=lf
+*.pro       text eol=lf
+
+# ---- 안드로이드 빌드 스크립트: gradlew 는 반드시 LF ----
+gradlew     text eol=lf
+*.sh        text eol=lf
+
+# ---- 윈도우 전용 스크립트는 CRLF ----
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+*.ps1       text eol=crlf
+
+# ---- 바이너리 (줄바꿈 변환 · diff 금지) ----
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.webp      binary
+*.gif       binary
+*.ico       binary
+*.ogg       binary
+*.mp3       binary
+*.wav       binary
+*.m4a       binary
+*.mp4       binary
+*.ttf       binary
+*.otf       binary
+*.woff      binary
+*.woff2     binary
+*.zip       binary
+*.jar       binary
+*.keystore  binary
+*.jks       binary
+*.xlsx      binary
+*.pdf       binary

@@ -269,3 +269,25 @@
 #### 저장
 - 설정 값은 플레이어 세이브(로컬 저장소)의 `settings` 항목에 저장되어 앱을 다시 켜도 유지된다.
 - 세이브 데이터 초기화(개발자 기능) 시 설정도 기본값으로 돌아간다.
+
+## 9. 에셋 배포 · 백업 · 플랫폼 대응 (2026-10-20)
+
+### 에셋 다이어트 (`tools/optimize_assets.py`)
+- PNG 227개 → WebP (61.6MB → 6.2MB), MP3 34개 → OGG (12.8MB → 10.7MB). JPG 2,725개는 WebP 로 바꾸면 오히려 커져 유지.
+- 앱에 안 들어가는 생성 원본 1.3GB(캐릭터 · 배경 원본, WAV BGM, 시트 등)는 프로젝트 바깥 `../assets_original_backup/` 으로 이동. 변환 전 PNG · MP3 원본, 치환 전 코드 사본(`_code/`), `manifest.json` 도 같은 곳.
+- 결과: APK 192.6MB → 135.7MB, Git 저장소 약 120MB.
+
+### 원본 백업 — 구글 드라이브 (수동)
+- `assets_original_backup` 폴더는 Git 에 올리지 않는다. **개발자가 직접 압축해 `orokorea1@gmail.com` 구글 드라이브에 올려 보관한다.**
+- 권장: `assets_original_backup_YYYYMMDD.zip` 이름으로, 원본이 바뀔 때마다(새 캐릭터 · 배경 생성, BGM 추가) 새로 올리고 이전 것은 1개 이상 남긴다.
+- 원본이 필요한 도구(`tools/build_episode_backgrounds.py` · `build_character_portraits.py` · `build_bgm.py` 등)를 다시 돌릴 때는 드라이브에서 받아 `../assets_original_backup/game_assets/…` 를 프로젝트 `game_assets/` 로 되돌려 놓고 실행 → 끝나면 `optimize_assets.py --apply` 로 다시 다이어트.
+
+### CDN 에셋 다운로드 (GCP Cloud Storage, `js/asset-manager.js`)
+- 대상: 에피소드 그림(배경 · 초상화 · 썸네일 · 단서, 약 98MB). `tools/build_cdn_pack.py` 가 버전 이름이 붙은 zip 묶음(최대 40MB, 무압축) + `version.json` 을 `dist/cdn/` 에 만든다 → 공개 버킷에 올림.
+- 빌드: `tools/build_www.py --cdn <version.json 주소>`(또는 `TP_CDN_URL`) → 이 폴더들을 APK 에서 빼고 `js/cdn-config.js` 를 켬. 기본 빌드는 지금처럼 모두 앱에 포함(꺼짐).
+- 첫 실행(네이티브): 진행 막대 로딩 화면 '사건 파일을 준비하고 있어요' → zip 을 받으면서 바로 풀어(fflate) 기기 저장소(Directory.DATA `cdn_assets/<버전>/`)에 기록 → 새로 고침. 이후 실행은 `TP.EPISODES` 의 그림 경로를 기기 저장소 주소로 바꿔 끼워 오프라인에서도 동작. 새 버전이 올라오면 다시 받고 예전 버전 폴더는 지움. 처음 실행에 오프라인이면 [다시 시도].
+- 비용 메모: 설치 1회당 약 98MB 전송. GCS 인터넷 전송 요금(대략 GB당 $0.12, 지역별 상이)이 크레딧에서 차감 → 설치 1만 건 ≈ 1TB. 대안으로 Google Play Asset Delivery(무료, AAB 필요)를 출시 전에 비교.
+
+### iOS 오디오 (`js/audio-helper.js`)
+- iOS(Safari · WKWebView)는 OGG Vorbis 재생이 불완전 → `Capacitor.getPlatform() === 'ios'` 이거나 브라우저가 OGG 를 못 튼다고 답하면 `TP.AUDIO_FILES` 의 경로를 `.mp3` 로 바꿔 쓴다. 안드로이드는 `.ogg`.
+- iOS 빌드는 `tools/build_www.py --platform ios`(또는 `TP_PLATFORM=ios`) — 백업의 MP3 를 같은 경로에 넣고 OGG 는 뺀다.

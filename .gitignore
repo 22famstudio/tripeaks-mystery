@@ -64,3 +64,4 @@ desktop.ini
 npm-debug.log*
 *.tmp
 .claude/settings.local.json
+dist/
