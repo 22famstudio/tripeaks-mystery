@@ -9,7 +9,9 @@
     "apk": "npm run sync && cd android && gradlew.bat assembleDebug"
   },
   "dependencies": {
+    "@capacitor-firebase/authentication": "^7.5.0",
     "@capacitor/android": "^7.6.9",
+    "@capacitor/app": "^7.1.2",
     "@capacitor/core": "^7.6.9",
     "@capacitor/filesystem": "^7.1.9",
     "canvas-confetti": "^1.9.3",

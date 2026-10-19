@@ -19,8 +19,13 @@
                                 (build_cdn_pack.py --no-audio 로 묶었을 때)
     --platform ios              (TP_PLATFORM)  OGG 대신 백업(../assets_original_backup)의 MP3 를 같은 경로에 넣는다
                                 (iOS WebKit 은 OGG Vorbis 재생이 불완전 — js/audio-helper.js 가 .mp3 를 고른다)
+
+  Firebase 로그인 플러그인(@capacitor-firebase/authentication)은 mobile/android/app/google-services.json 이 있을 때만
+  안드로이드 빌드에 넣는다 (mobile/capacitor.config.json 의 android.includePlugins 를 여기서 맞춤).
+  파일 없이 넣으면 앱이 켜질 때 Firebase 초기화 오류로 꺼진다. 빠진 빌드에서는 js/account.js 가 기기 ID 로 대신 식별한다.
 """
 import argparse
+import json
 import os
 import re
 import shutil
@@ -37,6 +42,23 @@ FFLATE_LOCAL = os.path.join(ROOT, 'mobile', 'node_modules', 'fflate', 'umd', 'in
 CDN_IMAGE_PATHS = {'episodes/ep_bg', 'episodes/portraits', 'episodes/ep_thumb', 'episodes/clue'}   # tools/build_cdn_pack.py 의 IMAGE_DIRS
 CDN_AUDIO_PATHS = {'sounds/sfx', 'sounds/bgm_mp3'}                                                  # tools/build_cdn_pack.py 의 AUDIO_DIRS
 BACKUP = os.path.join(os.path.dirname(ROOT), 'assets_original_backup')
+CAP_CONFIG = os.path.join(ROOT, 'mobile', 'capacitor.config.json')
+GOOGLE_SERVICES = os.path.join(ROOT, 'mobile', 'android', 'app', 'google-services.json')
+BASE_PLUGINS = ['@capacitor/filesystem', '@capacitor/app']  # 늘 넣는 네이티브 플러그인 (세이브 파일 · 백그라운드 감지)
+FIREBASE_PLUGINS = ['@capacitor-firebase/authentication']  # google-services.json 이 있을 때만
+
+
+def sync_plugin_allowlist():
+    """capacitor.config.json 의 android.includePlugins 를 google-services.json 유무에 맞춘다"""
+    cfg = json.load(open(CAP_CONFIG, encoding='utf-8'))
+    has_firebase = os.path.exists(GOOGLE_SERVICES)
+    want = BASE_PLUGINS + (FIREBASE_PLUGINS if has_firebase else [])
+    if cfg.setdefault('android', {}).get('includePlugins') != want:
+        cfg['android']['includePlugins'] = want
+        with open(CAP_CONFIG, 'w', encoding='utf-8', newline='\n') as fp:
+            json.dump(cfg, fp, ensure_ascii=False, indent=2)
+    print('Firebase 로그인: ' + ('켜짐 (google-services.json 있음)' if has_firebase
+                                 else '꺼짐 — mobile/android/app/google-services.json 을 넣으면 켜짐'))
 
 
 def main():
@@ -92,6 +114,7 @@ def main():
                 n += 1
         print(f'iOS: OGG {n}개 → 백업의 MP3 로 교체')
     open(os.path.join(OUT, 'index.html'), 'w', encoding='utf-8', newline='\n').write(html)
+    sync_plugin_allowlist()
 
     total = sum(os.path.getsize(os.path.join(d, f)) for d, _, fs in os.walk(OUT) for f in fs)
     count = sum(len(fs) for _, _, fs in os.walk(OUT))

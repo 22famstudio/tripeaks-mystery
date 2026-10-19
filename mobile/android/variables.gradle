@@ -1,5 +1,5 @@
 ext {
-    minSdkVersion = 23
+    minSdkVersion = 24   // Play 게임즈 서비스 v2 22.x 가 Android 7.0(24) 이상을 요구
     compileSdkVersion = 35
     targetSdkVersion = 35
     androidxActivityVersion = '1.9.2'
@@ -13,4 +13,7 @@ ext {
     androidxJunitVersion = '1.2.1'
     androidxEspressoCoreVersion = '3.6.1'
     cordovaAndroidVersion = '10.1.1'
+    // Firebase 로그인(@capacitor-firebase/authentication)의 Google 로그인 — app/google-services.json 이 있을 때만 켠다
+    // (없으면 Google 로그인 코드가 쓰는 default_web_client_id 리소스가 만들어지지 않아 빌드가 깨짐)
+    rgcfaIncludeGoogle = file('app/google-services.json').exists()
 }

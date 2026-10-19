@@ -25,6 +25,11 @@
 
         </activity>
 
+        <!-- Google Play 게임즈 서비스 프로젝트 ID (res/values/games_ids.xml — 비어 있으면 클라우드 세이브 꺼짐) -->
+        <meta-data
+            android:name="com.google.android.gms.games.APP_ID"
+            android:value="@string/game_services_project_id" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

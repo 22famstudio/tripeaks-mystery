@@ -1,4 +1,4 @@
-package com.tripeaks.mystery;
+package com.twotwofam.mystery;
 
 import android.os.Bundle;
 import android.view.WindowManager;
@@ -15,6 +15,7 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(PlayGamesSavesPlugin.class);   // 앱 안 플러그인: Play 게임즈 저장된 게임 (js/play-games-sync.js)
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         enterFullscreen();

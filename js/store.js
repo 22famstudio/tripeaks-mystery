@@ -66,6 +66,9 @@
 
   const LOGIC_VER = 2;   // tools/logic_gen.py v2 단서 (2026-10-18)
   const listeners = [];
+  let savedAt = 0;                       // 마지막 저장 시각 (load · save 가 갱신)
+  const persistHooks = [];
+  const codec = () => TP.saveCodec;
   let state = load();
 
   function sanitizeStars(v) {
@@ -161,21 +164,51 @@
     };
   }
 
+  // 저장 구조 (js/save-codec.js · js/local-save.js · js/play-games-sync.js)
+  //   정본: 기기 파일 save_data.json (네이티브 · local-save.js 가 onPersist 로 받아 씀)
+  //   사본: localStorage — 앱이 켜지는 즉시(동기) 상태를 갖기 위한 부팅용 사본이자, 파일 쓰기가 실패할 때의 폴백
+  //   클라우드: Google Play 게임즈 저장된 게임 (play-games-sync.js 가 모아서 올림)
+  //   셋 다 같은 형식(Base64 + 위조 검사 서명)이고, savedAt(마지막 저장 시각)으로 어느 쪽이 최신인지 가린다.
+
   function load() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return sanitize({ ...DEFAULTS, ...JSON.parse(raw) });
+      if (raw) {
+        if (codec()) {
+          const d = codec().decode(raw);
+          if (d.ok) { savedAt = d.savedAt; return sanitize({ ...DEFAULTS, ...d.data }); }
+          console.warn('[store] localStorage 사본이 손상 · 변조됨 → 기기 파일 · 클라우드에서 복구 시도', d.reason);
+        } else {
+          return sanitize({ ...DEFAULTS, ...JSON.parse(raw) });
+        }
+      }
     } catch (e) { /* 저장소 사용 불가(사생활 보호 모드 등) → 기본값으로 진행 */ }
     return sanitize(DEFAULTS);
   }
 
-  function save() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* 무시 */ }
+  function save(at = TP.now()) {
+    savedAt = at;
+    const text = codec() ? codec().encode(state, savedAt) : JSON.stringify(state);
+    try { localStorage.setItem(STORAGE_KEY, text); } catch (e) { /* 무시 — 기기 파일이 정본 */ }
+    persistHooks.forEach(h => { try { h(state, savedAt, text); } catch (err) { console.error(err); } });
   }
 
   TP.store = {
     MAX_LEVEL,
+    STORAGE_KEY,
     get state() { return state; },
+    get savedAt() { return savedAt; },
+
+    // 저장될 때마다 (state, savedAt, 인코딩된 문자열) 로 불린다 — 기기 파일 쓰기 · 클라우드 '바뀜' 표시용
+    onPersist(fn) { persistHooks.push(fn); },
+
+    // 다른 곳(기기 파일 · 클라우드)의 세이브로 통째로 바꾸기. savedAt 은 그 세이브의 시각을 그대로 쓴다
+    replace(data, at = TP.now()) {
+      const prev = state;
+      state = sanitize({ ...structuredClone(DEFAULTS), ...data });
+      save(at);
+      listeners.forEach(l => l(state, prev));
+    },
 
     update(fn) {
       const prev = state;

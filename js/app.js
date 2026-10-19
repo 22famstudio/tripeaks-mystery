@@ -1336,22 +1336,54 @@
       console.log('저장된 닉네임: ', newName);
     },
 
-    // 계정 연동 (GDD 8장): 하위 팝업 [로그인 / 로그아웃 / 계정 전환]
-    //   프로토타입에는 로그인 서버가 없어 각 버튼은 안내만 한다 (출시 버전: Google Play Games 로그인)
+    // 계정 관리 (js/account.js — Firebase Authentication): 게스트(익명) ↔ Google 연결 · 로그아웃 · 계정 삭제
     async manageAccount() {
+      const acc = TP.account;
+      const st = acc.state;
+      if (!acc.available) {
+        await showDialog({
+          title: '구글 계정 연동',
+          className: 'account',
+          body: `<p class="small">이 버전에서는 Google 로그인을 아직 쓸 수 없어요.</p>
+                 <p class="small">유저 ID <b data-no-icons>${acc.shortId()}</b> (이 기기)</p>`,
+        });
+        return;
+      }
+      const google = st.provider === 'google';
+      const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
       const choice = await showDialog({
         title: '구글 계정 연동',
         className: 'account',
-        body: `<p class="small">현재 계정: <b>player@gmail.com</b> (프로토타입 예시)</p>
-               <p class="small">지금은 진행 상황이 이 기기(브라우저)에만 저장돼요.</p>`,
+        body: `<p class="small">현재: <b>${google ? esc(st.email || st.displayName || 'Google 계정') : '게스트'}</b></p>
+               <p class="small">유저 ID <b data-no-icons>${acc.shortId()}</b></p>
+               <p class="small">${google ? 'Google 계정에 연결돼 있어요.' : 'Google 계정을 연결하면 같은 유저 ID 로 계속 식별돼요.'}<br>진행 상황은 이 기기에 저장돼요.</p>`,
         buttons: [
-          { label: '로그인', value: 'login', cls: 'primary' },
-          { label: '로그아웃', value: 'logout' },
-          { label: '계정 전환', value: 'switch' },
+          ...(google ? [{ label: '로그아웃', value: 'logout' }] : [{ label: 'Google 계정 연결', value: 'link', cls: 'primary' }]),
+          { label: '계정 삭제', value: 'delete', cls: 'danger-link' },
           { label: '닫기', value: null, cls: 'ghost' },
         ],
       });
-      if (choice) toast(`${{ login: '로그인', logout: '로그아웃', switch: '계정 전환' }[choice]}은 출시 버전에서 지원돼요`);
+      if (choice === 'link') {
+        const r = await acc.linkGoogle();
+        if (r.ok) return toast('Google 계정을 연결했어요');
+        if (r.conflict) {
+          const go = await TP.ui.confirm({ title: '이미 사용 중인 Google 계정', message: '이 Google 계정은 다른 유저 ID 에 연결돼 있어요.\n그 계정으로 전환할까요? (이 기기의 진행 상황은 그대로예요)', okLabel: '전환' });
+          if (go) { const s = await acc.switchToGoogle(); toast(s.ok ? 'Google 계정으로 전환했어요' : '전환하지 못했어요'); }
+          return;
+        }
+        if (r.reason !== 'cancelled') toast('Google 계정을 연결하지 못했어요');
+      } else if (choice === 'logout') {
+        const ok = await TP.ui.confirm({ title: '로그아웃', message: '로그아웃하면 새 게스트 유저 ID 로 바뀌어요.\n(이 기기의 진행 상황은 그대로예요)', okLabel: '로그아웃' });
+        if (ok) toast((await acc.signOut()).ok ? '로그아웃했어요' : '로그아웃하지 못했어요');
+      } else if (choice === 'delete') {
+        const ok = await TP.ui.confirm({ title: '계정 삭제', message: '유저 ID 와 연결된 Google 계정 정보를 서버에서 영구 삭제해요.\n되돌릴 수 없어요. 계속할까요?', okLabel: '삭제' });
+        if (!ok) return;
+        const r = await acc.deleteAccount();
+        if (!r.ok) return toast(r.reason === 'cancelled' ? '삭제를 취소했어요' : '계정을 삭제하지 못했어요');
+        toast('계정을 삭제했어요');
+        const wipe = await TP.ui.confirm({ title: '진행 상황도 지울까요?', message: '이 기기에 저장된 게임 진행 상황(골드 · 레벨 · 사건)도 초기화할까요?', okLabel: '초기화', cancelLabel: '남겨두기' });
+        if (wipe) { await TP.localSave?.wipe(); try { localStorage.clear(); } catch { /* 무시 */ } location.reload(); }
+      }
     },
 
     // 법적 고지 (GDD 8장): 이용약관 · 개인정보처리방침을 외부 웹뷰(새 창)로. 주소가 아직 없으면 안내
@@ -1362,7 +1394,7 @@
         body: `
           <div class="legal-text">
             <p><b>결제 안내</b><br>프로토타입의 상품 구매는 실제 결제가 일어나지 않는 테스트 결제예요.</p>
-            <p><b>개인정보</b><br>게임 진행 상황은 이 기기의 브라우저 저장소(localStorage)에만 저장되며 외부로 전송되지 않아요.</p>
+            <p><b>개인정보</b><br>게임 진행 상황은 이 기기에만 저장돼요. 유저 식별을 위해 Google Firebase 인증이 익명 유저 ID 를 만들고, Google 계정을 연결하면 그 계정의 이메일 · 이름을 함께 처리해요. 설정 → 계정 관리 → [계정 삭제] 로 언제든 지울 수 있어요.</p>
             <p><b>오픈소스</b><br>canvas-confetti — ISC License</p>
             <p><b>그림</b><br>일부 일러스트는 AI 이미지 생성 도구(Higgsfield)로 제작했어요.</p>
             <p class="small">버전 ${TP.SUPPORT.version}</p>
@@ -1379,6 +1411,18 @@
       else toast('출시 전에 게시될 예정이에요');
     },
 
+    // 클라우드 저장 (Google Play 게임즈 저장된 게임): 로그인 전이면 로그인, 로그인했으면 지금 올리기
+    async cloudSave() {
+      const sync = TP.playGamesSync;
+      if (!sync || sync.status.state === 'unavailable') return toast('이 버전에서는 클라우드 저장을 아직 쓸 수 없어요');
+      if (!sync.status.signedIn) {
+        const ok = await sync.signIn({ ask: askCloudRestore });
+        return toast(ok ? 'Play 게임즈에 로그인했어요' : 'Play 게임즈에 로그인하지 못했어요');
+      }
+      const done = await sync.uploadNow();
+      toast(done ? '☁️ 클라우드에 저장했어요' : sync.status.lastError ? '저장하지 못했어요. 잠시 뒤 다시 시도해 주세요' : '방금 저장했어요');
+    },
+
     // 고객 문의 (GDD 8장): 안내 후 기본 이메일 앱 호출
     contactUs() {
       alert('문의 메일을 작성합니다.\n답변에는 영업일 기준 3~10일이 소요될 수 있습니다.');
@@ -1386,12 +1430,55 @@
       const subject = encodeURIComponent('[온천 여관의 비밀] 고객 문의');
       // 안내문 양식 그대로, 닉네임 · 기기 정보 칸은 자동으로 채운다
       const body = encodeURIComponent(
-        `게임 닉네임: ${TP.settings.get().nickname}\n기기 정보: ${navigator.userAgent} (버전 ${TP.SUPPORT.version})\n\n` +
+        `게임 닉네임: ${TP.settings.get().nickname}\n유저 ID: ${TP.account ? TP.account.state.uid || '-' : '-'}\n기기 정보: ${navigator.userAgent} (버전 ${TP.SUPPORT.version})\n\n` +
         '문의 내용을 아래에 적어주세요.\n(답변에는 3~10 working days가 소요됩니다.)\n--------------------------\n');
       window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
     },
   });
   store.subscribe(() => { if (settingsModal.style.display !== 'none') fillSettings(); });
+
+  // ---------- 세이브: 기기 파일(save_data.json) → Play 게임즈 클라우드 ----------
+  // 시작 화면(로고 · 로딩)이 사라진 뒤에 묻는다
+  const afterSplash = () => new Promise(resolve => {
+    const check = () => (document.querySelector('.boot-splash') ? setTimeout(check, 300) : resolve());
+    check();
+  });
+  // 클라우드가 더 최근이고 진행도도 높을 때
+  async function askCloudRestore(cloud, local) {
+    await afterSplash();
+    return TP.ui.confirm({
+      title: '☁️ 클라우드 저장 데이터',
+      message: `클라우드 저장 데이터가 있습니다. 불러오시겠습니까?\n(진행도: 에피소드 ${cloud.episode}, 골드 ${cloud.gold.toLocaleString()})\n\n이 기기: 에피소드 ${local.episode}, 골드 ${local.gold.toLocaleString()}\n'아니요'를 고르면 다음 저장 때 이 기기 데이터로 클라우드를 덮어써요.`,
+      okLabel: '불러오기',
+      cancelLabel: '아니요',
+    });
+  }
+  const cloudLabel = st => ({
+    unavailable: '이 버전에서는 사용할 수 없어요', off: '준비 중', error: '연결 오류',
+    'signed-out': 'Play 게임즈 로그인이 필요해요',
+    ready: st.lastUpload ? `마지막 저장 ${new Date(st.lastUpload).toLocaleTimeString()}${st.dirty ? ' · 저장 대기' : ''}` : (st.dirty ? '저장 대기 중' : '클라우드와 같아요'),
+  }[st.state] || '준비 중');
+  if (TP.playGamesSync) TP.playGamesSync.onChange(st => {
+    $('#cloudSaveLabel').textContent = cloudLabel(st);
+    $('#cloudSaveBtn').textContent = st.state === 'signed-out' ? '로그인' : '지금 저장';
+  });
+  (async () => {
+    const local = TP.localSave ? await TP.localSave.init() : { source: 'web' };
+    if (local.restored) return location.reload();                 // 기기 파일이 더 최근 → 그 상태로 다시 시작
+    if (!TP.playGamesSync) return;
+    const st = await TP.playGamesSync.init({ ask: askCloudRestore });
+    if (st.result === 'restored') { toast('☁️ 클라우드 저장 데이터를 불러왔어요'); setTimeout(() => location.reload(), 600); }
+  })();
+
+  // 유저 식별: 첫 실행에 익명 계정 자동 생성 → 설정의 계정 줄 갱신
+  if (TP.account) {
+    const showAccount = st => {
+      $('#accountLabel').textContent = st.provider === 'google' ? (st.email || st.displayName || 'Google 계정') : '게스트';
+      $('#accountId').textContent = TP.account.shortId();
+    };
+    TP.account.onChange(showAccount);
+    TP.account.init();
+  }
 
   // =====================================================================
   // 숨겨진 개발자 패널: 레벨 칩을 1.5초 안에 5번 터치

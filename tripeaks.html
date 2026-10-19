@@ -318,8 +318,15 @@
 
           <label style="display:block; margin-bottom:5px; font-size:14px;">구글 계정 연동</label>
           <div style="display:flex; justify-content:space-between; align-items:center; background:#34495e; padding:10px; border-radius:5px;">
-            <span style="font-size:12px;">player@gmail.com</span>
+            <span style="font-size:12px;" id="accountLabel">게스트</span>
             <button onclick="app.manageAccount()" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:5px 10px; font-size:12px; cursor:pointer;">계정 관리</button>
+          </div>
+          <p style="margin:6px 0 0; font-size:11px; opacity:.7;">유저 ID <span id="accountId" data-no-icons>—</span></p>
+
+          <label style="display:block; margin:15px 0 5px; font-size:14px;">클라우드 저장 (Google Play 게임즈)</label>
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; background:#34495e; padding:10px; border-radius:5px;">
+            <span style="font-size:12px;" id="cloudSaveLabel">준비 중</span>
+            <button id="cloudSaveBtn" onclick="app.cloudSave()" style="background:#27ae60; color:white; border:none; border-radius:4px; padding:5px 10px; font-size:12px; cursor:pointer;">지금 저장</button>
           </div>
         </div>
 
@@ -350,7 +357,9 @@
   <script src="js/game.js"></script>
   <script src="js/core/tripeaks_core_engine.js"></script>
   <script src="js/deal-generator.js"></script>
+  <script src="js/save-codec.js"></script>
   <script src="js/store.js"></script>
+  <script src="js/local-save.js"></script>
   <script src="js/energy.js"></script>
   <script src="js/core/home_progression_system.js"></script>
   <script src="js/economy.js"></script>
@@ -366,6 +375,8 @@
   <script src="js/mystery.js"></script>
   <script src="js/home-bridge.js"></script>
   <script src="js/settings.js"></script>
+  <script src="js/account.js"></script>
+  <script src="js/play-games-sync.js"></script>
   <script src="js/audio-helper.js"></script>
   <script src="js/emoji-icons.js"></script>
   <script src="js/font-lang.js"></script>

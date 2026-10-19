@@ -315,49 +315,30 @@
   }
 
   // 스페셜 오퍼 팝업 (TP.SPECIAL_OFFERS 템플릿을 그대로 그린다)
+  // 상점 진입 스페셜 오퍼 (TP.SPECIAL_OFFERS — 탐정 긴급 지원 팩 등): 홈 SPECIAL OFFER 와 같은 가판대 팝업
+  //   [✕] 는 경고 없이 닫고 상점으로 이어진다 (홈 오퍼의 '회차 · 10일' 규칙은 홈 상품에만)
   async function showSpecialOffer(offer) {
-    const price = TP.formatPrice(offer.price, offer.currency);
-    const original = offer.originalPrice ? TP.formatPrice(offer.originalPrice, offer.currency) : '';
-    const off = offer.originalPrice ? Math.round((1 - offer.price / offer.originalPrice) * 100) : 0;
-    const choice = await showDialog({
-      className: 'special-offer',
-      framed: false,
-      art: offer.art ? { src: offer.art, cls: 'offer-art' } : null,
-      body: `
-        <div class="offer-ribbon">⏰ SPECIAL OFFER · 지금만</div>
-        ${offer.art ? '' : `<div class="offer-icon">${TP.productImage(offer) ? `<img src="${TP.productImage(offer)}" alt="">` : offer.icon}</div>`}
-        <div class="offer-name">${esc(offer.name)}</div>
-        ${offer.headline ? `<p class="offer-headline">${esc(offer.headline)}</p>` : ''}
-        <ul class="offer-items reward-icons">${rewardIcons(offer.rewards)}</ul>
-        <div class="offer-price">
-          ${original ? `<s>${original}</s>` : ''} <b>${price}</b> ${off ? `<span class="off">-${off}%</span>` : ''}
-        </div>`,
-      buttons: [
-        { label: '닫기', value: 'close', cls: 'ghost' },
-        { label: `${price} 구매하기`, value: 'buy', cls: 'primary hot' },
-      ],
-      footer: '※ 이 팝업을 닫으면 동일한 오퍼가 다시 나타나지 않을 수 있습니다.',
-    });
-    if (choice === 'buy') await buyProduct(offer);
+    if (await homeOfferPage(offer) === 'buy') await buyProduct(offer);
   }
 
   // 홈 SPECIAL OFFER 팝업: 가판대 그림(popup_home_offer.webp) 안 진열판에 구성품 · 가격, 그림의 BUY NOW 가 결제 버튼
   //   [✕] → 경고 '지금 닫으면 같은 오퍼를 다시 받지 못할 수 있어요' (10일 쉬는 규칙은 사용자에게 알리지 않음) [포기하기] [돌아가기] → 돌아가기면 오퍼로 복귀, 포기하면 회차 끝
+  const OFFER_STALL = 'game_assets/popup_home_offer.webp';   // 가판대 + 탐정 고양이 (홈 · 상점 스페셜 오퍼 공통)
   function homeOfferPage(offer) {
     const price = TP.formatPrice(offer.price, offer.currency);
-    const original = TP.formatPrice(offer.originalPrice, offer.currency);
-    const off = Math.round((1 - offer.price / offer.originalPrice) * 100);
+    const original = offer.originalPrice ? TP.formatPrice(offer.originalPrice, offer.currency) : '';
+    const off = offer.originalPrice ? Math.round((1 - offer.price / offer.originalPrice) * 100) : 0;
     const page = document.createElement('div');
     page.className = 'ho-popup';
     page.style.zIndex = ++zTop;
     page.innerHTML = `
       <div class="ho-stage" role="dialog" aria-modal="true" aria-label="SPECIAL OFFER">
-        <img class="ho-art" src="${offer.art}" alt="">
-        <div class="ho-badge" data-no-icons><b>${off}%</b><small>OFF</small></div>
+        <img class="ho-art" src="${OFFER_STALL}" alt="">
+        ${off ? `<div class="ho-badge" data-no-icons><b>${off}%</b><small>OFF</small></div>` : '<div class="ho-badge" data-no-icons><small>SPECIAL</small></div>'}
         <div class="ho-panel">
           <div class="ho-name">${esc(offer.name)}</div>
           <ul class="ho-items reward-icons">${rewardIcons(offer.rewards)}</ul>
-          <div class="ho-price"><s>${original}</s><b>${price}</b></div>
+          <div class="ho-price">${original ? `<s>${original}</s>` : ''}<b>${price}</b></div>
         </div>
         <button class="ho-buy" aria-label="${price} 지금 결제하기"></button>
         <button class="ho-close" aria-label="닫기">✕</button>

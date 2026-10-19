@@ -7,7 +7,7 @@ const J = f => path.join(__dirname, '..', f);
 const reset = () => { globalThis.TP = {}; load(J('js/data/episodes.js')); };
 const ls = state => ({ getItem: () => JSON.stringify(state), setItem() {} });
 const PREFIXES = ['episodes/ep_bg', 'episodes/portraits', 'episodes/ep_thumb', 'episodes/clue', 'sounds/sfx', 'sounds/bgm_mp3'];
-const BASE = 'https://localhost/_capacitor_file_/data/user/0/com.tripeaks.mystery/files/cdn_assets/v1/';
+const BASE = 'https://localhost/_capacitor_file_/data/user/0/com.twotwofam.mystery/files/cdn_assets/v1/';
 
 // 1) 기본(꺼짐) · 브라우저: 경로 그대로
 reset();
