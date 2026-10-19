@@ -1094,3 +1094,55 @@ td.split, th.split { padding-left: 0.6cqw !important; }
 .rsm-go i { font-style: normal; margin-right: .3em; }
 .rsm-quit { background: linear-gradient(#ef5a50, #b3231c); box-shadow: 0 1cqh 0 #5a120c, inset 0 .6cqh 0 #ffffff44; }
 .rsm-go:active, .rsm-quit:active { translate: 0 .6cqh; box-shadow: 0 .3cqh 0 #0008; }
+
+/* =====================================================================
+   수사 생명력(하트) 팝업 — frame_resume.webp (1145×702, 파란 패널 + 오른쪽 위 고양이)
+     제목 띠 x 4~83% · y 10~31% / 안쪽 진한 파랑 x 4~95% · y 33~95%
+   ===================================================================== */
+.stage .en-popup { position: absolute; }
+.en-popup { inset: 0; display: grid; place-items: center; background: #000a; animation: screen-in .25s; }
+.en-frame {
+  position: relative; width: min(88cqw, 140cqh); aspect-ratio: 1145 / 702; container-type: size; color: #fff;
+  background: url(../game_assets/frame_resume.webp) center / 100% 100% no-repeat; filter: drop-shadow(0 1.4cqh 2cqh #000c);
+  animation: rs-pop .35s cubic-bezier(.2, 1.4, .4, 1) both;
+}
+.en-head { position: absolute; left: 8%; width: 70%; top: 11%; height: 19%; display: flex; align-items: center; justify-content: center; gap: 1.5cqw; }
+.en-heart { height: 70%; width: auto; filter: drop-shadow(0 .6cqh 0 #0006); animation: cta-bob 1.6s ease-in-out infinite; }
+.en-title { height: 88%; width: auto; max-width: 80%; object-fit: contain; }
+.en-body { position: absolute; left: 8%; right: 8%; top: 35%; bottom: 8%; display: grid; grid-template-columns: 42% 1fr; grid-template-rows: 1fr auto; gap: 1.6cqh 3cqw; }
+.en-status { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.6cqh; text-align: center; }
+.en-hearts { display: flex; gap: 1cqw; }
+.en-hearts img { width: 8.5cqh; height: 8.5cqh; filter: drop-shadow(0 .5cqh 0 #0006); }
+.en-hearts img.off { opacity: .55; }
+.en-hearts img.gold { filter: grayscale(1) sepia(1) saturate(7) hue-rotate(-8deg) brightness(1.55) contrast(1.05) drop-shadow(0 .5cqh 0 #0006); }   /* 무한 하트 중: 금색 하트 */
+.en-big { margin: 0; display: flex; align-items: center; gap: .8cqw; font-size: 7cqh; font-weight: 800; text-shadow: 0 .5cqh 0 #0b2a6a; }
+.en-big img { height: 1.3em; width: auto; }
+.en-big span { color: #ff9a5a; -webkit-text-stroke: .35cqh #4a1a0a; paint-order: stroke fill; }
+.en-big b { color: #ffe680; font-size: 1.3em; }
+.en-timer { margin: 0; font-size: 4.4cqh; font-weight: 700; color: #e8f2ff; }
+.en-timer b { color: #ffe680; }
+.en-actions { display: flex; flex-direction: column; justify-content: center; gap: 1.6cqh; }
+.en-btn {
+  display: flex; align-items: center; justify-content: center; gap: .8cqw; height: 10.5cqh; border-radius: 2.4cqh; border: .5cqh solid #0b1d3a; cursor: pointer;
+  font-size: 4.6cqh; font-weight: 800; color: #fff; -webkit-text-stroke: .25cqh #0b1d3a; paint-order: stroke fill; text-shadow: 0 .3cqh 0 #0006;
+}
+.en-btn img { height: 1.4em; width: auto; }
+.en-btn .tv { -webkit-text-stroke: 0; }
+.en-btn small { font-size: .72em; opacity: .9; }
+.en-btn.blue { background: linear-gradient(#7aa5d8, #3e6aa8); box-shadow: 0 .8cqh 0 #1d3557, inset 0 .5cqh 0 #ffffff55; }
+.en-btn.green { background: linear-gradient(#a5e05a, #4f9a18); box-shadow: 0 .8cqh 0 #24560a, inset 0 .5cqh 0 #ffffff55; }
+.en-btn.red { background: linear-gradient(#f05a50, #b3231c); box-shadow: 0 .8cqh 0 #5a120c, inset 0 .5cqh 0 #ffffff44; }
+.en-btn:disabled { filter: grayscale(.8) brightness(.8); cursor: default; }
+.en-btn:not(:disabled):active { translate: 0 .5cqh; box-shadow: 0 .3cqh 0 #0008; }
+.en-rule { grid-column: 1 / -1; margin: 0; padding: 1.2cqh 0; background: #ffffff1a; text-align: center; font-size: 3.8cqh; font-weight: 700; color: #fff6c8; }
+@media (prefers-reduced-motion: reduce) { .en-heart, .en-frame { animation: none; } }
+/* 일시정지 팝업 — 수사 생명력 팝업(.en-*)과 같은 틀 */
+.en-frame.pause .en-body { grid-template-columns: 34% 1fr; }
+.pz-status { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4cqh 1.4cqw; align-content: center; }
+.pz-stat { display: flex; flex-direction: column; align-items: center; gap: .3cqh; padding: 1cqh 0; border-radius: 1.6cqh; background: #0b2a6a55; }
+.pz-stat small { font-size: 3.4cqh; color: #cfe3ff; }
+.pz-stat b { font-size: 5.2cqh; color: #ffe680; -webkit-text-stroke: .2cqh #3a1d00; paint-order: stroke fill; }
+.pz-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6cqh 1.6cqw; align-content: center; }
+.pz-actions .en-btn.wide { grid-column: 1 / -1; }
+.pz-actions .en-btn { font-size: 4.2cqh; white-space: nowrap; height: 9.5cqh; }
+.pz-actions .en-btn.red { grid-column: 1 / -1; }

@@ -867,27 +867,50 @@
   setInterval(updateEnergyHud, 1000);
   $('#sbEnergy').onclick = () => openEnergyPanel();
 
+  // 수사 생명력(하트) 팝업 — frame_resume.webp(파란 패널 + 고양이) · 제목 글씨 txt_energy_title.webp (Higgsfield)
+  //   왼쪽: 하트 5칸 · 상태(무한 하트 / n/5) · 남은 시간   오른쪽: [골드로 완충] [광고 +1칸] [무한 하트 팩] [닫기]   아래: 규칙 안내
+  function energyPage(st, adCheck) {
+    const A = 'game_assets/';
+    const { MAX, GOLD_REFILL_COST, AD_REFILL_AMOUNT, AD_DAILY_LIMIT } = TP.ENERGY;
+    const hearts = Array.from({ length: MAX }, (_, i) =>
+      `<img class="${st.infinite ? 'gold' : i < st.energy ? 'on' : 'off'}" src="${A}${st.infinite || i < st.energy ? 'icon_heart' : 'icon_heart_empty'}.webp" alt="">`).join('');
+    const timer = st.infinite ? `무한 하트 남은 시간 <b>${TP.formatDuration(st.infiniteLeftMs)}</b>`
+      : st.full ? '생명력이 가득 찼어요'
+      : `다음 1칸 <b>${TP.formatDuration(st.nextInMs)}</b> · 완충까지 <b>${TP.formatDuration(st.fullInMs)}</b>`;
+    const page = document.createElement('div');
+    page.className = 'en-popup';
+    page.style.zIndex = 98600;
+    page.innerHTML = `
+      <div class="en-frame" role="dialog" aria-modal="true" aria-label="수사 생명력" data-no-icons>
+        <div class="en-head"><img class="en-heart" src="${A}icon_heart.webp" alt=""><img class="en-title" src="${A}txt_energy_title.webp" alt="수사생명력"></div>
+        <div class="en-body">
+          <div class="en-status">
+            <div class="en-hearts">${hearts}</div>
+            <p class="en-big">${st.infinite ? `<img src="${A}icon_infinite_heart.webp" alt=""><span>무한 하트</span>` : `<b>${st.energy}</b> / ${MAX}`}</p>
+            <p class="en-timer">${timer}</p>
+          </div>
+          <div class="en-actions">
+            <button class="en-btn blue" data-v="gold" ${st.full ? 'disabled' : ''}><img src="${A}icon_gold.webp" alt="">${GOLD_REFILL_COST} 골드로 즉시 완충</button>
+            <button class="en-btn blue" data-v="ad" ${adCheck.ok ? '' : 'disabled'}><span class="tv">📺</span>광고 보고 +${AD_REFILL_AMOUNT}칸 <small>(오늘 ${st.adsLeftToday}/${AD_DAILY_LIMIT}회 남음)</small></button>
+            <button class="en-btn green" data-v="shop"><img src="${A}icon_infinite_heart.webp" alt="">무한 하트 팩 보기</button>
+            <button class="en-btn red" data-v="close">닫기</button>
+          </div>
+          <p class="en-rule">스테이지 입장 시 1칸 소모 (성공해도 돌아오지 않아요) · 20분마다 1칸 충전</p>
+        </div>
+      </div>`;
+    TP.ui.root().append(page);
+    TP.audio.sfx('popup');
+    return new Promise(resolve => {
+      page.querySelectorAll('.en-btn').forEach(b => { b.onclick = () => { TP.audio.sfx('click'); page.remove(); resolve(b.dataset.v); }; });
+      page.addEventListener('click', e => { if (e.target === page) { page.remove(); resolve('close'); } });
+    });
+  }
+
   async function openEnergyPanel() {
     const st = energy.status();
-    const { MAX, GOLD_REFILL_COST, AD_REFILL_AMOUNT, AD_DAILY_LIMIT } = TP.ENERGY;
+    const { MAX, AD_REFILL_AMOUNT } = TP.ENERGY;
     const adCheck = energy.canRefillWithAd();
-    const pips = Array.from({ length: MAX }, (_, i) => `<span class="pip ${i < st.energy ? 'on' : ''}">❤️</span>`).join('');
-    const choice = await showDialog({
-      title: '❤️ 수사 생명력',
-      className: 'energy-panel',
-      body: `
-        <div class="energy-pips">${pips}</div>
-        <p class="energy-big">${st.infinite ? '♾️ 무한 하트' : `${st.energy} / ${MAX}`}</p>
-        <p class="small">${st.infinite ? `무한 하트 남은 시간 ${TP.formatDuration(st.infiniteLeftMs)}`
-          : st.full ? '생명력이 가득 찼어요' : `다음 1칸 ${TP.formatDuration(st.nextInMs)} · 완충까지 ${TP.formatDuration(st.fullInMs)}`}</p>
-        <p class="small">스테이지 입장 시 1칸 소모 (성공해도 돌아오지 않아요) · 20분마다 1칸 충전</p>`,
-      buttons: [
-        { label: `🪙 ${GOLD_REFILL_COST} 골드로 즉시 완충`, value: 'gold', cls: 'primary', disabled: st.full },
-        { label: `📺 광고 보고 +${AD_REFILL_AMOUNT}칸 <small>(오늘 ${st.adsLeftToday}/${AD_DAILY_LIMIT}회 남음)</small>`, value: 'ad', disabled: !adCheck.ok },
-        { label: '🛒 무한 하트 팩 보기', value: 'shop' },
-        { label: '닫기', value: 'close', cls: 'ghost' },
-      ],
-    });
+    const choice = await energyPage(st, adCheck);
     if (choice === 'gold') {
       const r = energy.refillWithGold();
       if (r.ok) toast(`❤️ 수사 생명력 완충! 🪙 -${r.cost}`);
@@ -1221,21 +1244,49 @@
   }
 
   // 설정 · 일시정지 메뉴 (트라이픽스는 시간 제한이 없어, 메뉴가 열린 동안 입력만 막으면 된다)
+  // 일시정지 팝업 — 수사 생명력 팝업과 같은 디자인 (frame_resume.webp · 제목 글씨 txt_pause_title.webp, Higgsfield)
+  //   왼쪽: 판 상태(스테이지 · 배수 · 남은 카드 · 덱)   오른쪽: 버튼 2열   아래: 안내
+  function pausePage({ inGame, running }) {
+    const A = 'game_assets/';
+    const g = view.game;
+    const stat = (label, value) => `<div class="pz-stat"><small>${label}</small><b>${value}</b></div>`;
+    const btn = (v, cls, icon, label) => `<button class="en-btn ${cls}" data-v="${v}">${icon}${label}</button>`;
+    const page = document.createElement('div');
+    page.className = 'en-popup';
+    page.style.zIndex = 98600;
+    page.innerHTML = `
+      <div class="en-frame pause" role="dialog" aria-modal="true" aria-label="일시정지" data-no-icons>
+        <div class="en-head"><img class="en-title" src="${A}txt_pause_title.webp" alt="일시정지"></div>
+        <div class="en-body">
+          <div class="en-status pz-status">
+            ${running && run ? `
+              ${stat('스테이지', run.stage ? `STAGE ${run.stage}` : '자유 플레이')}
+              ${stat('배수', `×${run.mult}`)}
+              ${stat('남은 카드', `${g.remaining}장`)}
+              ${stat('덱', `${g.stockCount}장`)}` : '<p class="en-timer">진행 중인 판이 없어요</p>'}
+          </div>
+          <div class="en-actions pz-actions">
+            ${btn('resume', 'green wide', '▶ ', '계속하기')}
+            ${btn('notebook', 'blue', `<img src="${A}icons/notebook.webp" alt="">`, '탐정 수첩')}
+            ${btn('shop', 'blue', `<img src="${A}btn_shop.webp" alt="">`, '상점')}
+            ${btn('settings', 'blue', `<img src="${A}btn_settings.webp" alt="">`, '설정')}
+            ${inGame ? btn('lobby', 'blue', `<img src="${A}icons/home.webp" alt="">`, '로비로 나가기') : ''}
+            ${running ? btn('giveup', 'red', '', '스테이지 포기') : ''}
+          </div>
+          <p class="en-rule">${running ? '로비로 나가거나 포기하면 이 판은 실패 처리되고 입장료는 돌아오지 않아요' : '트라이픽스는 시간 제한이 없어요 — 천천히 생각해도 돼요'}</p>
+        </div>
+      </div>`;
+    TP.ui.root().append(page);
+    TP.audio.sfx('popup');
+    return new Promise(resolve => {
+      page.querySelectorAll('.en-btn').forEach(b => { b.onclick = () => { TP.audio.sfx('click'); page.remove(); resolve(b.dataset.v); }; });
+      page.addEventListener('click', e => { if (e.target === page) { page.remove(); resolve('resume'); } });
+    });
+  }
+
   async function settingsMenu() {
     const inGame = $('#stage').dataset.screen === 'game';
-    const choice = await showDialog({
-      title: inGame ? '⏸ 일시정지' : '⚙ 설정',
-      className: 'pause-menu',
-      body: activeRun() ? `<p class="small">남은 카드 ${view.game.remaining}장 · 덱 ${view.game.stockCount}장</p>` : '',
-      buttons: [
-        { label: '▶ 계속하기', value: 'resume', cls: 'primary' },
-        { label: '📓 탐정 수첩', value: 'notebook' },
-        { label: '🛒 상점', value: 'shop' },
-        { label: '⚙ 설정', value: 'settings' },
-        ...(inGame ? [{ label: '🏠 로비로 나가기', value: 'lobby' }] : []),
-        ...(activeRun() ? [{ label: '스테이지 포기', value: 'giveup', cls: 'danger-link' }] : []),
-      ],
-    });
+    const choice = await pausePage({ inGame, running: !!activeRun() });
     if (choice === 'notebook') notebook.open();
     else if (choice === 'shop') openShop();
     else if (choice === 'settings') app.openSettings();

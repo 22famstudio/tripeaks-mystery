@@ -45,6 +45,7 @@
   align-items: center;
   justify-content: center;
   pointer-events: none;
+  isolation: isolate;                           /* 카드 겹침 순서(--z, 앞면 +1000)를 보드 안에 가둔다 — 일시정지 · 팝업 위로 카드가 올라오지 않게 */
 }
 .board-area .tableau {
   position: relative;
