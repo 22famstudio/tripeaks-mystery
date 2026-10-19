@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>상점 프로토타입 — Crime Scene 선반</title>
+<!-- 프로토타입 전용: Tailwind CDN (게임 본체에 넣을 때는 css/shop-crime.css 로 분리) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+/* 게임 본체와 같은 폰트 (game_assets/fonts). 한글 = 나눔스퀘어, 영문 · 숫자 = Luckiest Guy */
+@font-face { font-family: 'NanumSquare'; src: url('../../game_assets/fonts/NanumSquareR.ttf') format('truetype'); font-weight: 100 549; }
+@font-face { font-family: 'NanumSquare'; src: url('../../game_assets/fonts/NanumSquareB.ttf') format('truetype'); font-weight: 550 749; }
+@font-face { font-family: 'NanumSquare'; src: url('../../game_assets/fonts/NanumSquareEB.ttf') format('truetype'); font-weight: 750 1000; }
+@font-face { font-family: 'Luckiest Guy'; src: url('../../game_assets/fonts/LuckiestGuy-Regular.ttf') format('truetype'); font-display: swap; }
+/* =====================================================================
+   디자인 토큰 (design/shop/tokens.json 과 같은 값)
+   ===================================================================== */
+:root {
+  --bg-wall: #1f2a33; --bg-wall-deep: #121a21; --bg-brick: #3b2f2a; --bg-brick-mortar: #2a211d; --bg-night: #3a5168;
+  --steel-base: #5d6871; --steel-light: #8c979f; --steel-dark: #2e363c; --steel-rust: #7a4b2b; --rivet: #b9c2c8; --rivet-shadow: #1b2126;
+  --paper-base: #e9d7b4; --paper-light: #f5e9cf; --paper-shadow: #c7b08a; --paper-ink: #2a1d12; --paper-tab: #efe2c4; --paper-tab-active: #f8f0dc;
+  --neon-yellow: #ffd43a; --neon-yellow-core: #fff6b0; --neon-yellow-glow: rgba(255,212,58,.75); --neon-warm-glow: rgba(255,180,60,.35);
+  --tape-yellow: #f5c518; --tape-black: #111; --tape-ink: #1a1a1a;
+  --green: #3fa524; --green-light: #7ed84a; --green-ink: #0d3d08; --red: #c93333; --red-light: #ff6b5b; --gold: #ffcf5a; --gold-deep: #c98a12;
+  --text-on-dark: #f3ead8; --text-muted: #9aa4ab; --lamp-bulb: #ffe08a; --lamp-core: #fff8dd; --lamp-cage: #6b5a44;
+  --font-display: 'Luckiest Guy', 'NanumSquare', cursive;
+  --font-body: 'Luckiest Guy', 'NanumSquare', 'Noto Sans KR', system-ui, sans-serif;
+  /* 머티리얼 */
+  --mat-steel: repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0 2px, rgba(0,0,0,.05) 2px 4px), linear-gradient(var(--steel-light), var(--steel-base) 40%, var(--steel-dark));
+  --mat-paper: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.35), transparent 55%), radial-gradient(ellipse at 70% 80%, rgba(120,90,40,.12), transparent 60%), linear-gradient(var(--paper-light), var(--paper-base));
+  --mat-brick: repeating-linear-gradient(0deg, var(--bg-brick-mortar) 0 2px, transparent 2px 22px), repeating-linear-gradient(90deg, var(--bg-brick-mortar) 0 2px, transparent 2px 46px), linear-gradient(var(--bg-brick), #2d2320);
+  --mat-tape: repeating-linear-gradient(45deg, var(--tape-yellow) 0 24px, var(--tape-black) 24px 48px);
+  /* 그림자 */
+  --sh-neon-text: 0 0 6px var(--neon-yellow-core), 0 0 14px var(--neon-yellow), 0 0 28px var(--neon-yellow-glow), 0 0 48px var(--neon-warm-glow);
+  --sh-neon-box: 0 0 0 2px var(--neon-yellow), 0 0 14px 2px var(--neon-yellow-glow), inset 0 0 10px var(--neon-warm-glow);
+  --sh-steel: inset 0 2px 0 var(--steel-light), inset 0 -3px 0 var(--steel-dark), 0 4px 0 var(--steel-dark), 0 8px 14px rgba(0,0,0,.6);
+  --sh-paper: 0 3px 0 var(--paper-shadow), 0 6px 10px rgba(0,0,0,.55);
+  --sh-paper-inset: inset 0 1px 0 var(--paper-light), inset 0 -8px 12px rgba(120,90,40,.18);
+  --sh-shelf: inset 0 3px 0 var(--steel-light), inset 0 -4px 0 var(--steel-dark), 0 10px 18px rgba(0,0,0,.7);
+  --sh-lamp: 0 0 20px 8px rgba(255,224,138,.55), 0 0 60px 30px rgba(255,200,90,.25);
+}
+
+/* ---------- 16:9 스테이지 (게임 본체와 같은 방식) ---------- */
+html, body { margin: 0; height: 100%; background: #000; font-family: var(--font-body); color: var(--text-on-dark); overflow: hidden; }
+.stage {
+  position: fixed; inset: 0; margin: auto;
+  width: min(100vw, calc(100vh * 16 / 9)); height: min(100vh, calc(100vw * 9 / 16));
+  container-type: size; overflow: hidden;
+  background: radial-gradient(ellipse at 50% 30%, var(--bg-night) 0%, var(--bg-wall) 45%, var(--bg-wall-deep) 100%);
+}
+.rotate-hint { display: none; position: fixed; inset: 0; z-index: 99; place-items: center; background: #000e; color: #fff; font-size: 20px; }
+@media (orientation: portrait) and (max-width: 700px) { .rotate-hint { display: grid; } }
+
+/* ---------- 벽 · 외곽 철제 프레임 ---------- */
+.wall { position: absolute; inset: 0; background: var(--mat-brick); opacity: .55; mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 85%); -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 85%); }
+.frame { position: absolute; inset: 1.5cqh 1.2cqw; border: 1.6cqh solid transparent; border-image: var(--mat-steel) 1; box-shadow: inset 0 0 0 2px var(--steel-dark), 0 0 0 2px var(--steel-dark); pointer-events: none; }
+.rivet { position: absolute; width: 1.6cqh; height: 1.6cqh; border-radius: 50%; background: radial-gradient(circle at 35% 35%, var(--rivet), var(--steel-base) 55%, var(--rivet-shadow)); box-shadow: 0 1px 2px #000a; }
+.rivet::after { content: ''; position: absolute; left: 20%; right: 20%; top: 45%; height: 10%; background: var(--rivet-shadow); rotate: 35deg; border-radius: 1px; }
+.frame .rivet { position: absolute; }
+.frame .rivet.tl { left: -.6cqh; top: -.6cqh; } .frame .rivet.tr { right: -.6cqh; top: -.6cqh; } .frame .rivet.bl { left: -.6cqh; bottom: -.6cqh; } .frame .rivet.br { right: -.6cqh; bottom: -.6cqh; }
+
+/* ---------- 폴리스 라인 ---------- */
+.tape { position: absolute; z-index: 3; height: 6cqh; width: 60cqh; background: var(--mat-tape); box-shadow: 0 4px 10px #000a; pointer-events: none; overflow: hidden; display: flex; align-items: center; }
+.tape span { white-space: nowrap; font-family: var(--font-display); font-size: 3.6cqh; color: var(--tape-ink); letter-spacing: .12em; padding-left: 1cqw; text-shadow: 0 0 2px var(--tape-yellow), 0 0 2px var(--tape-yellow); animation: tape-scroll 14s linear infinite; }
+.tape span::before { content: 'CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS · '; }
+.tape.left { left: -27cqh; top: 30cqh; rotate: -72deg; }
+.tape.right { right: -27cqh; top: 22cqh; rotate: 68deg; }
+.tape.top { left: 60cqw; top: -1cqh; width: 26cqw; height: 4.2cqh; rotate: -6deg; z-index: 2; }
+.tape.top span { font-size: 2.6cqh; }
+@keyframes tape-scroll { to { transform: translateX(-33%); } }
+
+/* ---------- 상단: 네온 간판 · 탭 · 닫기 ---------- */
+.topbar { position: absolute; left: 3.5cqw; right: 3.5cqw; top: 3cqh; height: 12cqh; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 2cqw; z-index: 4; }
+.sign { position: relative; padding: 1.2cqh 2.4cqw; background: var(--mat-steel); border-radius: 4px; box-shadow: var(--sh-steel); rotate: -2deg; }
+.sign b { font-family: var(--font-display); font-size: clamp(28px, 9cqh, 64px); line-height: 1; color: var(--neon-yellow-core); -webkit-text-stroke: 1.5px var(--neon-yellow); text-shadow: var(--sh-neon-text); animation: neon-flicker 6s infinite; letter-spacing: .06em; }
+.sign .rivet { position: absolute; } .sign .rivet.tl { left: .6cqh; top: .6cqh; } .sign .rivet.tr { right: .6cqh; top: .6cqh; } .sign .rivet.bl { left: .6cqh; bottom: .6cqh; } .sign .rivet.br { right: .6cqh; bottom: .6cqh; }
+@keyframes neon-flicker { 0%, 100% { opacity: 1; } 3% { opacity: .78; } 6% { opacity: 1; } 55% { opacity: .92; } 57% { opacity: 1; } }
+
+.tabs { display: flex; justify-content: center; align-items: flex-end; gap: 1.6cqw; }
+.tab {
+  position: relative; height: 8.5cqh; padding: 0 1.8cqw; display: flex; align-items: center; white-space: nowrap;
+  background: var(--mat-paper), var(--paper-tab); border: 1px solid var(--paper-shadow); border-radius: 4px 4px 2px 2px;
+  box-shadow: var(--sh-paper), var(--sh-paper-inset); color: var(--paper-ink); font-weight: 900; font-size: clamp(12px, 3.8cqh, 22px);
+  cursor: pointer; transition: transform .12s, box-shadow .12s; user-select: none;
+}
+.tab:nth-child(odd) { rotate: -1.5deg; } .tab:nth-child(even) { rotate: 1deg; }
+.tab::before { /* 클립보드 집게 */ content: ''; position: absolute; left: 50%; top: -1.3cqh; translate: -50% 0; width: 3.2cqw; height: 2cqh; border-radius: 3px 3px 1px 1px; background: var(--mat-steel); box-shadow: 0 2px 0 var(--steel-dark), inset 0 1px 0 var(--steel-light); }
+.tab small { position: absolute; left: .6cqw; top: -2.6cqh; font-size: 1.9cqh; font-weight: 700; color: var(--text-on-dark); opacity: .7; }
+.tab:hover { transform: translateY(-2px); }
+.tab:active { transform: translateY(2px); }
+.tab.on { rotate: 0deg; transform: translateY(-3px); background: var(--mat-paper), var(--paper-tab-active); box-shadow: var(--sh-neon-box), var(--sh-paper); }
+.tab.on::before { background: linear-gradient(var(--gold), var(--gold-deep)); }
+
+.close-btn { width: 8cqh; height: 8cqh; border-radius: 50%; border: 0; background: radial-gradient(circle at 35% 35%, var(--steel-light), var(--steel-base) 50%, var(--steel-dark)); box-shadow: var(--sh-steel); color: var(--text-on-dark); font-family: var(--font-display); font-size: 4.5cqh; cursor: pointer; }
+.close-btn:active { transform: translateY(2px); }
+
+/* ---------- 선반 2단 ---------- */
+.shelves { position: absolute; left: 7cqw; right: 9cqw; top: 16.5cqh; bottom: 3cqh; display: grid; grid-template-rows: 1fr 1fr; gap: 1cqh; z-index: 4; }
+.shelf { position: relative; display: flex; flex-direction: column; justify-content: flex-end; }
+.products { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.2cqw; align-items: end; padding: 0 1cqw; }
+.shelf-beam { position: relative; height: 4cqh; margin-top: -.6cqh; background: var(--mat-steel); box-shadow: var(--sh-shelf); border-radius: 2px; }
+.shelf-beam::after { content: ''; position: absolute; left: 1%; right: 1%; top: 100%; height: 3cqh; background: linear-gradient(#000a, #0000); }
+.shelf-beam .rivet { position: absolute; top: 50%; translate: 0 -50%; }
+.shelf-beam .rivet:nth-child(1) { left: 1.2cqw; } .shelf-beam .rivet:nth-child(2) { left: 33%; } .shelf-beam .rivet:nth-child(3) { left: 66%; } .shelf-beam .rivet:nth-child(4) { right: 1.2cqw; }
+
+/* ---------- 상품 카드 ---------- */
+.product { position: relative; display: flex; flex-direction: column; align-items: center; gap: .3cqh; padding-bottom: .8cqh; }
+.product-icon { height: 10cqh; width: auto; max-width: 100%; object-fit: contain; filter: drop-shadow(0 6px 6px #000a); transition: transform .15s; }
+.product:hover .product-icon { transform: translateY(-3px) scale(1.03); }
+.product-icon.placeholder { /* 아이콘 파일이 없을 때 자리 표시 (실제 에셋이 들어오면 사라짐) */ width: 18cqw; display: grid; place-items: center; background: radial-gradient(circle, #ffcf5a33, transparent 70%); border: 2px dashed #ffcf5a55; border-radius: 12px; color: #ffcf5a; font-size: 2.6cqh; text-align: center; padding: 1cqh; }
+.glow { position: absolute; left: 50%; top: 1cqh; width: 18cqw; height: 10cqh; translate: -50% 0; background: radial-gradient(ellipse, rgba(255,207,90,.28), transparent 65%); pointer-events: none; }
+.sparkle { position: absolute; color: var(--neon-yellow-core); font-size: 2.6cqh; text-shadow: 0 0 6px var(--neon-yellow); animation: twinkle 2.4s ease-in-out infinite; pointer-events: none; }
+@keyframes twinkle { 50% { opacity: .2; transform: scale(.6); } }
+
+.price-paper {
+  position: relative; width: min(21cqw, 180px); padding: .8cqh 1cqw .7cqh; text-align: center;
+  background: var(--mat-paper); border-radius: 6px; box-shadow: var(--sh-paper), var(--sh-paper-inset); color: var(--paper-ink);
+}
+.product:nth-child(odd) .price-paper { rotate: -1.2deg; } .product:nth-child(even) .price-paper { rotate: 1deg; }
+.price-paper::before { /* 테이프 조각 */ content: ''; position: absolute; left: 50%; top: -1.1cqh; translate: -50% 0; rotate: -3deg; width: 5cqw; height: 2cqh; background: rgba(255,255,255,.45); box-shadow: 0 1px 2px #0004; }
+.price-paper .name { font-weight: 900; font-size: clamp(11px, 3.2cqh, 18px); }
+.price-paper .gold { display: flex; align-items: center; justify-content: center; gap: .5cqw; margin: .2cqh 0 .4cqh; font-family: var(--font-display); font-size: clamp(14px, 4cqh, 26px); color: var(--paper-ink); }
+.coin { display: inline-block; width: 3.4cqh; height: 3.4cqh; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff2b0, var(--gold) 45%, var(--gold-deep)); box-shadow: inset 0 -2px 0 #0003, 0 1px 2px #0006; }
+.bonus { display: inline-block; padding: .15em .9em; border-radius: 999px; background: linear-gradient(var(--green-light), var(--green)); border: 2px solid var(--green-ink); color: #fff; font-weight: 900; font-size: clamp(10px, 2.8cqh, 15px); text-shadow: 0 1px 0 #0006; }
+.bonus.none { background: linear-gradient(#777, #4a4a4a); border-color: #222; }
+
+.buy-btn {
+  position: relative; min-width: 13cqw; padding: 0 2.4cqw; height: 5.8cqh; border: 0; border-radius: 4px; cursor: pointer;
+  background: var(--mat-steel); box-shadow: var(--sh-steel); color: var(--text-on-dark);
+  font-family: var(--font-display); font-size: clamp(13px, 3.8cqh, 24px); letter-spacing: .04em; text-shadow: 0 2px 0 #000a;
+  transition: filter .12s, transform .08s;
+}
+.buy-btn::before, .buy-btn::after { content: ''; position: absolute; top: 50%; translate: 0 -50%; width: 1.4cqh; height: 1.4cqh; border-radius: 50%; background: radial-gradient(circle at 35% 35%, var(--rivet), var(--steel-base) 55%, var(--rivet-shadow)); }
+.buy-btn::before { left: .8cqw; } .buy-btn::after { right: .8cqw; }
+.buy-btn:hover { filter: brightness(1.15); }
+.buy-btn:active { transform: translateY(3px); box-shadow: inset 0 2px 0 var(--steel-light), 0 1px 0 var(--steel-dark); }
+.buy-btn.paper { background: var(--mat-paper); color: var(--paper-ink); box-shadow: var(--sh-paper); text-shadow: none; }   /* 시안 1번 상품의 종이 가격 */
+.buy-btn.paper::before, .buy-btn.paper::after { display: none; }
+
+.badge-best { position: absolute; left: 50%; top: -1cqh; translate: -50% 0; rotate: -4deg; z-index: 2; padding: .2em 1.2em; border-radius: 999px; background: linear-gradient(var(--red-light), var(--red)); border: 2px solid #fff; color: #fff; font-weight: 900; font-size: clamp(11px, 3cqh, 16px); box-shadow: 0 3px 0 #6b1010, 0 5px 8px #0008; }
+.badge-scene { position: absolute; left: 50%; top: -2.2cqh; translate: -50% 0; rotate: -5deg; z-index: 2; padding: .15em 1em; background: var(--tape-yellow); border: 2px solid var(--tape-black); color: var(--tape-ink); font-family: var(--font-display); font-size: clamp(10px, 2.6cqh, 14px); letter-spacing: .08em; }
+
+/* ---------- 램프 · 케이블 ---------- */
+.lamp { position: absolute; right: 1.6cqw; top: 15cqh; width: 6cqw; height: 15cqh; z-index: 5; pointer-events: none; }
+.lamp .cord { position: absolute; left: 50%; top: -12cqh; width: 3px; height: 13cqh; background: var(--lamp-cage); translate: -50% 0; }
+.lamp .cage { position: absolute; inset: 1cqh 0 0; border: 3px solid var(--lamp-cage); border-radius: 40% 40% 50% 50% / 30% 30% 60% 60%; background: repeating-linear-gradient(90deg, transparent 0 22%, var(--lamp-cage) 22% 25%); }
+.lamp .ring { position: absolute; left: 0; right: 0; height: 3px; background: var(--lamp-cage); } .lamp .ring.a { top: 5cqh; } .lamp .ring.b { top: 10cqh; }
+.lamp .bulb { position: absolute; left: 50%; top: 6cqh; width: 3.4cqw; height: 7cqh; translate: -50% 0; border-radius: 50% 50% 48% 48% / 40% 40% 60% 60%; background: radial-gradient(circle at 50% 60%, var(--lamp-core), var(--lamp-bulb) 55%, #e2b35a); box-shadow: var(--sh-lamp); animation: breathe 2.5s ease-in-out infinite; }
+.lamp .light { position: absolute; left: -16cqw; right: -6cqw; top: 8cqh; height: 40cqh; background: radial-gradient(ellipse at 70% 0%, rgba(255,210,110,.22), transparent 60%); }
+@keyframes breathe { 50% { filter: brightness(.92); } }
+.cable { position: absolute; z-index: 2; height: 3px; background: var(--steel-dark); border-radius: 2px; box-shadow: 0 1px 0 #000a; pointer-events: none; }
+
+@media (prefers-reduced-motion: reduce) { .sign b, .lamp .bulb, .tape span, .sparkle { animation: none; } }
+@container (max-width: 700px) { .tab { padding: 0 1.4cqw; } .tab small { display: none; } .badge-best { font-size: 10px; } }
+</style>
+</head>
+<body>
+<div class="rotate-hint">📱↻ 기기를 가로로 돌려 주세요</div>
+
+<div class="stage" id="stage">
+  <div class="wall"></div>
+  <!-- 외곽 철제 빔 + 모서리 나사 -->
+  <div class="frame"><i class="rivet tl"></i><i class="rivet tr"></i><i class="rivet bl"></i><i class="rivet br"></i></div>
+  <!-- 천장 케이블 (장식) -->
+  <div class="cable" style="left: 20cqw; top: 2.2cqh; width: 60cqw; rotate: .4deg;"></div>
+  <div class="cable" style="left: 55cqw; top: 3.6cqh; width: 40cqw; rotate: -.6deg;"></div>
+
+  <!-- 폴리스 라인: 좌 · 우 · 상품 위 -->
+  <div class="tape left" aria-hidden="true"><span></span></div>
+  <div class="tape right" aria-hidden="true"><span></span></div>
+
+  <!-- 상단: 네온 간판 · 탭 · 닫기 -->
+  <header class="topbar">
+    <div class="sign"><b>상점</b><i class="rivet tl"></i><i class="rivet tr"></i><i class="rivet bl"></i><i class="rivet br"></i></div>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="상품 카테고리"></nav>
+    <button class="close-btn" aria-label="닫기">✕</button>
+  </header>
+
+  <!-- 선반 2단 -->
+  <main class="shelves" id="shelves">
+    <section class="shelf"><div class="products" id="row1"></div><div class="shelf-beam"><i class="rivet"></i><i class="rivet"></i><i class="rivet"></i><i class="rivet"></i></div></section>
+    <section class="shelf"><div class="products" id="row2"></div><div class="shelf-beam"><i class="rivet"></i><i class="rivet"></i><i class="rivet"></i><i class="rivet"></i></div></section>
+  </main>
+
+  <!-- 빈티지 알전구 램프 -->
+  <div class="lamp" aria-hidden="true"><div class="cord"></div><div class="light"></div><div class="cage"></div><div class="ring a"></div><div class="ring b"></div><div class="bulb"></div></div>
+</div>
+
+<script>
+// 상품 데이터: 게임 본체 js/shop.js 의 TP.SHOP_PRODUCTS 구조 ({ id, category, name, price, rewards:{gold}, bonusPct, tag })
+// 아이콘은 src="assets/shop/<id>.png" — 기존 에셋을 이 경로에 두면 그대로 보인다.
+const CATEGORIES = [
+  { id: 'starter', name: '스타터/특가', memo: '한정 특가' },
+  { id: 'coin', name: '골드 코인' },
+  { id: 'chance', name: '찬스 팩', memo: '찬스 코인' },
+  { id: 'hint', name: '힌트권' },
+  { id: 'noads', name: '광고 제거' },
+];
+const PRODUCTS = [
+  // 골드 코인 — 시안 8종
+  { id: 'coin_tier_01', category: 'coin', name: '동전 주머니', price: 0.99, rewards: { gold: 1000 }, bonusPct: 0, paper: true,
+    todo: "Higgsfield에서 '범죄 테마에 맞는 동전 주머니 아이콘(가죽 주머니 · 금화)' 생성 후 교체" },
+  { id: 'coin_tier_02', category: 'coin', name: '골드 주머니', price: 1.99, rewards: { gold: 2200 }, bonusPct: 10,
+    todo: "Higgsfield에서 '동전이 넘치는 가죽 주머니' 생성 후 교체" },
+  { id: 'coin_tier_03', category: 'coin', name: '골드 상자', price: 4.99, rewards: { gold: 6000 }, bonusPct: 20, scene: true,
+    todo: "Higgsfield에서 '열린 나무 보물 상자(증거 태그 달림)' 생성 후 교체" },
+  { id: 'coin_tier_04', category: 'coin', name: '골드 자루', price: 9.99, rewards: { gold: 13500 }, bonusPct: 35,
+    todo: "Higgsfield에서 '금화 가득한 큰 나무 상자' 생성 후 교체" },
+  { id: 'coin_tier_05', category: 'coin', name: '골드 궤짝', price: 12.99, rewards: { gold: 18000 }, bonusPct: 35,
+    todo: "Higgsfield에서 '은빛 철제 궤짝 속 금화' 생성 후 교체" },
+  { id: 'coin_tier_06', category: 'coin', name: '골드 금고', price: 19.99, rewards: { gold: 25000 }, bonusPct: 40, best: true,
+    todo: "Higgsfield에서 '범죄 테마에 맞는 금고 아이콘(다이얼 금고 문이 열려 금화가 쏟아짐)' 생성 후 교체" },
+  { id: 'coin_tier_07', category: 'coin', name: '대형 금고', price: 49.99, rewards: { gold: 55000 }, bonusPct: 50,
+    todo: "Higgsfield에서 '은행 금고 문 + 금괴 · 금화' 생성 후 교체" },
+  { id: 'coin_tier_08', category: 'coin', name: '증거 보관고', price: 99.99, rewards: { gold: 100000 }, bonusPct: 60,
+    todo: "Higgsfield에서 '열린 강철 캐비닛에서 금화가 쏟아지는 장면' 생성 후 교체" },
+  // 나머지 탭 — 게임 본체 상품을 그대로 옮긴 샘플 (아이콘은 기존 pack_*.png 를 assets/shop/ 로 복사)
+  { id: 'starter_novice', category: 'starter', name: '초보 탐정 스타터팩', price: 2.99, rewards: { gold: 3000, undo: 5, wild: 2 }, tag: '2.3배 혜택' },
+  { id: 'starter_elite', category: 'starter', name: '엘리트 탐정 스타터팩', price: 4.99, rewards: { gold: 6000, undo: 10, wild: 4, hint: 2 }, tag: '3.2배 혜택', best: true },
+  { id: 'chance_mini', category: 'chance', name: '미니 찬스 팩', price: 0.99, rewards: { undo: 5, wild: 2 } },
+  { id: 'chance_standard', category: 'chance', name: '스탠다드 찬스 팩', price: 2.99, rewards: { undo: 15, wild: 6 } },
+  { id: 'chance_pro', category: 'chance', name: '프로 찬스 팩', price: 6.99, rewards: { undo: 40, wild: 15 }, best: true },
+  { id: 'chance_bulk', category: 'chance', name: '대용량 찬스 팩', price: 12.99, rewards: { undo: 110, wild: 15 } },
+  { id: 'hint_single', category: 'hint', name: '힌트권 1장', price: 250, currency: 'GOLD', rewards: { hint: 1 } },
+  { id: 'hint_trio', category: 'hint', name: '힌트권 3장 묶음', price: 600, currency: 'GOLD', rewards: { hint: 3 }, tag: '20% 할인' },
+  { id: 'hint_ten', category: 'hint', name: '힌트권 10장 묶음', price: 0.99, rewards: { hint: 10 } },
+  { id: 'hint_case', category: 'hint', name: '탐정 힌트 가방', price: 1.99, rewards: { hint: 15, gold: 1000 }, tag: 'BEST DEAL', best: true },
+  { id: 'noads_basic', category: 'noads', name: '광고 제거', price: 4.99, rewards: { removeAds: true } },
+  { id: 'noads_plus', category: 'noads', name: '광고 제거 플러스', price: 5.99, rewards: { removeAds: true, gold: 1000 } },
+  { id: 'noads_deluxe', category: 'noads', name: '광고 제거 디럭스', price: 7.99, rewards: { removeAds: true, gold: 2500, undo: 5 } },
+  { id: 'noads_vip', category: 'noads', name: '광고 제거 VIP', price: 11.99, rewards: { removeAds: true, gold: 6000, undo: 12, wild: 4 }, best: true },
+];
+let current = 'coin';
+const fmtPrice = p => p.currency === 'GOLD' ? `🪙 ${p.price.toLocaleString()}` : `$${p.price.toFixed(2)}`;
+const describe = r => [r.gold && `🪙 ${r.gold.toLocaleString()}`, r.undo && `↶ ×${r.undo}`, r.wild && `★ ×${r.wild}`, r.hint && `🎟 ×${r.hint}`, r.removeAds && '광고 제거'].filter(Boolean).join(' · ');
+
+function renderTabs() {
+  document.getElementById('tabs').innerHTML = CATEGORIES.map(c => `
+    <button class="tab ${c.id === current ? 'on' : ''}" role="tab" aria-selected="${c.id === current}" data-id="${c.id}">
+      ${c.memo ? `<small>${c.memo}</small>` : ''}${c.name}
+    </button>`).join('');
+}
+function productCard(p) {
+  const todo = p.todo ? `<!-- TODO: ${p.todo} -->` : '';
+  const isCoin = p.category === 'coin';
+  return `
+    <article class="product" data-id="${p.id}">
+      ${p.best ? '<span class="badge-best">베스트</span>' : ''}
+      ${p.scene ? '<span class="badge-scene">CRIME SCENE</span>' : ''}
+      <div class="glow"></div>
+      <i class="sparkle" style="left:12%; top:1cqh;">✦</i><i class="sparkle" style="right:14%; top:7cqh; animation-delay:.8s;">✦</i>
+      ${todo}
+      <!-- 아이콘: 기존 에셋을 assets/shop/<id>.png 로 두면 그대로 표시. 파일이 없으면 자리 표시 -->
+      <img class="product-icon" src="assets/shop/${p.id}.png" alt="${p.name}"
+           onerror="this.outerHTML='<div class=\\'product-icon placeholder\\'>${p.name}<br><small>assets/shop/${p.id}.png</small></div>'">
+      <div class="price-paper">
+        <div class="name">${p.name}</div>
+        ${isCoin ? `<div class="gold"><i class="coin"></i>${p.rewards.gold.toLocaleString()}</div>
+                    <span class="bonus ${p.bonusPct ? '' : 'none'}">${p.bonusPct ? `보너스 +${p.bonusPct}%` : '기본'}</span>`
+                 : `<div class="gold" style="font-size:clamp(12px,3.4cqh,18px)">${describe(p.rewards)}</div>
+                    ${p.tag ? `<span class="bonus">${p.tag}</span>` : ''}`}
+      </div>
+      <button class="buy-btn ${p.paper ? 'paper' : ''}">${fmtPrice(p)}</button>
+    </article>`;
+}
+function renderProducts() {
+  const list = PRODUCTS.filter(p => p.category === current);
+  document.getElementById('row1').innerHTML = list.slice(0, 4).map(productCard).join('');
+  document.getElementById('row2').innerHTML = list.slice(4, 8).map(productCard).join('');
+  // 상품이 4개 이하면 아래 선반은 비워 둔다 (빈 철제 선반도 세트의 일부)
+}
+document.getElementById('tabs').addEventListener('click', e => { const t = e.target.closest('.tab'); if (!t) return; current = t.dataset.id; renderTabs(); renderProducts(); });
+document.getElementById('shelves').addEventListener('click', e => { const b = e.target.closest('.buy-btn'); if (b) alert(`구매: ${b.closest('.product').dataset.id} (${b.textContent})`); });
+renderTabs(); renderProducts();
+</script>
+</body>
+</html>

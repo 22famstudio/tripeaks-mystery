@@ -1,0 +1,66 @@
+# =====================================================================
+# 트라이픽스 추리 솔리테어 — Git 에 올리지 않는 것
+# =====================================================================
+
+# ---- 의존성 (npm install 로 다시 받음) ----
+node_modules/
+
+# ---- 빌드 결과물 (npm run sync / gradlew 로 다시 만들 수 있음) ----
+build/
+mobile/www/
+mobile/android/.gradle/
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/app/release/
+mobile/android/capacitor-cordova-android-plugins/build/
+*.apk
+*.aab
+*.apks
+output-metadata.json
+
+# ---- 서명 키 · 비밀 값 (절대 올리지 말 것) ----
+*.keystore
+*.jks
+keystore.properties
+mobile/android/local.properties
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+# Firebase 등 클라이언트 설정에 키가 들어 있다면 (공개 저장소일 때)
+# google-services.json
+
+# ---- 에셋 원본 (tools/optimize_assets.py 가 프로젝트 바깥 ../assets_original_backup/ 로 옮김) ----
+# 바깥 폴더라 원래 추적되지 않지만, 실수로 안으로 복사됐을 때를 대비
+assets_original_backup/
+# 앱에 들어가지 않는 생성 원본 (옮기지 않고 프로젝트 안에 둘 때도 Git 에서 제외)
+game_assets/characters_background/
+game_assets/characters/
+game_assets/background/
+game_assets/sheets/
+game_assets/_replaced/
+game_assets/episodes/bg/
+game_assets/episodes/suspect/
+game_assets/sounds/bgm/
+
+# ---- 파이썬 ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ---- 에디터 · OS ----
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- 로그 · 임시 ----
+*.log
+npm-debug.log*
+*.tmp
+.claude/settings.local.json

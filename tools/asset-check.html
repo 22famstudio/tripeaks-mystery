@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>에셋 로드 검사</title>
+<style>
+  body { margin: 0; padding: 16px; font: 14px system-ui, sans-serif; background: #f6f3ee; color: #222; }
+  h1 { font-size: 1.2rem; margin: 0 0 4px; }
+  #summary { font-weight: 700; margin: 8px 0 12px; }
+  table { border-collapse: collapse; width: 100%; background: #fff; }
+  th, td { padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: left; vertical-align: middle; }
+  td img { max-width: 48px; max-height: 48px; display: block; }
+  .ok { color: #1b7f3b; font-weight: 700; }
+  .bad { color: #c62828; font-weight: 700; }
+  .warn { color: #b26a00; }
+  .report { margin-top: 20px; }
+</style>
+</head>
+<body>
+<!-- 개발용: 게임이 참조하는 모든 이미지(JS 목록 + CSS url() + HTML src)를 실제로 로드해 본다.
+     로컬 서버로 열 것: http://localhost:5173/tools/asset-check.html -->
+<h1>에셋 로드 검사</h1>
+<p>js/assets.js · js/data/episodes.js · js/shop.js · css/*.css · tripeaks.html 에서 참조하는 이미지를 모두 로드합니다.</p>
+<div id="summary">검사 중…</div>
+<table>
+  <thead><tr><th></th><th>경로</th><th>참조 위치</th><th>결과</th><th>크기</th></tr></thead>
+  <tbody id="rows"></tbody>
+</table>
+<div class="report">
+  <h2>에셋 상태표 (js/assets.js)</h2>
+  <table><thead><tr><th>파일</th><th>상태</th><th>메모</th></tr></thead><tbody id="report"></tbody></table>
+</div>
+
+<script src="../js/assets.js"></script>
+<script src="../js/data/episodes.js"></script>
+<script src="../js/shop.js"></script>
+<script>
+  // 기대 규격: 카드 180×260, 초상화 1:1
+  const EXPECT = [
+    [/card_(A|[2-9]|10|J|Q|K|back|wild|dimmed)\.png$/, 180, 260],
+    [/portrait_.*\.png$/, 1, 1, 'ratio'],
+  ];
+
+  async function collect() {
+    const refs = new Map();
+    const add = (path, from) => {
+      path = path.replace(/^(\.\.\/|\.\/)/, '');
+      if (!refs.has(path)) refs.set(path, new Set());
+      refs.get(path).add(from);
+    };
+    const walk = v => (typeof v === 'string' ? add(v, 'js/assets.js') : Object.values(v).forEach(walk));
+    walk(Object.fromEntries(Object.entries(TP.ASSETS)));
+    TP.EPISODES.forEach(ep => ep.suspects.forEach(s => s.portrait && add(s.portrait, 'episodes.js')));
+    TP.SPECIAL_OFFERS.forEach(o => o.art && add(o.art, 'shop.js'));
+
+    const css = (await Promise.all(['style', 'layout'].map(n => fetch(`../css/${n}.css`).then(r => r.text())))).join(' ');
+    for (const m of css.matchAll(/url\(([^)#]+\.png)\)/g)) add(m[1], 'css');
+    const html = await fetch('../tripeaks.html').then(r => r.text());
+    for (const m of html.matchAll(/src="(game_assets\/[^"]+)"/g)) add(m[1], 'tripeaks.html');
+    return refs;
+  }
+
+  const load = src => new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => resolve({ ok: true, w: img.naturalWidth, h: img.naturalHeight });
+    img.onerror = () => resolve({ ok: false });
+    img.src = '../' + src;
+  });
+
+  (async () => {
+    const refs = await collect();
+    const rows = [];
+    let fails = 0, warns = 0;
+    for (const [path, from] of [...refs].sort()) {
+      const r = await load(path);
+      let note = '';
+      for (const [re, w, h, mode] of EXPECT) {
+        if (!r.ok || !re.test(path)) continue;
+        const good = mode === 'ratio' ? r.w * h === r.h * w : r.w === w && r.h === h;
+        if (!good) { note = ` <span class="warn">⚠ 기대 ${w}${mode === 'ratio' ? ':' : '×'}${h}</span>`; warns++; }
+      }
+      if (!r.ok) fails++;
+      rows.push(`<tr><td>${r.ok ? `<img src="../${path}">` : ''}</td><td>${path}</td><td>${[...from].join(', ')}</td>
+        <td class="${r.ok ? 'ok' : 'bad'}">${r.ok ? '로드 성공' : '로드 실패'}</td>
+        <td>${r.ok ? `${r.w}×${r.h}` : '-'}${note}</td></tr>`);
+    }
+    document.getElementById('rows').innerHTML = rows.join('');
+    document.getElementById('summary').innerHTML =
+      `참조 ${refs.size}개 · <span class="${fails ? 'bad' : 'ok'}">실패 ${fails}개</span> · 규격 경고 ${warns}개`;
+    document.getElementById('report').innerHTML = TP.ASSET_REPORT.map(a =>
+      `<tr><td>${a.file}</td><td class="${a.status === 'ok' ? 'ok' : a.status === 'mismatch' ? 'bad' : 'warn'}">${a.status}${a.used ? '' : ' (미사용)'}</td><td>${a.note || ''}</td></tr>`).join('');
+    window.__assetCheck = { total: refs.size, fails, warns };
+  })();
+</script>
+</body>
+</html>

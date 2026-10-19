@@ -1,0 +1,8 @@
+{
+  "appId": "com.tripeaks.mystery",
+  "appName": "온천 여관의 비밀",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#0d2a4a"
+  }
+}

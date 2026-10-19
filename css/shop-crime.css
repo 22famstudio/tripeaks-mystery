@@ -1,0 +1,131 @@
+/* =====================================================================
+   상점 — Crime Scene 철제 선반 (design/shop/tokens.json · components.md)
+   #shopModal .modal.shop 에 적용. 기존 양피지 프레임 상점 스타일을 덮어쓴다.
+   ===================================================================== */
+.stage .modal.shop.framed.wide {
+  --bg-wall: #1f2a33; --bg-wall-deep: #121a21; --bg-brick: #3b2f2a; --bg-brick-mortar: #2a211d; --bg-night: #3a5168;
+  --steel-base: #5d6871; --steel-light: #8c979f; --steel-dark: #2e363c; --rivet: #b9c2c8; --rivet-shadow: #1b2126;
+  --paper-base: #e9d7b4; --paper-light: #f5e9cf; --paper-shadow: #c7b08a; --paper-ink: #2a1d12; --paper-tab: #efe2c4; --paper-tab-active: #f8f0dc;
+  --neon-yellow: #ffd43a; --neon-yellow-core: #fff6b0; --neon-yellow-glow: rgba(255,212,58,.75); --neon-warm-glow: rgba(255,180,60,.35);
+  --tape-yellow: #f5c518; --tape-black: #111; --green: #3fa524; --green-light: #7ed84a; --green-ink: #0d3d08; --red: #c93333; --red-light: #ff6b5b;
+  --gold: #ffcf5a; --gold-deep: #c98a12; --text-on-dark: #f3ead8; --lamp-bulb: #ffe08a; --lamp-core: #fff8dd; --lamp-cage: #6b5a44;
+  --mat-steel: repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0 2px, rgba(0,0,0,.05) 2px 4px), linear-gradient(var(--steel-light), var(--steel-base) 40%, var(--steel-dark));
+  --mat-paper: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.35), transparent 55%), radial-gradient(ellipse at 70% 80%, rgba(120,90,40,.12), transparent 60%), linear-gradient(var(--paper-light), var(--paper-base));
+  --mat-brick: repeating-linear-gradient(0deg, var(--bg-brick-mortar) 0 2px, transparent 2px 22px), repeating-linear-gradient(90deg, var(--bg-brick-mortar) 0 2px, transparent 2px 46px), linear-gradient(var(--bg-brick), #2d2320);
+  --mat-tape: repeating-linear-gradient(45deg, var(--tape-yellow) 0 24px, var(--tape-black) 24px 48px);
+  --sh-neon-text: 0 0 6px var(--neon-yellow-core), 0 0 14px var(--neon-yellow), 0 0 28px var(--neon-yellow-glow), 0 0 48px var(--neon-warm-glow);
+  --sh-neon-box: 0 0 0 2px var(--neon-yellow), 0 0 14px 2px var(--neon-yellow-glow), inset 0 0 10px var(--neon-warm-glow);
+  --sh-steel: inset 0 2px 0 var(--steel-light), inset 0 -3px 0 var(--steel-dark), 0 4px 0 var(--steel-dark), 0 8px 14px rgba(0,0,0,.6);
+  --sh-paper: 0 3px 0 var(--paper-shadow), 0 6px 10px rgba(0,0,0,.55);
+  --sh-paper-inset: inset 0 1px 0 var(--paper-light), inset 0 -8px 12px rgba(120,90,40,.18);
+  --sh-shelf: inset 0 3px 0 var(--steel-light), inset 0 -4px 0 var(--steel-dark), 0 10px 18px rgba(0,0,0,.7);
+
+  width: 96cqw; height: 94cqh; aspect-ratio: auto; max-width: none; max-height: none;
+  background: radial-gradient(ellipse at 50% 30%, var(--bg-night) 0%, var(--bg-wall) 45%, var(--bg-wall-deep) 100%);
+  clip-path: none; border-radius: 10px; overflow: hidden; color: var(--text-on-dark);
+  font-weight: 900;                                   /* 전체 굵게 */
+  box-shadow: 0 0 0 1.4cqh var(--steel-dark), 0 20px 40px #000c;
+}
+.stage .modal.shop.framed.wide > .paper { position: absolute; inset: 0; padding: 0; background: none; border: 0; box-shadow: none; overflow: hidden; display: flex; flex-direction: column; }
+/* 벽돌 벽 + 외곽 철제 빔 */
+.modal.shop > .paper::before { content: ''; position: absolute; inset: 0; background: var(--mat-brick); opacity: .5; mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 85%); -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 85%); pointer-events: none; }
+.modal.shop > .paper::after { content: ''; position: absolute; inset: 1.2cqh 1cqw; border: 1.4cqh solid transparent; border-image: var(--mat-steel) 1; box-shadow: inset 0 0 0 2px var(--steel-dark); pointer-events: none; }
+
+/* 나사 */
+.shop .rivet { position: absolute; width: 1.5cqh; height: 1.5cqh; border-radius: 50%; background: radial-gradient(circle at 35% 35%, var(--rivet), var(--steel-base) 55%, var(--rivet-shadow)); box-shadow: 0 1px 2px #000a; z-index: 1; }
+.shop .rivet::after { content: ''; position: absolute; left: 20%; right: 20%; top: 45%; height: 10%; background: var(--rivet-shadow); rotate: 35deg; }
+
+/* 폴리스 라인 (좌 · 우) */
+.shop .tape { position: absolute; z-index: 3; height: 5.5cqh; width: 62cqh; background: var(--mat-tape); box-shadow: 0 4px 10px #000a; pointer-events: none; overflow: hidden; display: flex; align-items: center; }
+.shop .tape span { white-space: nowrap; font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; font-size: 3.3cqh; color: #1a1a1a; letter-spacing: .12em; padding-left: 1cqw; animation: tape-scroll 14s linear infinite; }
+.shop .tape span::before { content: 'CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS · CRIME SCENE · DO NOT CROSS · '; }
+.shop .tape.left { left: -28cqh; top: 28cqh; rotate: -72deg; }
+.shop .tape.right { right: -28cqh; top: 20cqh; rotate: 68deg; }
+@keyframes tape-scroll { to { transform: translateX(-33%); } }
+
+/* 상단: 네온 간판 SHOP · 탭 · 닫기 */
+.shop .modal-head { position: relative; z-index: 4; flex: none; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 1.6cqw; margin: 2.6cqh 3cqw 0; }
+.shop .modal-head h2 {
+  position: relative; margin: 0; padding: .8cqh 2cqw; rotate: -2deg;
+  background: var(--mat-steel); border-radius: 4px; box-shadow: var(--sh-steel);
+  font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; font-size: clamp(26px, 8cqh, 56px); line-height: 1; letter-spacing: .06em;
+  color: var(--neon-yellow-core); -webkit-text-stroke: 1.5px var(--neon-yellow); text-shadow: var(--sh-neon-text); animation: neon-flicker 6s infinite;
+}
+.shop .modal-head h2 .rivet.tl { left: .5cqh; top: .5cqh; } .shop .modal-head h2 .rivet.tr { right: .5cqh; top: .5cqh; }
+.shop .modal-head h2 .rivet.bl { left: .5cqh; bottom: .5cqh; } .shop .modal-head h2 .rivet.br { right: .5cqh; bottom: .5cqh; }
+@keyframes neon-flicker { 0%, 100% { opacity: 1; } 3% { opacity: .78; } 6% { opacity: 1; } 55% { opacity: .92; } 57% { opacity: 1; } }
+
+.shop .shop-tabs { display: flex; justify-content: center; align-items: flex-end; gap: 1.4cqw; }
+.shop .shop-tab {
+  position: relative; height: 8cqh; padding: 0 1.8cqw; display: flex; align-items: center; white-space: nowrap;
+  background: var(--mat-paper), var(--paper-tab); border: 1px solid var(--paper-shadow); border-radius: 4px 4px 2px 2px;
+  box-shadow: var(--sh-paper), var(--sh-paper-inset); color: var(--paper-ink); font-weight: 900; font-size: clamp(12px, 3.8cqh, 22px);
+  cursor: pointer; transition: transform .12s, box-shadow .12s; text-shadow: none;
+}
+.shop .shop-tab:nth-child(odd) { rotate: -1.5deg; } .shop .shop-tab:nth-child(even) { rotate: 1deg; }
+.shop .shop-tab::before { content: ''; position: absolute; left: 50%; top: -1.2cqh; translate: -50% 0; width: 3cqw; height: 1.9cqh; border-radius: 3px 3px 1px 1px; background: var(--mat-steel); box-shadow: 0 2px 0 var(--steel-dark), inset 0 1px 0 var(--steel-light); }
+.shop .shop-tab:active { transform: translateY(2px); }
+.shop .shop-tab.on { rotate: 0deg; transform: translateY(-3px); background: var(--mat-paper), var(--paper-tab-active); box-shadow: var(--sh-neon-box), var(--sh-paper); color: var(--paper-ink); }
+.shop .shop-tab.on::before { background: linear-gradient(var(--gold), var(--gold-deep)); }
+.shop #shopClose { width: 7.5cqh; height: 7.5cqh; border-radius: 50%; border: 0; background: radial-gradient(circle at 35% 35%, var(--steel-light), var(--steel-base) 50%, var(--steel-dark)); box-shadow: var(--sh-steel); color: var(--text-on-dark); font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; font-size: 4cqh; }
+
+/* 선반: 3열 × n단, 패널 안에서 세로 스크롤 */
+.shop .product-grid { position: relative; z-index: 4; flex: 1; min-height: 0; display: block; overflow-y: auto; overflow-x: hidden; margin: 1cqh 7cqw 0 6cqw; padding: 2cqh 1cqw 2cqh; scrollbar-width: thin; scrollbar-color: var(--steel-light) transparent; }
+.shop .shelf { position: relative; display: flex; flex-direction: column; margin-bottom: 2.2cqh; }
+.shop .shelf-products { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.4cqw; align-items: end; padding: 0 1.5cqw; }
+.shop .shelf-beam { position: relative; height: 4cqh; margin-top: -.6cqh; background: var(--mat-steel); box-shadow: var(--sh-shelf); border-radius: 2px; }
+.shop .shelf-beam::after { content: ''; position: absolute; left: 1%; right: 1%; top: 100%; height: 3cqh; background: linear-gradient(#000a, #0000); }
+.shop .shelf-beam .rivet { top: 50%; translate: 0 -50%; }
+.shop .shelf-beam .rivet:nth-child(1) { left: 1.2cqw; } .shop .shelf-beam .rivet:nth-child(2) { left: 33%; } .shop .shelf-beam .rivet:nth-child(3) { left: 66%; } .shop .shelf-beam .rivet:nth-child(4) { right: 1.2cqw; }
+
+/* 상품 카드 */
+.shop .product { position: relative; display: flex; flex-direction: column; align-items: center; gap: .4cqh; padding: 3cqh 0 1cqh; background: none; border: 0; border-radius: 0; text-align: center; }
+.shop .product.featured { grid-column: auto; flex-direction: column; background: none; border: 0; }
+.shop .product.owned { opacity: .6; }
+.shop .product-glow { position: absolute; left: 50%; top: 1cqh; width: 22cqw; height: 16cqh; translate: -50% 0; background: radial-gradient(ellipse, rgba(255,207,90,.3), transparent 65%); pointer-events: none; }
+.shop .sparkle { position: absolute; color: var(--neon-yellow-core); font-size: 2.6cqh; text-shadow: 0 0 6px var(--neon-yellow); animation: twinkle 2.4s ease-in-out infinite; pointer-events: none; }
+@keyframes twinkle { 50% { opacity: .2; transform: scale(.6); } }
+.shop .product-icon { position: relative; height: 18cqh; width: auto; display: flex; align-items: flex-end; justify-content: center; font-size: 0; }
+.shop .product-icon img { height: 100%; width: auto; max-width: 24cqw; object-fit: contain; filter: drop-shadow(0 6px 6px #000a); transition: transform .15s; }
+.shop .product:hover .product-icon img { transform: translateY(-3px) scale(1.04); }
+.shop .product-icon:empty::before, .shop .product-icon.emoji { font-size: 12cqh; line-height: 1; }
+
+.shop .price-paper {
+  position: relative; width: min(24cqw, 220px); padding: .9cqh 1cqw .8cqh; text-align: center;
+  background: var(--mat-paper); border-radius: 6px; box-shadow: var(--sh-paper), var(--sh-paper-inset); color: var(--paper-ink); text-shadow: none;
+}
+.shop .product:nth-child(odd) .price-paper { rotate: -1.2deg; } .shop .product:nth-child(even) .price-paper { rotate: 1deg; }
+.shop .price-paper::before { content: ''; position: absolute; left: 50%; top: -1.1cqh; translate: -50% 0; rotate: -3deg; width: 5cqw; height: 2cqh; background: rgba(255,255,255,.45); box-shadow: 0 1px 2px #0004; }
+.shop .product-name { font-weight: 900; font-size: clamp(12px, 3.4cqh, 19px); color: var(--paper-ink); }
+.shop .coin-amount { display: flex; align-items: center; justify-content: center; gap: .5cqw; margin: .2cqh 0 .4cqh; background: none; padding: 0; font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; font-size: clamp(15px, 4.6cqh, 30px); color: var(--paper-ink); }
+.shop .coin-amount .ico { width: 3.6cqh; height: 3.6cqh; }
+.shop .bonus-badge { position: static; display: inline-block; margin: 0; padding: .15em .9em; border-radius: 999px; background: linear-gradient(var(--green-light), var(--green)); border: 2px solid var(--green-ink); color: #fff; font-weight: 900; font-size: clamp(10px, 2.8cqh, 15px); text-shadow: 0 1px 0 #0006; }
+.shop .bonus-badge.none { background: linear-gradient(#777, #4a4a4a); border-color: #222; color: #fff; }
+/* 구성품: 게임 에셋 아이콘(코인 · 와일드 카드 · 되돌리기 · 힌트권 …) 크게 */
+.shop .reward-icons { display: flex; flex-wrap: wrap; justify-content: center; gap: .4cqh 1.2cqw; margin: .3cqh 0 .2cqh; padding: 0; list-style: none; font-size: clamp(11px, 3cqh, 16px); color: var(--paper-ink); }
+.shop .reward-icons li { display: flex; align-items: center; gap: .3cqw; font-weight: 900; }
+.shop .reward-icons .ico { width: 4.6cqh; height: 4.6cqh; }
+.shop .product.featured .reward-icons { display: flex; }
+
+.shop .product .price {
+  position: relative; width: auto; min-width: 14cqw; margin-top: .4cqh; padding: 0 2.6cqw; height: 6cqh; border: 0; border-radius: 4px;
+  background: var(--mat-steel); box-shadow: var(--sh-steel); color: var(--text-on-dark);
+  font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; font-size: clamp(13px, 4cqh, 25px); letter-spacing: .04em; text-shadow: 0 2px 0 #000a;
+}
+.shop .product .price::before, .shop .product .price::after { content: ''; position: absolute; top: 50%; translate: 0 -50%; width: 1.3cqh; height: 1.3cqh; border-radius: 50%; background: radial-gradient(circle at 35% 35%, var(--rivet), var(--steel-base) 55%, var(--rivet-shadow)); }
+.shop .product .price::before { left: .7cqw; } .shop .product .price::after { right: .7cqw; }
+.shop .product .price small { display: inline; font-size: .6em; opacity: .85; margin-left: .3em; font-family: inherit; }
+.shop .product .price:hover { filter: brightness(1.15); }
+.shop .product .price:active { transform: translateY(3px); box-shadow: inset 0 2px 0 var(--steel-light), 0 1px 0 var(--steel-dark); }
+.shop .product .price:disabled { filter: grayscale(.6) brightness(.8); }
+.shop .tag { position: absolute; left: 50%; top: 0; translate: -50% 0; rotate: -4deg; z-index: 2; padding: .15em 1.1em; border-radius: 999px; background: linear-gradient(var(--red-light), var(--red)); border: 2px solid #fff; color: #fff; font-weight: 900; font-size: clamp(11px, 2.9cqh, 16px); box-shadow: 0 3px 0 #6b1010, 0 5px 8px #0008; white-space: nowrap; }
+.shop .fine { display: none; }
+
+/* 램프 */
+.shop .lamp { position: absolute; right: 1.4cqw; top: 14cqh; width: 5.5cqw; height: 14cqh; z-index: 5; pointer-events: none; }
+.shop .lamp .cord { position: absolute; left: 50%; top: -11cqh; width: 3px; height: 12cqh; background: var(--lamp-cage); translate: -50% 0; }
+.shop .lamp .cage { position: absolute; inset: 1cqh 0 0; border: 3px solid var(--lamp-cage); border-radius: 40% 40% 50% 50% / 30% 30% 60% 60%; background: repeating-linear-gradient(90deg, transparent 0 22%, var(--lamp-cage) 22% 25%); }
+.shop .lamp .bulb { position: absolute; left: 50%; top: 5cqh; width: 3cqw; height: 6cqh; translate: -50% 0; border-radius: 50% 50% 48% 48% / 40% 40% 60% 60%; background: radial-gradient(circle at 50% 60%, var(--lamp-core), var(--lamp-bulb) 55%, #e2b35a); box-shadow: 0 0 20px 8px rgba(255,224,138,.55), 0 0 60px 30px rgba(255,200,90,.25); animation: breathe 2.5s ease-in-out infinite; }
+.shop .lamp .light { position: absolute; left: -16cqw; right: -6cqw; top: 7cqh; height: 40cqh; background: radial-gradient(ellipse at 70% 0%, rgba(255,210,110,.2), transparent 60%); }
+@keyframes breathe { 50% { filter: brightness(.92); } }
+@media (prefers-reduced-motion: reduce) { .shop .modal-head h2, .shop .lamp .bulb, .shop .tape span, .shop .sparkle { animation: none; } }

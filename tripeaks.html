@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="screen-orientation" content="landscape">
+<title>온천 여관의 비밀 — 트라이픽스</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/board.css">
+<!-- 글꼴 (game_assets/fonts 내장, readability.css): 영문 · 숫자 = Luckiest Guy, 한글 = 나눔스퀘어 R/B/EB -->
+<link rel="stylesheet" href="css/readability.css">
+<link rel="stylesheet" href="css/cardscene.css">
+<link rel="stylesheet" href="css/shop-crime.css">
+</head>
+<body>
+  <!-- 마크 이미지(mark_*.webp)가 투명 배경이 아니어서, 색으로 배경을 걸러 내는 필터 (asset 교체 시 제거 가능) -->
+  <svg class="svg-defs" width="0" height="0" aria-hidden="true" focusable="false">
+    <filter id="keyRed" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  3 -3 0 0 -0.3" />
+    </filter>
+    <filter id="keyYellow" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 3 -3 0 -0.3" />
+    </filter>
+  </svg>
+
+  <!-- 세로 화면 안내 (가로 전용 레이아웃) -->
+  <div class="rotate-hint" aria-hidden="true"><span>📱↻</span>기기를 가로로 돌려 주세요</div>
+
+  <!-- 16:9 고정 스테이지: 모든 화면·모달이 이 안에서 비율을 유지하며 레터박스/필러박스로 중앙 정렬 -->
+  <div id="stage" class="stage" data-screen="lobby" data-mult="1">
+    <div class="screen-glow" aria-hidden="true"></div>
+
+    <!-- ① 공통 상단 바: [OFFER · SHOP · 에피소드] | [레벨 · EXP] | [골드 · 설정] -->
+    <header class="hud-top">
+      <div class="hud-left">
+        <button class="offer-btn" id="hudOffer" title="특별 할인">
+          <b>SPECIAL<br>OFFER</b><small id="offerTimer">00:00:00</small>
+        </button>
+        <button class="round-btn img-btn" id="hudShop" aria-label="상점"><img src="game_assets/btn_shop.webp" alt=""></button>
+        <button class="round-btn img-btn" id="hudEpisodes" aria-label="에피소드"><img src="game_assets/btn_episode.webp" alt=""></button>
+      </div>
+      <button class="level-box" id="sbLevel" title="레벨 · 경험치">
+        <span class="level-star"><b id="sbLevelNum" aria-label="레벨"></b><small>LEVEL</small></span>
+        <span class="exp-bar"><i id="expFill"></i><em id="expText">0 / 100 EXP</em></span>
+      </button>
+      <div class="hud-right">
+        <div class="currency-bar" id="sbGoldChip" title="골드">
+          <b id="sbGold" class="currency-num">0</b>
+          <button id="sbGoldPlus" class="currency-plus" aria-label="골드 구매"></button>
+        </div>
+        <button class="icon-asset settings" id="btnSettings" aria-label="설정">
+          <img src="game_assets/btn_settings.webp" alt="">
+        </button>
+      </div>
+    </header>
+
+    <!-- 숨겨진 개발자 패널: 탐정 프로필 칩을 빠르게 5번 터치하면 열림 -->
+    <div id="devPanel" class="dev-panel" hidden>
+      <span>🛠 DEV</span>
+      <button id="devLevel">+10 레벨</button>
+      <button id="devStreak">연승 +1</button>
+      <button id="devClues">단서 +5</button>
+      <button id="devSolve">정답 수순 재생</button>
+      <button id="devChapterEnd">챕터 마지막 화로 (단서 20)</button>
+      <button id="devReset">데이터 초기화</button>
+    </div>
+
+    <!-- ③ 홈 화면 (손그림 스케치 레이아웃) -->
+    <section class="screen lobby" id="lobbyScreen" aria-label="홈">
+      <div class="lobby-bg" id="lobbyBg"></div>
+
+      <!-- 좌측 하단: 탐정 프로필 (레벨 구간별 코스튬 · 칭호) -->
+      <div class="profile">
+        <img class="avatar-img" id="avatarImg" src="game_assets/avatar_1.webp" alt="탐정 아바타">
+        <div class="profile-title"><small id="profileNick">탐정님</small><b id="sbTitle"></b></div>
+      </div>
+
+      <!-- 하단 중앙: [대륙 챕터] 에피소드 제목 [추리 수첩 보기] + [단서 진행] [생명력] -->
+      <div class="play-panel">
+        <div class="title-row">
+          <span class="chapter-chip" id="lobbyChapter" title="스토리 챕터 (대륙)"></span>
+          <h2 class="episode-title" id="lobbyEpisodeTitle"></h2>
+          <button class="board-btn" id="btnBoard" title="수사 보드 열기">
+            <img src="game_assets/icons/notebook.webp" alt=""><span>추리 수첩 보기</span>
+            <span class="badge" id="boardBadge" hidden>0</span>
+          </button>
+        </div>
+        <div class="play-blocks">
+          <button class="clue-block" id="lobbyClueBlock" title="탐정 수첩 열기">
+            <span class="ep-label"><small>EPISODE</small><b id="lobbyEpNo">ONE</b></span>
+            <span class="clue-main">
+              <span class="clue-dots" id="clueDots"></span>
+              <span class="clue-count">CLUE : <b id="clueCount">00/20</b></span>
+            </span>
+          </button>
+          <button class="life-block" id="sbEnergy" title="수사 생명력">
+            <span class="life-label">Life</span>
+            <span class="hearts" id="sbEnergyCells"></span>
+            <span class="life-meta"><b id="sbEnergyNum">5/5</b><small id="sbEnergyTimer">MAX</small></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 우측: 연속 승리 보상 뱃지 + PLAY -->
+      <div class="play-side">
+        <button class="streak-badge" id="sbStreakChip" aria-describedby="streakTip">
+          <span class="flame">🔥</span><b id="sbStreak">0</b><small>WIN STREAK</small>
+          <span class="streak-tip" id="streakTip" role="tooltip"></span>
+        </button>
+        <div class="streak-track" id="streakTrack" aria-label="연속 승리 보상"></div>
+        <button class="play-btn" id="btnPlay">
+          <span class="play-word"><b>PLAY</b><i>▶</i></span>
+          <small id="playSub">스테이지 1</small>
+        </button>
+        <button class="stages-btn" id="btnStages" aria-label="스테이지 선택"><span class="sb-star">★</span> STAGES <b id="stagesStars">0/60</b></button>
+      </div>
+
+    </section>
+
+    <!-- ② 인게임 퍼즐 테이블 -->
+    <section class="screen game" id="gameScreen" aria-label="퍼즐 테이블">
+      <div class="game-info">
+        <div class="hud-item mult-badge" id="hudMult">×1</div>
+        <div class="hud-item" id="hudTier"></div>
+        <div class="hud-item">남은 카드 <b id="hudRemain">28</b></div>
+        <div class="hud-item">콤보 <b id="hudCombo">0</b></div>
+        <button class="hud-item ep-chip" id="hudEpisode"></button>
+        <div class="hud-item seed">#<span id="hudSeed">-</span></div>
+      </div>
+
+      <!-- 우측 상단: 연속 제거 콤보 게이지 (콤보 상자) — 틀 그림 game_assets/ui_combo.webp
+           끝 소켓의 보상 아이콘은 다음 상자 보상에 따라 바뀐다 (와일드 → card_wild.webp / 덱 +N → card_plusN.webp) -->
+      <div class="combo-gauge" id="chest" title="콤보 상자: 덱을 뽑지 않고 보드 카드를 연속으로 치우면 게이지가 찹니다">
+        <div class="gauge-track"><div class="gauge-fill" id="chestFill"></div></div>
+        <span class="gauge-text" id="chestText">0/3</span>
+        <span class="gauge-reward" id="chestRewardSlot">
+          <img class="gauge-reward-icon" id="chestRewardIcon" src="game_assets/card_plus1.webp" alt="">
+          <b class="sr-only" id="chestReward"></b>
+        </span>
+      </div>
+
+      <!-- 세이프 보드 영역: 상단 HUD 와 하단 바 사이 (css/cardscene.css .board-area) — 카드는 이 안에서만 배치된다 -->
+      <div class="board-area" id="boardArea">
+        <main id="tableau" class="tableau" aria-label="카드 피라미드"></main>
+      </div>
+      <p id="message" class="message"></p>
+      <div class="fx-layer" id="fxLayer" aria-hidden="true"></div>
+      <!-- 탐정 조수 마스코트: 카드를 맞힐 때마다 폴짝 (game_assets/mascot_cat.webp) -->
+      <img class="mascot" id="mascot" src="game_assets/mascot_cat.webp" alt="" aria-hidden="true">
+
+      <footer class="game-bar">
+        <div class="bar-left">
+          <button class="icon-asset notebook" id="btnNotebook" aria-label="탐정 수첩">
+            <img src="game_assets/btn_open_notebook.webp" alt="">
+            <span class="badge" id="notebookBadge" hidden>0</span>
+          </button>
+          <span class="clue-progress" id="clueProgress">0 / 20</span>
+        </div>
+        <div class="bar-center">
+          <div class="slot-wrap">
+            <div id="stock" class="slot draw" role="button" aria-label="덱에서 한 장 뽑기"></div>
+            <span class="deck-badge" id="stockCount">0</span>
+          </div>
+          <div id="waste" class="slot active"></div>
+        </div>
+        <div class="bar-right">
+          <button id="btnUndo" class="item-btn booster undo" aria-label="되돌리기">
+            <img class="item-img" src="game_assets/btn_booster_undo.webp" alt="">
+            <span class="item-label">되돌리기</span>
+            <span class="badge" id="badgeUndo">0</span>
+          </button>
+          <button id="btnWild" class="item-btn booster wild" aria-label="와일드카드">
+            <img class="item-img" src="game_assets/btn_booster_wild.webp" alt="">
+            <span class="item-label">와일드</span>
+            <span class="badge" id="badgeWild">0</span>
+          </button>
+        </div>
+      </footer>
+    </section>
+
+    <!-- 스테이지 시작(배수 선택) 모달 -->
+    <div id="entryModal" class="modal-backdrop" hidden>
+      <!-- 프레임 frame_entry.webp (Higgsfield) · 배수 카드 card_mult_gold / blue / locked.webp -->
+      <div class="modal entry ev2" id="entryCard" role="dialog" aria-modal="true" aria-labelledby="entryTitle">
+        <h2 class="ev2-title" id="entryTitle">STAGE</h2>
+        <div class="ev2-body">
+          <div class="ev2-sub">
+            <span class="ev2-tier" id="entryTier"></span>
+            <span class="ev2-seed">#<span id="entrySeed"></span></span>
+            <span class="ev2-reassure">걱정 마세요! 모든 스테이지는 클리어할 방법이 있어요!</span>
+          </div>
+          <div class="mult-list" id="multList"></div>
+          <p class="entry-stars" id="entryStars" data-no-icons></p>
+          <p class="entry-note" id="entryNote"></p>
+          <div class="ev2-actions">
+            <button id="entryCancel" class="ev2-back">BACK</button>
+            <button id="entryGo" class="ev2-play"><span class="ev2-play-label" id="entryGoLabel">PLAY</span><span class="ev2-cost" id="entryCost"></span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ⑤ 상점 모달: Crime Scene 철제 선반 (css/shop-crime.css · design/shop/) -->
+    <div id="shopModal" class="modal-backdrop" hidden>
+      <div class="modal shop framed wide" role="dialog" aria-modal="true" aria-labelledby="shopTitle">
+        <div class="paper">
+          <div class="tape left" aria-hidden="true"><span></span></div>
+          <div class="tape right" aria-hidden="true"><span></span></div>
+          <div class="lamp" aria-hidden="true"><div class="cord"></div><div class="light"></div><div class="cage"></div><div class="bulb"></div></div>
+          <div class="modal-head">
+            <h2 id="shopTitle" data-no-icons>SHOP<i class="rivet tl"></i><i class="rivet tr"></i><i class="rivet bl"></i><i class="rivet br"></i></h2>
+            <div class="shop-tabs" id="shopTabs" role="tablist" aria-label="상품 카테고리"></div>
+            <button id="shopClose" class="icon-btn" aria-label="닫기">✕</button>
+          </div>
+          <div class="product-grid" id="productGrid"></div>
+          <p class="fine">프로토타입: 실제 결제 없이 즉시 지급됩니다.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ④ 탐정 수첩 (코르크 보드, 좌: 단서 / 우: 용의자) -->
+    <div id="notebookModal" class="modal-backdrop" hidden>
+      <div class="modal notebook" role="dialog" aria-modal="true" aria-labelledby="nbTitle">
+        <div class="modal-head">
+          <div>
+            <h2 id="nbTitle">📓 탐정 수첩</h2>
+            <p class="sub" id="nbSub"></p>
+          </div>
+          <button id="nbClose" class="icon-btn" aria-label="닫기">✕</button>
+        </div>
+        <div class="cork" id="nbCork">
+          <svg class="strings" id="nbStrings" aria-hidden="true"></svg>
+          <section class="cork-clues">
+            <h3>단서 <span id="nbClueCount"></span></h3>
+            <div id="nbBanner" class="accuse-banner" hidden></div>
+            <div id="nbHints"></div>
+            <ol id="nbClues" class="clue-list"></ol>
+          </section>
+          <section class="cork-suspects">
+            <div class="board-tabs" role="tablist">
+              <button class="board-tab on" data-tab="suspects" role="tab">용의자</button>
+              <button class="board-tab" data-tab="grid" role="tab">논리 그리드</button>
+              <small class="board-tab-help" id="nbTabHelp">사진을 누르면 용의자 파일 · ☆ 유력 · ✕ 제외 메모</small>
+            </div>
+            <div id="nbSuspects" class="suspect-grid"></div>
+            <!-- 논리 그리드: 세로 = 용의자 6명, 가로 = [장소 6] [물건 6]. 칸을 누를 때마다 빈칸 → X → O -->
+            <div id="nbGrid" class="logic-grid-wrap" hidden></div>
+          </section>
+          <!-- 단서 20개가 모이면 보드 중앙 하단에 [최종 범인 지목하기] (notebook.js renderAccuseBar) -->
+          <div class="accuse-bar final" id="nbAccuseBar" hidden></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 에피소드 메뉴: 과거 · 현재 · 미래 사건을 가로로 스크롤 -->
+    <div id="episodesModal" class="modal-backdrop" hidden>
+      <div class="modal episodes-panel" role="dialog" aria-modal="true" aria-labelledby="episodesTitle">
+        <div class="modal-head">
+          <h2 id="episodesTitle">📚 사건 파일</h2>
+          <button id="episodesClose" class="icon-btn" aria-label="닫기">✕</button>
+        </div>
+        <div class="episode-strip" id="episodeStrip"></div>
+      </div>
+    </div>
+
+    <!-- 스테이지 선택: 사건마다 스테이지 20개 · 최고 별 · 다시하기 -->
+    <div id="stagesModal" class="modal-backdrop" hidden>
+      <div class="modal stages-panel" role="dialog" aria-modal="true" aria-labelledby="stagesTitle">
+        <div class="modal-head">
+          <button id="stagesPrev" class="icon-btn st-nav" aria-label="이전 사건">‹</button>
+          <h2 id="stagesTitle">STAGES</h2>
+          <button id="stagesNext" class="icon-btn st-nav" aria-label="다음 사건">›</button>
+          <button id="stagesClose" class="icon-btn" aria-label="닫기">✕</button>
+        </div>
+        <p class="st-sub" id="stagesSub"></p>
+        <div class="stage-grid" id="stageGrid" data-no-icons></div>
+        <p class="st-foot" id="stagesFoot" data-no-icons></p>
+      </div>
+    </div>
+
+    <!-- 설정 모달 (로비 톱니 → app.openSettings(), 인게임은 일시정지 메뉴의 '설정') -->
+    <div id="settings-modal" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index: 200;">
+      <div class="modal-content" style="width: 85%; max-height: 80%; overflow-y: auto; text-align: left; padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #34495e; padding-bottom: 10px; margin-bottom: 15px;">
+          <h2 style="margin:0; color:#f1c40f;">설정 (Settings)</h2>
+          <span style="font-size:24px; cursor:pointer;" onclick="app.closeSettings()" role="button" aria-label="닫기">❌</span>
+        </div>
+
+        <!-- 오디오 설정 -->
+        <h3 style="margin: 10px 0; color: #bdc3c7;">🎵 오디오</h3>
+        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+            <label for="setting-bgm-toggle">배경음악 (BGM)</label>
+            <input type="checkbox" id="setting-bgm-toggle" checked>
+          </div>
+          <input type="range" id="setting-bgm-vol" min="0" max="100" value="70" style="width:100%;" aria-label="배경음악 볼륨">
+
+          <div style="display:flex; justify-content:space-between; margin: 15px 0 10px;">
+            <label for="setting-sfx-toggle">효과음 (SFX)</label>
+            <input type="checkbox" id="setting-sfx-toggle" checked>
+          </div>
+          <input type="range" id="setting-sfx-vol" min="0" max="100" value="80" style="width:100%;" aria-label="효과음 볼륨">
+        </div>
+
+        <!-- 계정 및 프로필 -->
+        <h3 style="margin: 10px 0; color: #bdc3c7;">👤 프로필 및 계정</h3>
+        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+          <label for="setting-nickname" style="display:block; margin-bottom:5px; font-size:14px;">닉네임</label>
+          <input type="text" id="setting-nickname" value="탐정님" maxlength="12" style="width:90%; padding:8px; border-radius:5px; border:none; margin-bottom:15px;">
+
+          <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:14px;">
+            <label>언어 (Language)</label>
+            <select disabled title="추후 업데이트 예정" style="background:#7f8c8d; color:white; border:none; border-radius:4px;">
+              <option>한국어 (추후 업데이트)</option>
+            </select>
+          </div>
+
+          <label style="display:block; margin-bottom:5px; font-size:14px;">구글 계정 연동</label>
+          <div style="display:flex; justify-content:space-between; align-items:center; background:#34495e; padding:10px; border-radius:5px;">
+            <span style="font-size:12px;">player@gmail.com</span>
+            <button onclick="app.manageAccount()" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:5px 10px; font-size:12px; cursor:pointer;">계정 관리</button>
+          </div>
+        </div>
+
+        <!-- 카드 뒷면 스킨 (50연승 프레스티지 보상으로 수집 · 보유한 것만 장착) -->
+        <h3 style="margin: 10px 0; color: #bdc3c7;">🂠 카드 뒷면 (Card Backs) <small id="cardBackCount" class="cb-count"></small></h3>
+        <div class="card-back-grid" id="cardBackGrid" role="listbox" aria-label="카드 뒷면 선택"></div>
+        <p class="cb-hint">50연승을 달성할 때마다 새 카드 뒷면을 하나 얻어요.</p>
+
+        <!-- 정보 및 지원 -->
+        <h3 style="margin: 10px 0; color: #bdc3c7;">ℹ️ 정보 및 지원</h3>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <button onclick="app.openLegal()" style="padding:12px; border-radius:8px; border:none; background:#34495e; color:white; cursor:pointer; text-align:left;">📜 법적 고지 (Legal Notice)</button>
+          <button onclick="app.contactUs()" style="padding:12px; border-radius:8px; border:none; background:#2980b9; color:white; cursor:pointer; text-align:left;">✉️ 고객 문의 (Contact Us)</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+  </div>
+
+  <!-- 모듈 로드 순서 (file:// 더블클릭 실행을 위해 ES 모듈 대신 일반 스크립트 + TP 네임스페이스):
+       로직(DOM 없음) cards → layouts → game → core/tripeaks_core_engine → deal-generator → store → energy → core/home_progression_system → economy → streak → shop → assets → episodes → mystery → home-bridge
+       화면           settings → emoji-icons → ui-kit → ui → notebook → app (app이 마지막에 전체를 연결) -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script src="js/cards.js"></script>
+  <script src="js/layouts.js"></script>
+  <script src="js/layout-engine.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/core/tripeaks_core_engine.js"></script>
+  <script src="js/deal-generator.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/energy.js"></script>
+  <script src="js/core/home_progression_system.js"></script>
+  <script src="js/economy.js"></script>
+  <script src="js/streak.js"></script>
+  <script src="js/shop.js"></script>
+  <script src="js/card-backs.js"></script>
+  <script src="js/daily-bonus.js"></script>
+  <script src="js/assets.js"></script>
+  <script src="js/data/episodes.js"></script>
+  <script src="js/mystery.js"></script>
+  <script src="js/home-bridge.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/emoji-icons.js"></script>
+  <script src="js/font-lang.js"></script>
+  <script src="js/ui-kit.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/notebook.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

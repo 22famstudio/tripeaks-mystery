@@ -1,0 +1,1096 @@
+/* =====================================================================
+   수사 보드 (V6 300화) — 홈 [추리 수첩 보기] · 자동 ✕ 도장 · 용의자 파일 · 최종 지목 · 진범의 고백 · 대륙 전환
+   layout.css 다음에 불러온다 (16:9 스테이지 기준 cqw/cqh)
+   ===================================================================== */
+
+/* 홈: [대륙 챕터] <제목> [추리 수첩 보기] */
+.title-row { display: flex; align-items: center; justify-content: center; gap: 0.8cqw; min-width: 0; }
+.title-row .episode-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1rem; }
+.chapter-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.3em 0.7em;
+  border: 3px solid #000;
+  border-radius: 999px;
+  background: #fff;
+  color: #1a1a1a;
+  font-size: 0.72rem;
+  font-weight: 900;
+  box-shadow: 2px 2px 0 #000;
+}
+.chapter-chip[hidden] { display: none; }
+.chapter-chip small { padding: 0.05em 0.45em; border-radius: 999px; background: #2a6fc9; color: #fff; font-size: 0.62rem; }
+.board-btn {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.3em 0.8em 0.3em 0.4em;
+  border: 3px solid #000;
+  border-radius: 999px;
+  background: linear-gradient(#fff4d6, #f3d9a0);
+  color: #3b2a1a;
+  font-size: 0.78rem;
+  font-weight: 900;
+  box-shadow: 2px 2px 0 #000;
+}
+.board-btn img { width: 1.9em; height: 1.9em; object-fit: contain; }
+.board-btn .badge { top: -8px; right: -8px; }
+.board-btn.hot { animation: board-call 1s ease-in-out infinite; background: linear-gradient(#ffd54a, #f39012); }
+@keyframes board-call { 50% { transform: translateY(-2px); box-shadow: 2px 2px 0 #000, 0 0 14px #ffcf5a; } }
+
+/* (예전) 단서로 소거된 용의자 자동 표시 — 지금은 쓰지 않음 (추리는 플레이어가 직접) */
+.stage .suspect-grid.many { grid-template-columns: repeat(5, 1fr); }
+.suspect.eliminated .avatar { filter: grayscale(1) contrast(0.9); }
+.suspect.eliminated .suspect-name { text-decoration: line-through 2px #c62828; }
+.clue-stamp { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden; pointer-events: none; z-index: 2; }
+.clue-stamp .mark-img.x { position: static; translate: 0 8%; width: 110%; opacity: 0.92; scale: 1; }
+.suspect.stamp-in .clue-stamp { animation: x-slam 0.45s cubic-bezier(.2, 1.5, .4, 1) var(--stamp-delay, 0.3s) both; }
+.suspect.stamp-in .avatar { animation: gray-in 0.3s var(--stamp-delay, 0.3s) both; }
+@keyframes x-slam { from { opacity: 0; transform: scale(2.4) rotate(-18deg); } 70% { opacity: 1; } }
+@keyframes gray-in { from { filter: none; } }
+.cleared-by { margin-top: 2px; font-size: 0.62rem; font-weight: 800; color: #c62828; }
+
+/* 단서 20개 → 보드 중앙 하단의 [최종 범인 지목하기] */
+.stage .accuse-bar.final {
+  position: absolute;
+  left: 50%;
+  bottom: 2.2cqh;
+  translate: -50% 0;
+  z-index: 6;
+  margin: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+.accuse-bar.final[hidden] { display: none; }
+.final-accuse-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2em;
+  padding: 1.4cqh 3.4cqw;
+  border: 4px solid #000;
+  border-radius: 16px;
+  background: linear-gradient(#ff5a4e, #b3261e);
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 900;
+  text-shadow: 0 2px 0 #0007;
+  box-shadow: 4px 4px 0 #000, 0 0 28px #ff5a4e99;
+  animation: accuse-call 1.4s ease-in-out infinite;
+}
+.final-accuse-btn small { font-size: 0.72rem; font-weight: 700; opacity: 0.9; }
+.final-accuse-btn:disabled { animation: none; filter: grayscale(0.8); opacity: 0.7; }
+@keyframes accuse-call { 50% { transform: scale(1.04); box-shadow: 4px 4px 0 #000, 0 0 40px #ffcf5acc; } }
+.notebook.accusing .cork > section { padding-bottom: 12cqh; }
+
+/* 용의자 파일 팝업 */
+.suspect-file { display: grid; grid-template-columns: 30% 1fr; gap: 1.2cqw; align-items: start; text-align: left; }
+.file-photo { position: relative; }
+.file-photo .avatar.lg { width: 100%; height: auto; aspect-ratio: 1; margin: 0; border: 5px solid #fffdf6; border-radius: 2px; box-shadow: 0 3px 8px #0007; }
+.file-photo.eliminated .avatar { filter: grayscale(1); }
+.suspect-file dl { display: grid; grid-template-columns: auto 1fr; gap: 0.35em 0.8em; margin: 0; font-size: 0.9rem; }
+.suspect-file dt { font-weight: 900; color: #ffd54a; }
+.suspect-file dd { margin: 0; }
+.suspect-file dd.ok { color: #9ff0b5; font-weight: 800; }
+.suspect-file dd.warn { color: #ffd0cc; font-weight: 800; }
+.related-clues { margin: 1cqh 0 0; padding: 0.8cqh 1cqw; list-style: none; border-radius: 8px; background: #0003; text-align: left; font-size: 0.8rem; }
+.related-clues li + li { margin-top: 0.4em; }
+.related-clues b { color: #ffd54a; }
+
+/* 최종 지목 팝업: 용의자 선택 그리드 */
+.picker-guide { margin: 0 0 1cqh; }
+.pick-count { margin-left: 0.4em; color: #ffd54a; font-weight: 900; }
+.accuse-picker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1cqh 0.8cqw; }
+.accuse-picker .pick {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0.6cqh 0.4cqw;
+  border: 3px solid transparent;
+  border-radius: 6px;
+  background: #fffdf6;
+  color: #3b2a1a;
+  text-shadow: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.accuse-picker .pick .avatar { width: 100%; height: auto; aspect-ratio: 1; margin: 0; border-radius: 2px; border: 0; font-size: 2rem; }
+.accuse-picker .pick b { font-size: 0.8rem; }
+.accuse-picker .pick small { font-size: 0.62rem; color: #8a6d55; }
+.accuse-picker .pick.cleared .avatar { filter: grayscale(1); opacity: 0.75; }
+.accuse-picker .pick .clue-stamp { inset: 0.6cqh 0.4cqw auto; aspect-ratio: 1; }
+.accuse-picker .pick.memo-x .avatar { opacity: 0.6; }   /* 플레이어가 직접 ✕ 메모한 사람만 살짝 흐리게 */
+.accuse-picker .pick.picked { border-color: #e53935; transform: translateY(-3px) scale(1.04); box-shadow: 0 0 0 3px #ffd54a, 0 6px 14px #0008; }
+
+/* 진범의 고백 (타이핑) + [사건 해결 완료] 도장 */
+.stage .confession-scene, .stage .chapter-transition { position: absolute; }
+.confession-scene { inset: 0; display: grid; place-items: center; background: #000d; cursor: pointer; animation: screen-in 0.4s; }
+.confession-scene.out, .chapter-transition.out { opacity: 0; transition: opacity 0.35s; }
+.cf-bg { position: absolute; inset: 0; background: center / cover no-repeat; filter: blur(6px) brightness(0.35) sepia(0.4); scale: 1.05; }
+.cf-card {
+  position: relative;
+  width: min(78cqw, 140cqh);
+  padding: 3cqh 3cqw 2.4cqh;
+  border-radius: 10px;
+  background: linear-gradient(#fdf6e3, #f1e3c2);
+  color: #3b2a1a;
+  box-shadow: 0 12px 40px #000c;
+  rotate: -1deg;
+}
+.cf-head { display: flex; align-items: center; gap: 1.6cqw; margin-bottom: 2cqh; }
+.cf-portraits { display: flex; gap: 0.6cqw; }
+.cf-portraits .avatar.lg { width: 17cqh; height: 17cqh; margin: 0; border: 5px solid #fff; border-radius: 2px; box-shadow: 0 3px 8px #0006; }
+.cf-who { display: flex; flex-direction: column; gap: 0.2em; }
+.cf-who small { color: #b3261e; font-weight: 900; letter-spacing: 0.1em; }
+.cf-who b { font-size: 1.5rem; }
+.cf-who span { font-size: 0.8rem; color: #6b5440; }
+.cf-text { min-height: 7em; margin: 0; font-size: 1.05rem; line-height: 1.7; font-family: inherit; white-space: pre-wrap; }
+.cf-text::before { content: '“'; font-size: 1.6em; line-height: 0; color: #b3261e; margin-right: 0.15em; }
+.cf-caret { display: inline-block; width: 0.5em; height: 1.1em; margin-left: 2px; vertical-align: -0.15em; background: #3b2a1a; animation: caret 0.7s steps(1) infinite; }
+.confession-scene.typed .cf-caret { display: none; }
+@keyframes caret { 50% { opacity: 0; } }
+.cf-stamp {
+  position: absolute;
+  right: 4cqw;
+  bottom: 10cqh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.6em 1.2em;
+  border: 5px double #c62828;
+  border-radius: 10px;
+  color: #c62828;
+  font-weight: 900;
+  rotate: -12deg;
+  opacity: 0;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.cf-stamp span { font-size: 1.7rem; letter-spacing: 0.08em; }
+.cf-stamp small { font-size: 0.7rem; letter-spacing: 0.2em; }
+.confession-scene.stamped .cf-stamp { animation: case-stamp 0.4s cubic-bezier(.2, 1.6, .4, 1) both; }
+.confession-scene.stamped .cf-card { animation: card-thud 0.35s 0.12s; }
+@keyframes case-stamp { from { opacity: 0; transform: scale(2.6); } to { opacity: 0.92; transform: scale(1); } }
+@keyframes card-thud { 30% { translate: 0 6px; } 60% { translate: 0 -3px; } }
+.cf-next { display: block; margin: 2cqh 0 0 auto; padding: 0.5em 1.2em; border: 0; border-radius: 999px; background: #3b2a1a; color: #fff; font-weight: 800; }
+
+/* 대륙(챕터) 전환 */
+.chapter-transition { inset: 0; display: grid; place-items: center; overflow: hidden; background: #0b1a2e; cursor: pointer; animation: screen-in 0.5s; }
+.ct-bg { position: absolute; inset: 0; background: center / cover no-repeat; filter: brightness(0.45) saturate(1.1); animation: ct-pan 3.4s ease-out both; }
+@keyframes ct-pan { from { scale: 1.18; } to { scale: 1.02; } }
+.ct-body { position: relative; display: flex; flex-direction: column; align-items: center; gap: 1.2cqh; color: #fff; text-align: center; text-shadow: 0 2px 8px #000c; }
+.ct-map { width: 16cqh; height: 16cqh; object-fit: contain; animation: ct-drop 0.7s cubic-bezier(.2, 1.5, .4, 1) both; }
+@keyframes ct-drop { from { opacity: 0; transform: translateY(-6cqh) rotate(-20deg) scale(0.6); } }
+.ct-chapter { font-size: 0.85rem; font-weight: 900; letter-spacing: 0.25em; color: #ffd54a; }
+.ct-body h2 { margin: 0; font-size: 2rem; font-weight: 900; animation: ct-rise 0.6s 0.25s both; }
+.ct-body h2 b { color: #ffd54a; }
+.ct-ep { margin: 0; font-size: 1rem; opacity: 0.9; animation: ct-rise 0.6s 0.45s both; }
+@keyframes ct-rise { from { opacity: 0; translate: 0 2cqh; } }
+.ct-route { display: flex; gap: 0.6cqw; margin: 2cqh 0 0; padding: 0; list-style: none; animation: ct-rise 0.6s 0.6s both; }
+.ct-route li { display: flex; flex-direction: column; align-items: center; gap: 0.5em; width: 11cqw; font-size: 0.72rem; font-weight: 800; opacity: 0.55; }
+.ct-route li i { width: 2.4cqh; height: 2.4cqh; border: 3px solid #fff; border-radius: 50%; }
+.ct-route li.done { opacity: 0.9; }
+.ct-route li.done i { background: #9ff0b5; border-color: #9ff0b5; }
+.ct-route li.now { opacity: 1; color: #ffd54a; }
+.ct-route li.now i { background: #ffd54a; border-color: #ffd54a; box-shadow: 0 0 16px #ffd54a; animation: ct-blink 0.8s infinite; }
+@keyframes ct-blink { 50% { opacity: 0.4; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .board-btn.hot, .final-accuse-btn, .ct-bg, .ct-map, .ct-body h2, .ct-ep, .ct-route, .ct-route li.now i,
+  .suspect.stamp-in .clue-stamp, .suspect.stamp-in .avatar { animation: none; }
+}
+
+/* 지목 직후 결과 발표 전 (두근두근) */
+.stage .suspense-scene { position: absolute; }
+.suspense-scene { inset: 0; display: grid; place-content: center; justify-items: center; gap: 2cqh; background: #000c; color: #fff; animation: screen-in 0.25s; }
+.suspense-scene p { margin: 0; font-size: 1.6rem; text-shadow: 0 2px 6px #000; }
+.suspense-avatars { display: flex; gap: 1.5cqw; }
+.suspense-avatars .avatar.lg { width: 26cqh; height: 26cqh; margin: 0; border: 6px solid #fff; border-radius: 4px; animation: heartbeat 0.7s ease-in-out infinite; }
+@keyframes heartbeat { 15% { transform: scale(1.06); } 30% { transform: scale(1); } 45% { transform: scale(1.04); } }
+@media (prefers-reduced-motion: reduce) { .suspense-avatars .avatar.lg { animation: none; } }
+
+/* =====================================================================
+   클리어 결과 화면 (popup_stage_clear 배지 · 파란 패널 · 골드/연승 · BONUS 말풍선 · HOME / REPLAY / NEXT STAGE)
+   ===================================================================== */
+.stage .result-screen { position: absolute; }
+.result-screen { inset: 0; display: grid; place-items: center; background: #000a; animation: screen-in 0.25s; }
+.result-screen.out { opacity: 0; transition: opacity 0.2s; }
+.rs-panel {
+  position: relative;
+  width: min(74cqw, 124cqh);
+  aspect-ratio: 1.55;
+  margin-top: 9cqh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0 1cqh;
+  /* 파란 패널: 모서리(고양이 포함)는 그대로, 가운데만 늘림 */
+  border-style: solid;
+  border-width: 21cqh 22cqh 8cqh 8cqh;
+  border-image: url(../game_assets/derived/frame_result.webp) 200 210 80 80 fill / 21cqh 22cqh 8cqh 8cqh stretch;
+  animation: rs-pop 0.35s cubic-bezier(.2, 1.4, .4, 1) both;
+}
+@keyframes rs-pop { from { transform: scale(0.7); opacity: 0; } }
+.rs-badge {
+  position: absolute;
+  left: 50%;
+  top: -35cqh;
+  width: 50cqh;
+  translate: -50% 0;
+  filter: drop-shadow(0 6px 10px #0008);
+  animation: rs-badge 0.6s 0.15s cubic-bezier(.2, 1.5, .4, 1) both;
+}
+@keyframes rs-badge { from { transform: scale(0.3) rotate(-12deg); opacity: 0; } }
+.rs-bonus {
+  position: absolute;
+  right: 1cqh;
+  top: -9cqh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.4em 1.1em 0.5em;
+  border: 4px solid #f0b46a;
+  border-radius: 22px;
+  background: #fff4e3;
+  box-shadow: 0 4px 0 #b9773a, 0 8px 16px #0006;
+  animation: rs-bubble 0.5s 0.5s cubic-bezier(.2, 1.6, .4, 1) both;
+}
+.rs-bonus::after {     /* 말풍선 꼬리 (왼쪽 아래) */
+  content: '';
+  position: absolute;
+  left: 14%;
+  bottom: -18px;
+  border: 12px solid transparent;
+  border-top: 16px solid #fff4e3;
+  border-left-width: 4px;
+}
+@keyframes rs-bubble { from { transform: scale(0); } }
+.rs-bonus small { font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; font-size: 1.5rem; color: #e8652a; -webkit-text-stroke: 1px #7a2d10; letter-spacing: 0.04em; }
+.rs-bonus span { display: flex; align-items: center; gap: 0.3em; }
+.rs-bonus img { height: 2.3rem; width: auto; filter: drop-shadow(0 2px 0 #0004); }
+.rs-bonus b { font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; font-size: 2rem; color: #3b2a1a; margin-right: 0.3em; }
+.rs-gold {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  width: 100%;
+  margin-bottom: 3cqh;
+  padding: 0.25em 1em;
+  border-radius: 18px;
+  background: #0d3c8acc;
+  box-shadow: inset 0 2px 6px #0007;
+  font-size: 2.9rem;
+  line-height: 1.1;
+}
+.rs-gold img { height: 1.35em; width: auto; filter: drop-shadow(0 3px 0 #0005); }
+.rs-gold b, .rs-gold i {
+  font-style: normal;
+  font-weight: 900;
+  color: #ffd54a;
+  -webkit-text-stroke: 3px #6b3a00;
+  paint-order: stroke fill;
+  text-shadow: 0 4px 0 #6b3a00;
+}
+.rs-gold b:first-of-type { font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; }
+.rs-notes { margin: -1cqh 0 2cqh; text-align: center; color: #fff; font-size: 0.95rem; text-shadow: 0 1px 2px #000; }
+.rs-notes p { margin: 0.15em 0; }
+.rs-notes b { color: #ffd54a; }
+.rs-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.4cqh; width: 100%; margin-top: 4cqh; }
+.rs-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 16cqh;
+  padding: 0 0 1.6cqh;
+  border: 3px solid #1a1a1a;
+  border-radius: 14px;
+  box-shadow: inset 0 -6px 0 #0003, 0 5px 0 #0007;
+  transition: transform 0.12s;
+}
+.rs-tile:active { transform: translateY(3px); }
+.rs-tile.red { background: linear-gradient(#f05a5a, #c73131); }
+.rs-tile.orange { background: linear-gradient(#ff9a45, #e2691b); }
+.rs-tile.green { background: linear-gradient(#7ed84a, #3fa524); }
+.rs-tile.hot { animation: cta-bob 1.2s ease-in-out infinite; }
+.rs-icon { position: absolute; top: -4cqh; left: 50%; translate: -50% 0; height: 10cqh; width: auto; filter: drop-shadow(0 3px 0 #0006); }
+.rs-label { width: 88%; height: auto; filter: drop-shadow(0 2px 0 #0005); }
+.rs-tile small { position: absolute; bottom: -1.9em; font-size: 0.85rem; color: #fff; text-shadow: 0 1px 2px #000; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .rs-panel, .rs-badge, .rs-bonus, .rs-tile.hot { animation: none; } }
+
+/* =====================================================================
+   단서 획득 팝업 (세로 파란 패널 · '단서 획득' 배지 · 집게 양피지 · COLLECT)
+   ===================================================================== */
+.stage .clue-screen { position: absolute; }
+.clue-screen { inset: 0; display: grid; place-items: center; background: #000a; animation: screen-in 0.25s; }
+.clue-screen.out { opacity: 0; transition: opacity 0.2s; }
+.cs-panel {
+  position: relative;
+  isolation: isolate;
+  width: 96cqh;
+  height: 84cqh;
+  margin-top: 12cqh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12cqh 6cqh 2.5cqh;
+  animation: rs-pop 0.35s cubic-bezier(.2, 1.4, .4, 1) both;
+}
+/* 파란 패널(고양이 모서리)은 뒤 레이어로: 모서리는 그대로, 가운데만 늘림 → 내용은 패널 폭을 다 씀 */
+.cs-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-style: solid;
+  border-width: 20cqh 21cqh 8cqh 8cqh;
+  border-image: url(../game_assets/derived/frame_result.webp) 200 210 80 80 fill / 20cqh 21cqh 8cqh 8cqh stretch;
+}
+.cs-badge { position: absolute; left: 50%; top: -14cqh; width: 46cqh; translate: -50% 0; }
+.cs-badge img { width: 100%; height: auto; filter: drop-shadow(0 6px 10px #0008); animation: rs-badge 0.6s 0.1s cubic-bezier(.2, 1.5, .4, 1) both; }
+.cs-badge span {
+  position: absolute;
+  left: 13%;
+  right: 13%;
+  top: 46%;
+  height: 17%;
+  display: grid;
+  place-items: center;
+  color: #ffd54a;
+  font-size: 2.6rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  -webkit-text-stroke: 4px #3a2400;
+  paint-order: stroke fill;
+  text-shadow: 0 3px 0 #3a2400;
+  animation: rs-badge 0.6s 0.1s cubic-bezier(.2, 1.5, .4, 1) both;
+}
+.cs-note {
+  width: 90%;
+  margin-top: 8cqh;
+  aspect-ratio: 900 / 520;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.4cqh;
+  padding: 10.5cqh 8% 2.5cqh;
+  background: url(../game_assets/clue_note_paper.webp) center / 100% 100% no-repeat;
+  color: #3b2a1a;
+  text-align: center;
+  filter: drop-shadow(0 6px 8px #0006);
+}
+.cs-note b { color: #c62828; font-size: 2.2rem; }
+.cs-note p { margin: 0; font-size: 1.9rem; line-height: 1.5; word-break: keep-all; }
+.cs-saved { display: flex; align-items: center; gap: 0.5em; margin: 2cqh 0 0; color: #fff; font-size: 1.35rem; white-space: nowrap; text-shadow: 0 2px 3px #000; }
+.cs-saved img { height: 2.2em; width: auto; }
+.cs-collect { margin-top: auto; padding: 0; border: 0; background: none; width: 32cqh; transition: transform 0.12s; }
+.cs-collect:active { transform: translateY(3px); }
+.cs-collect img { width: 100%; height: auto; filter: drop-shadow(0 4px 0 #0007); }
+@media (prefers-reduced-motion: reduce) { .cs-panel, .cs-badge img, .cs-badge span { animation: none; } }
+
+/* =====================================================================
+   50연승 프레스티지 보상 팝업 · 설정의 카드 뒷면 그리드
+   ===================================================================== */
+.stage .prestige-screen { position: absolute; }
+.prestige-screen { inset: 0; display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle at 50% 45%, #3a2a6acc, #0b0716f2 70%); animation: screen-in 0.3s; }
+.prestige-screen.out { opacity: 0; transition: opacity 0.25s; }
+.ps-rays {     /* 뒤에서 도는 빛줄기 */
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 160cqh;
+  height: 160cqh;
+  translate: -50% -50%;
+  background: repeating-conic-gradient(#ffd54a33 0 10deg, transparent 10deg 20deg);
+  border-radius: 50%;
+  mask: radial-gradient(circle, #000 20%, transparent 65%);
+  animation: ps-spin 18s linear infinite;
+}
+@keyframes ps-spin { to { rotate: 360deg; } }
+.ps-body { position: relative; display: flex; flex-direction: column; align-items: center; gap: 1.2cqh; text-align: center; }
+.ps-title, .ps-sub {
+  margin: 0;
+  font-family: 'Luckiest Guy', 'NanumSquare', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  paint-order: stroke fill;
+}
+.ps-title { font-size: 3rem; color: #ffd54a; -webkit-text-stroke: 6px #6b3a00; text-shadow: 0 5px 0 #6b3a00, 0 8px 20px #000a; animation: rs-badge 0.6s cubic-bezier(.2, 1.5, .4, 1) both; }
+.ps-sub { font-size: 1.7rem; color: #fff; -webkit-text-stroke: 4px #b3261e; text-shadow: 0 3px 0 #7a0d0d; animation: rs-badge 0.6s 0.15s cubic-bezier(.2, 1.5, .4, 1) both; }
+.ps-card { margin: 1cqh 0; animation: ps-card 0.9s 0.3s cubic-bezier(.2, 1.4, .4, 1) both; }
+.ps-card img { height: 42cqh; width: auto; filter: drop-shadow(0 0 24px #ffd54acc) drop-shadow(0 10px 18px #000a); }
+@keyframes ps-card { from { transform: rotateY(540deg) scale(0.3); opacity: 0; } }
+.ps-fallback { padding: 1em 2em; border-radius: 16px; background: #0006; color: #fff; font-size: 1.6rem; }
+.ps-name { margin: 0; color: #fff; font-size: 1.1rem; text-shadow: 0 2px 4px #000; }
+.ps-name b { color: #ffd54a; }
+.ps-ok { padding: 0; border: 0; background: none; width: 30cqh; transition: transform 0.12s; }
+.ps-ok:active { transform: translateY(3px); }
+.ps-ok img { width: 100%; height: auto; filter: drop-shadow(0 4px 0 #0007); }
+.ps-reset { margin: 0; color: #ffcf9a; font-size: 0.95rem; text-shadow: 0 1px 2px #000; }
+.rs-bonus img.rs-back { height: 3rem; }
+@media (prefers-reduced-motion: reduce) { .ps-rays, .ps-title, .ps-sub, .ps-card { animation: none; } }
+
+/* 설정 · 카드 뒷면 */
+.cb-count { margin-left: 0.4em; color: #ffd54a; font-size: 0.85em; }
+.card-back-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 10px;
+  padding: 12px;
+  margin-bottom: 6px;
+  border-radius: 10px;
+  background: #0003;
+}
+.cb-item {
+  position: relative;
+  padding: 3px;
+  border: 3px solid transparent;
+  border-radius: 9px;
+  background: none;
+  cursor: pointer;
+  transition: transform 0.12s;
+}
+.cb-item img { display: block; width: 100%; aspect-ratio: 180 / 260; object-fit: contain; }
+.cb-item.owned:hover { transform: translateY(-3px); }
+.cb-item.equipped { border-color: #ffd54a; box-shadow: 0 0 0 2px #6b3a00, 0 0 14px #ffd54acc; }
+.cb-item.locked { cursor: not-allowed; }
+.cb-item.locked img { filter: grayscale(1) brightness(0.45); }
+.cb-lock { position: absolute; inset: 0; display: grid; place-items: center; font-size: 1.6rem; }
+.cb-check {
+  position: absolute;
+  right: -6px;
+  top: -6px;
+  width: 1.6em;
+  height: 1.6em;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #2e9e5b;
+  color: #fff;
+  font-size: 0.8rem;
+  box-shadow: 0 2px 0 #0006;
+}
+.cb-hint { margin: 0 0 15px; color: #bdc3c7; font-size: 0.85rem; }
+
+/* =====================================================================
+   수첩: 용의자 / 논리 그리드 탭 · 논리 그리드 표 · 결정적 힌트 버튼
+   ===================================================================== */
+.board-tabs { display: flex; align-items: center; gap: 0.5em; margin-bottom: 1cqh; }
+.board-tab {
+  padding: 0.35em 1em;
+  border: 2px solid #3b2a1a;
+  border-radius: 999px;
+  background: #fffbe6cc;
+  color: #3b2a1a;
+  font-size: 1rem;
+  font-weight: 900;
+  box-shadow: 0 2px 0 #0006;
+}
+.board-tab.on { background: #ffd54a; }
+.board-tab[hidden] { display: none; }
+.board-tab-help { color: #fff; font-size: 0.8rem; text-shadow: 0 1px 2px #000; }
+.hint-ad-btn {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.6em;
+  padding: 0.4em 1em;
+  border: 3px solid #1a1a1a;
+  border-radius: 999px;
+  background: linear-gradient(#7ed84a, #3fa524);
+  color: #fff;
+  font-weight: 900;
+  text-shadow: 0 1px 2px #0008;
+  box-shadow: 0 3px 0 #0007;
+}
+.hint-ad-btn small { margin-left: 0.4em; opacity: 0.9; }
+
+/* =====================================================================
+   논리 그리드 v2 — 게임 팝업과 같은 파란 패널 · 크림색 칸 · 도장 같은 ✕ / ○
+   그리드 탭을 열면 수첩이 '그리드 모드'가 되어 그리드가 보드 대부분을 차지 (휴대폰에서도 칸이 큼)
+   ===================================================================== */
+.stage .modal.notebook.grid-mode { width: 98cqw; height: 96cqh; }
+.stage .notebook.grid-mode .cork { grid-template-columns: minmax(0, 0.62fr) minmax(0, 2.6fr); gap: 1cqw; padding: 1.2cqh 1cqw; }
+.notebook.grid-mode .cork-clues .clue { font-size: 0.9rem; padding: 6px 8px; }
+.notebook.grid-mode .cork-clues .clue.intro { display: none; }
+.notebook.grid-mode #nbStrings { display: none; }          /* 그리드 모드에서는 붉은 실 숨김 */
+.notebook.grid-mode .cork-suspects { padding-bottom: 0 !important; }
+.logic-grid-wrap {
+  padding: 0.8cqh 0.7cqw 1cqh;
+  border: 3px solid #0b2a5a;
+  border-radius: 16px;
+  background: linear-gradient(#2b74d6, #1a4fa0);
+  box-shadow: 0 6px 16px #0008, inset 0 2px 0 #ffffff40;
+}
+.logic-grid-wrap[hidden] { display: none; }
+.lg-bar { display: flex; align-items: center; gap: 0.8em; margin-bottom: 0.8cqh; color: #fff; font-size: 0.85rem; }
+.lg-legend { display: inline-flex; align-items: center; gap: 0.35em; opacity: 0.95; }
+.lg-legend .lg-mini { margin-left: 0.4em; }
+.lg-goal { flex: 1; text-align: center; text-shadow: 0 1px 2px #0008; }
+.lg-goal b { color: #ffd54a; }
+.lg-help, .lg-clear {
+  flex: none;
+  padding: 0.25em 0.8em;
+  border: 2px solid #0b2a5a;
+  border-radius: 999px;
+  background: #fff7e3;
+  color: #0b2a5a;
+  font-weight: 900;
+  box-shadow: 0 2px 0 #0007;
+}
+.lg-help { width: 2em; padding: 0.25em 0; }
+.logic-grid { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0.25cqw 0.5cqh; }
+.lg-col-who { width: 11%; }
+.logic-grid th, .logic-grid td { padding: 0; border: 0; }
+.lg-group {
+  padding: 0.25em 0 !important;
+  border-radius: 999px;
+  color: #0b2a5a;
+  font-size: 0.85rem;
+  font-weight: 900;
+  text-align: center;
+}
+.lg-group.places { background: #9fd3ff; }
+.lg-group.items { background: #ffd54a; }
+.lg-head { height: 9cqh; vertical-align: bottom; }
+.lg-head span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  padding: 0 0.1em;
+  color: #fff;
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.12;
+  text-align: center;
+  word-break: keep-all;
+  text-shadow: 0 1px 2px #000a;
+}
+.lg-head.crime span { color: #ffb3a8; }
+.lg-head.crime::before {                       /* 사건 현장 · 범행 도구 칸 표시 */
+  content: '';
+  display: block;
+  width: 0.7em;
+  height: 0.7em;
+  margin: 0 auto 0.25em;
+  border-radius: 50%;
+  background: #ff5a4e;
+  box-shadow: 0 0 6px #ff5a4e;
+}
+.lg-who { text-align: left; }
+.lg-who { display: flex; align-items: center; gap: 0.4em; height: 100%; padding-right: 0.3em !important; }
+.lg-who .avatar { flex: none; width: 5cqh; height: 5cqh; margin: 0; border: 2px solid #ffd54a; border-radius: 50%; overflow: hidden; font-size: 1.1rem; }
+.lg-who .avatar.portrait img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.lg-who b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; font-size: 0.95rem; text-shadow: 0 1px 2px #000a; }
+td.split, th.split { padding-left: 0.6cqw !important; }
+.lg-cell {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 7.4cqh;
+  min-height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: #fff7e3;
+  box-shadow: inset 0 -3px 0 #e2cfa3, 0 2px 0 #0b2a5a66;
+  cursor: pointer;
+  transition: transform 0.08s, background 0.15s;
+}
+.lg-cell:hover { background: #fffbef; }
+.lg-cell:active { transform: translateY(1px) scale(0.97); }
+.lg-cell i, .lg-mini { position: relative; display: inline-block; }
+.lg-cell i { position: absolute; inset: 0; margin: auto; width: 62%; height: 62%; max-width: 3.4cqh; max-height: 3.4cqh; }
+/* ✕ : 빨간 붓 획 두 개 */
+.lg-cell.x i::before, .lg-cell.x i::after, .lg-cell.auto i::before, .lg-cell.auto i::after,
+.lg-mini.x::before, .lg-mini.x::after, .lg-mini.auto::before, .lg-mini.auto::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 115%;
+  height: 22%;
+  border-radius: 999px;
+  background: #e53935;
+  translate: -50% -50%;
+  rotate: 45deg;
+}
+.lg-cell.x i::after, .lg-cell.auto i::after, .lg-mini.x::after, .lg-mini.auto::after { rotate: -45deg; }
+.lg-cell.x { background: #ffe6e2; animation: lg-stamp 0.16s ease-out; }
+.lg-cell.auto { background: #f6efdc; }
+.lg-cell.auto i::before, .lg-cell.auto i::after, .lg-mini.auto::before, .lg-mini.auto::after { background: #e5393566; }
+/* ○ : 초록 고리 */
+.lg-cell.o { background: #e1f7e6; animation: lg-stamp 0.16s ease-out; }
+.lg-cell.o i, .lg-mini.o { border: 0.45em solid #2e9e5b; border-radius: 50%; box-shadow: 0 0 8px #2e9e5b88; }
+.lg-cell.o i { width: 58%; height: 58%; border-width: 4px; box-sizing: border-box; }
+@keyframes lg-stamp { from { transform: scale(0.85); } }
+.lg-mini { width: 0.95em; height: 0.95em; vertical-align: -0.1em; }
+.lg-mini.o { border-width: 3px; box-sizing: border-box; }
+/* 사용법 팝업 */
+.gg-rules { margin: 0 0 0.8em; padding-left: 1.3em; text-align: left; line-height: 1.55; }
+.gg-rules li + li { margin-top: 0.35em; }
+.gg-rules b { color: #ffd54a; }
+.gg-cell { display: inline-flex; align-items: center; gap: 0.25em; padding: 0 0.4em; border-radius: 6px; background: #fff7e3; color: #3b2a1a; font-weight: 800; }
+.gg-goal { padding: 0.6em 0.9em; border-radius: 10px; background: #0005; color: #fff; text-align: center; }
+.gg-goal b { color: #ffd54a; }
+
+/* ---- 결과 정산: 기본 보상 × 배수 · EXP 롤링 · 실패 결과창 ---- */
+.rs-gold b[data-roll] { font-variant-numeric: tabular-nums; min-width: 3.2em; text-align: left; }
+.rs-gold b.done, .rs-exp b.done { animation: rs-num-pop 0.35s ease-out; }
+@keyframes rs-num-pop { 50% { transform: scale(1.18); } }
+.rs-sub { display: flex; align-items: center; justify-content: center; gap: 1em; margin: -1.6cqh 0 1.2cqh; flex-wrap: wrap; }
+.rs-sub .rs-calc, .rs-sub .rs-exp { margin: 0; }
+.rs-calc { margin: -0.6cqh 0 1cqh; color: #fff; font-size: 1rem; text-shadow: 0 1px 2px #000; text-align: center; }
+.rs-calc b { color: #ffd54a; }
+.rs-calc b.x2 { color: #7fe3ff; }
+.rs-calc b.x4 { color: #ff7ad1; }
+.rs-calc.lost { color: #ffb0a0; }
+.rs-exp {
+  display: inline-flex; align-items: center; gap: 0.5em; margin: 0 0 1.6cqh;
+  padding: 0.25em 1em; border-radius: 999px;
+  background: linear-gradient(#2c4f9e, #1d3672); border: 2px solid #ffd54a; box-shadow: 0 3px 0 #0006;
+}
+.rs-exp span { font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; color: #7fe3ff; font-size: 1.15rem; letter-spacing: 0.05em; }
+.rs-exp b { font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; color: #fff; font-size: 1.5rem; -webkit-text-stroke: 1px #0b1d46; font-variant-numeric: tabular-nums; min-width: 2.6em; }
+.rs-fail-title {
+  margin: 0 0 1.5cqh; font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; font-size: 2.6rem; letter-spacing: 0.04em;
+  color: #ff6b5b; -webkit-text-stroke: 2px #fff; paint-order: stroke fill; text-shadow: 0 4px 0 #0006;
+}
+.result-screen.fail .rs-gold { opacity: 0.75; filter: grayscale(0.5); }
+.rs-tip { margin: 0.4cqh 0 0; color: #dfe8ff; font-size: 0.9rem; text-shadow: 0 1px 2px #000; }
+.rs-save {
+  margin: 0.2cqh 0 1cqh; padding: 0.45em 1.2em; border: 2px solid #fff; border-radius: 999px; cursor: pointer;
+  background: linear-gradient(#ff8a3d, #e04e1d); color: #fff; font: inherit; font-weight: 700; box-shadow: 0 3px 0 #7a2d10;
+}
+.rs-save:active { transform: translateY(2px); box-shadow: 0 1px 0 #7a2d10; }
+.rs-actions.two { grid-template-columns: repeat(2, 1fr); width: 70%; }
+/* 골드 부족 팝업 */
+.ng-row { display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 0.3em 0.6em; align-items: center; margin: 0.8em auto 0.2em; max-width: 22em; }
+.ng-row span { opacity: 0.75; font-size: 0.9em; }
+.ng-row b { font-size: 1.2em; }
+.ng-row b.have { color: #ff9a7a; }
+/* 정산 줄(기본 × 배수 · EXP)이 있으면 위 배지와 겹치지 않게 간격을 줄인다 */
+.rs-panel:has(.rs-sub) .rs-gold { margin-bottom: 2.4cqh; font-size: 2.5rem; padding: 0.15em 1em; }
+.rs-panel:has(.rs-sub) .rs-notes { margin: -0.4cqh 0 0.6cqh; }
+.rs-panel:has(.rs-sub) .rs-actions { margin-top: 2.6cqh; }
+
+/* ---- 공정성 배지 · 정답 수순 ---- */
+.info-chip.fair { background: #e6f7e0; color: #23661c; border-color: #8fd27a; font-weight: 700; }
+.rs-solution {
+  margin-left: 0.4em; padding: 0.25em 0.9em; border: 2px solid #ffd54a; border-radius: 999px; cursor: pointer;
+  background: #1d3672; color: #ffd54a; font: inherit; font-weight: 700;
+}
+.rs-solution:active { transform: translateY(1px); }
+.modal.solution .sol-list {
+  display: flex; flex-wrap: wrap; gap: 0.35em; margin: 0.6em 0 0; padding: 0; list-style: none; counter-reset: sol;
+  max-height: 46cqh; overflow-y: auto;
+}
+.sol-step { counter-increment: sol; display: inline-flex; align-items: center; gap: 0.2em; padding: 0.15em 0.35em 0.15em 0.25em; border-radius: 8px; background: #fff7e3; border: 1px solid #e3c98f; }
+.sol-step::before { content: counter(sol); font-size: 0.7em; color: #8a6a2c; min-width: 1.2em; text-align: right; }
+.sol-step small { font-size: 0.68em; color: #8a6a2c; }
+.sol-step.draw { background: #e8f0ff; border-color: #9db5e6; }
+.sol-step.draw small { color: #3b5aa0; }
+.sol-card { display: inline-block; min-width: 2.1em; padding: 0.05em 0.3em; border-radius: 5px; background: #fff; border: 1px solid #bbb; color: #222; font-weight: 800; text-align: center; }
+.sol-card.red { color: #d22; }
+.sol-card.special { background: #ffe9a8; border-color: #e0b84a; color: #7a5200; }
+.sol-more { align-self: center; color: #ffe6a8; font-size: 0.85em; padding: 0 0.4em; }
+
+/* ---- 스테이지 별 등급 ---- */
+.rs-stars { display: flex; align-items: center; justify-content: center; gap: 0.15em; margin: -2cqh 0 0; position: relative; }
+.rs-stars i {
+  font-style: normal; font-size: 2.7rem; line-height: 1; color: #23315f; -webkit-text-stroke: 2px #0b1d46;
+  text-shadow: 0 3px 0 #0006; transform: scale(0.4); opacity: 0.5;
+  animation: rs-star-in 0.45s calc(0.5s + var(--d) * 0.28s) cubic-bezier(.2, 1.6, .4, 1) forwards;
+}
+.rs-stars i:nth-child(2) { font-size: 3.2rem; translate: 0 -0.15em; }
+.rs-stars i.on { color: #ffd54a; -webkit-text-stroke: 2px #8a4b00; }
+@keyframes rs-star-in { to { transform: scale(1); opacity: 1; } }
+.rs-stars b { position: absolute; top: -0.3em; left: calc(50% + 3.4em); font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; color: #ff6b5b; -webkit-text-stroke: 1px #fff; font-size: 1.05rem; rotate: -8deg; animation: cta-bob 1.2s ease-in-out infinite; }
+.rs-panel:has(.rs-stars) .rs-gold { margin-bottom: 1.2cqh; font-size: 2.3rem; }
+.rs-panel:has(.rs-stars) .rs-actions { margin-top: 1.6cqh; }
+.rs-panel:has(.rs-stars) .rs-sub { margin-top: -0.6cqh; }
+@media (prefers-reduced-motion: reduce) { .rs-stars i { animation: none; transform: none; opacity: 1; } }
+.entry-stars { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.3em 0.8em; margin: 0.2em 0 0; font-size: 0.98rem; }
+.entry-stars:empty { display: none; }
+.es-best i { font-style: normal; font-size: 1.25rem; color: #c9c2b3; -webkit-text-stroke: 1px #8a7a5a; }
+.es-best i.on { color: #ffc93a; -webkit-text-stroke: 1px #8a4b00; }
+.es-rule { opacity: 0.9; }
+.es-total { font-weight: 800; color: #b06a00; }
+.es-rule b, .es-total b { color: #ffc93a; -webkit-text-stroke: 0.5px #8a4b00; }
+
+.rs-stars i, .es-best i { display: inline-flex; }
+.rs-stars i svg { width: 1.1em; height: 1.1em; fill: #2a3c74; stroke: #0b1d46; stroke-width: 1.6; stroke-linejoin: round; filter: drop-shadow(0 3px 0 #0006); }
+.rs-stars i.on svg { fill: #ffd54a; stroke: #8a4b00; }
+.es-best i svg { width: 1.15em; height: 1.15em; fill: #d8d0bf; stroke: #8a7a5a; stroke-width: 1.4; stroke-linejoin: round; }
+.es-best i.on svg { fill: #ffc93a; stroke: #8a4b00; }
+
+/* ---- 스테이지 선택 ---- */
+.stages-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.35em; margin-top: 0.8cqh;
+  padding: 0.35em 1em; border: 3px solid #fff; border-radius: 999px; cursor: pointer;
+  background: linear-gradient(#3a63c9, #1d3672); color: #fff; box-shadow: 0 4px 0 #0b1d46, 0 6px 12px #0006;
+  font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; font-size: 1.05rem; letter-spacing: 0.04em;
+}
+.stages-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #0b1d46; }
+.stages-btn .sb-star { color: #ffd54a; }
+.stages-btn b { font-weight: 400; color: #ffd54a; }
+.stage .modal.stages-panel { width: min(80cqw, 130cqh); max-width: none; max-height: 94cqh; display: flex; flex-direction: column; }
+.stages-panel .modal-head { display: flex; align-items: center; gap: 0.5em; }
+.stages-panel .modal-head h2 { flex: 1; text-align: center; margin: 0; font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; letter-spacing: 0.05em; }
+.st-nav { font-size: 1.6rem; line-height: 1; }
+.st-nav:disabled { opacity: 0.3; }
+.st-sub { margin: 0.2em 0 0.6em; text-align: center; font-weight: 700; }
+.stage-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.2cqh 1cqw; overflow-y: auto; padding: 0.4em; }
+.st-tile {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2em;
+  min-height: 12cqh; padding: 0.4em 0.2em; border-radius: 14px; border: 3px solid #e3c98f; cursor: pointer;
+  background: linear-gradient(#fffaf0, #f3e2bd); box-shadow: 0 4px 0 #b9894a; color: #3b2a1a;
+}
+.st-tile:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #b9894a; }
+.st-no { font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; font-size: 1.7rem; line-height: 1; }
+.st-stars { display: inline-flex; gap: 0.05em; }
+.st-stars i { display: inline-flex; }
+.st-stars svg { width: 1.15rem; height: 1.15rem; fill: #d8d0bf; stroke: #8a7a5a; stroke-width: 1.4; stroke-linejoin: round; }
+.st-stars i.on svg { fill: #ffc93a; stroke: #8a4b00; }
+.st-tile.perfect { border-color: #ffc93a; background: linear-gradient(#fff6d0, #ffe28a); }
+.st-tile.next { border-color: #fff; background: linear-gradient(#7ed84a, #3fa524); color: #fff; box-shadow: 0 4px 0 #23661c, 0 0 0 3px #ffd54a; animation: cta-bob 1.2s ease-in-out infinite; }
+.st-tile.next .st-no { -webkit-text-stroke: 1px #23661c; }
+.st-next { font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; font-size: 0.95rem; letter-spacing: 0.06em; }
+.st-tile.locked { cursor: default; background: #d9d2c4; border-color: #b7ad99; box-shadow: 0 4px 0 #8f8573; color: #7c7465; }
+.st-lock { font-size: 1.1rem; }
+.st-clue { position: absolute; top: 0.25em; right: 0.4em; font-size: 0.7rem; color: #8a6a2c; }
+.st-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.3em 1.2em; margin: 0.6em 0 0; font-size: 0.95rem; }
+.st-foot b { color: #ffc93a; -webkit-text-stroke: 0.5px #8a4b00; }
+.sf-total { font-weight: 800; font-size: 1.1em; }
+.sf-rule { opacity: 0.85; }
+.sf-accuse { width: 100%; text-align: center; color: #c0392b; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .st-tile.next { animation: none; } }
+.lg-corridor { font-weight: 600; font-size: 0.78em; opacity: 0.85; margin-left: 0.4em; }
+
+/* ---- 논리 그리드: 칸 확인 ---- */
+.lg-check { display: inline-flex; align-items: center; gap: 0.3em; padding: 0.25em 0.8em; border: 2px solid #ffd54a; border-radius: 999px; background: #1d3672; color: #fff; font: inherit; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
+.lg-check b { color: #ffd54a; }
+.lg-check.on { background: #ffd54a; color: #1d3672; animation: cta-bob 1.2s ease-in-out infinite; }
+.lg-check.on b { color: #1d3672; }
+.lg-check-tip { margin: 0.2em 0 0.4em; text-align: center; color: #ffe6a8; font-weight: 700; font-size: 0.9rem; }
+.logic-grid.checking .lg-cell.x, .logic-grid.checking .lg-cell.o { box-shadow: 0 0 0 3px #ffd54a; cursor: help; }
+.logic-grid.checking .lg-cell:not(.x):not(.o) { opacity: 0.45; }
+.lg-cell.verified { border-color: #3fa524; }
+.lg-cell.verified em { position: absolute; right: 1px; top: -2px; font-style: normal; font-size: 0.7rem; font-weight: 900; color: #fff; background: #3fa524; border-radius: 999px; padding: 0 0.3em; line-height: 1.3; }
+@media (prefers-reduced-motion: reduce) { .lg-check.on { animation: none; } }
+
+/* ---- 데일리 로그인 보너스 (설치 후 7일) ---- */
+.stage .daily-bonus { position: absolute; }
+.daily-bonus { inset: 0; display: grid; place-items: center; background: #000b; animation: screen-in 0.25s; }
+.daily-bonus.out { opacity: 0; transition: opacity 0.2s; }
+.db-panel {
+  position: relative; width: min(86cqw, 150cqh); padding: 3cqh 3cqw 2.5cqh;
+  display: flex; flex-direction: column; align-items: center; gap: 1.2cqh;
+  border-radius: 24px; border: 4px solid #e3c98f;
+  background: radial-gradient(ellipse at 50% 0%, #4b3523, #1d130b 70%);
+  box-shadow: 0 10px 30px #000c; animation: rs-pop 0.35s cubic-bezier(.2, 1.4, .4, 1) both;
+}
+.db-title {
+  margin: 0; display: flex; flex-direction: column; align-items: center; line-height: 0.95; rotate: -6deg;
+  font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; font-size: 2.6rem; letter-spacing: 0.04em;
+  color: #7ed84a; -webkit-text-stroke: 2px #fff; paint-order: stroke fill; text-shadow: 0 5px 0 #23661c, 0 8px 12px #000a;
+}
+.db-sub { margin: 0; color: #ffe6a8; font-weight: 700; font-size: 1rem; }
+.db-grid { display: grid; grid-template-columns: repeat(3, 1fr) 1.35fr; grid-template-rows: repeat(2, 1fr); gap: 1.4cqh 1cqw; width: 100%; }
+.db-tile {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 0.3cqh; padding: 0 0 1cqh;
+  border-radius: 14px; border: 3px solid #5ea7ff; background: linear-gradient(#4f9cf5, #2a66c7); box-shadow: 0 4px 0 #173f80, 0 6px 12px #0008;
+}
+.db-tile.big { grid-column: 4; grid-row: 1 / span 2; border-color: #ffd54a; background: linear-gradient(#ffd868, #e8a21a); box-shadow: 0 4px 0 #8a4b00, 0 8px 16px #000a; }
+.db-day { font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; color: #fff; font-size: 1.15rem; padding: 0.35em 0 0.15em; -webkit-text-stroke: 1px #173f80; }
+.db-tile.big .db-day { color: #fff; -webkit-text-stroke: 1px #8a4b00; font-size: 1.35rem; }
+.db-body {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2cqh; width: 86%; flex: 1; padding: 0.6cqh 0;
+  border-radius: 10px; background: #fff4df; border: 2px solid #e3c98f;
+}
+.db-tile.big .db-body { background: #fff7e3; }
+.db-body img { height: 7.5cqh; width: auto; filter: drop-shadow(0 2px 0 #0004); }
+.db-tile.big .db-coin { height: 13cqh; }
+.db-amt { font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; color: #fff; -webkit-text-stroke: 1.5px #1d130b; paint-order: stroke fill; font-size: 1.3rem; text-shadow: 0 2px 0 #1d130b; }
+.db-tile.big .db-amt { font-size: 1.9rem; }
+.db-extra { display: flex; gap: 1.2cqw; margin-top: 0.6cqh; }
+.db-extra span { display: flex; flex-direction: column; align-items: center; }
+.db-extra img { height: 8cqh; }
+.db-extra small { font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; color: #fff; -webkit-text-stroke: 1px #1d130b; paint-order: stroke fill; font-size: 1rem; }
+.db-tile.done .db-body { filter: brightness(0.55) saturate(0.6); }
+.db-check { position: absolute; left: 50%; top: 55%; translate: -50% -50%; font-style: normal; font-size: 3rem; color: #ffd54a; -webkit-text-stroke: 2px #6b3a00; paint-order: stroke fill; text-shadow: 0 3px 0 #000a; }
+.db-tile.today { border-color: #ffd54a; box-shadow: 0 0 0 3px #ffd54a, 0 0 18px 4px #ffd54a88, 0 6px 12px #0008; animation: cta-bob 1.2s ease-in-out infinite; }
+.db-tile.future { opacity: 0.85; }
+.db-collect { margin-top: 0.6cqh; padding: 0; border: 0; background: none; cursor: pointer; }
+.db-collect img { height: 11cqh; width: auto; filter: drop-shadow(0 4px 0 #0007); }
+.db-collect:active img { translate: 0 3px; }
+.db-avatar { position: absolute; left: -2cqw; bottom: -1cqh; height: 34cqh; width: auto; pointer-events: none; filter: drop-shadow(0 4px 6px #000a); }
+@media (prefers-reduced-motion: reduce) { .db-tile.today, .db-panel { animation: none; } }
+
+/* =====================================================================
+   연속 승리 보상 팝업 (시안: 양피지 겹 프레임 + 남색 보드 + 금색 트랙)
+   ===================================================================== */
+.stage .ws-popup { position: absolute; }
+.ws-popup { inset: 0; display: grid; place-items: center; background: #000b; animation: screen-in .25s; }
+.ws-popup.out { opacity: 0; transition: opacity .2s; }
+.ws-frame {
+  position: relative; width: min(88cqw, 156cqh); padding: 6cqh 2.2cqw 3.4cqh;
+  border-radius: 34px; background: linear-gradient(135deg, #fcebc4 0%, #ebb96e 100%);
+  border: 5px solid #422915; box-shadow: inset 0 0 0 4px #fdcb5b, 0 0 0 6px #f3dfb3, 0 0 0 10px #c99a55, 0 14px 30px #000c;
+  font-weight: 900; animation: rs-pop .35s cubic-bezier(.2, 1.4, .4, 1) both;
+}
+.ws-cat { position: absolute; right: -3cqw; top: -11cqh; height: 26cqh; width: auto; z-index: 3; filter: drop-shadow(0 6px 6px #0008); pointer-events: none; }
+.ws-title {
+  position: absolute; left: 50%; top: -9cqh; translate: -50% 0; margin: 0; z-index: 2; white-space: nowrap;
+  display: flex; align-items: center; gap: .6cqw;
+  font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 900; font-size: clamp(30px, 10cqh, 72px); letter-spacing: .02em;
+  color: #ffd84a; -webkit-text-stroke: 3px #6b3a00; paint-order: stroke fill;
+  text-shadow: 0 3px 0 #b86a00, 0 6px 0 #4a2200, 0 10px 14px #000a, 0 0 22px #ff9f1a88;
+}
+.ws-title span { background: linear-gradient(#fff3a8, #ffd84a 45%, #f39a12); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.ws-title .ws-fire-ico { height: 1.25em; width: auto; translate: 0 -.18em; filter: drop-shadow(0 0 10px #ff8a1a); animation: ws-flame 1.1s ease-in-out infinite; }
+.ws-title .ws-fire-ico:last-child { animation-delay: .35s; }
+@keyframes ws-flame { 50% { transform: scale(1.08, .94) translateY(2px); } }
+.ws-board {
+  position: relative; border-radius: 26px; padding: 2cqh 2.4cqw 2cqh;
+  background: linear-gradient(#22345a, #15243f 55%, #0d182c); border: 4px solid #b98a3f; box-shadow: inset 0 4px 12px #000c, 0 0 0 3px #4a3424;
+  color: #fff;
+}
+.ws-current {
+  display: flex; align-items: center; gap: .6cqw; width: max-content; margin: 0 auto 1cqh; padding: .6cqh 2.6cqw;
+  border-radius: 999px; background: #0d182c; border: 3px solid #4a6593; box-shadow: inset 0 2px 6px #000a;
+  font-size: clamp(18px, 5.6cqh, 40px);
+}
+.ws-current .ws-fire-ico { height: 1.2em; }
+.ws-current b { color: #ffd84a; }
+.ws-track-wrap { position: relative; height: 40cqh; }
+.ws-track { position: absolute; left: 4%; right: 4%; top: 50%; height: 2.4cqh; translate: 0 -50%; border-radius: 999px; background: #0b1424; border: 3px solid #3c2a12; box-shadow: inset 0 2px 4px #000c; overflow: hidden; }
+.ws-track-fill { display: block; height: 100%; background: linear-gradient(#ffe27a, #f2a91c 60%, #c97a0a); box-shadow: 0 0 10px #ffc23a; border-radius: 999px; }
+.ws-runner { position: absolute; top: calc(50% - 8.5cqh); height: 7cqh; width: auto; translate: -50% 0; z-index: 4; filter: drop-shadow(0 0 10px #ff8a1a); animation: ws-flame 1s ease-in-out infinite; pointer-events: none; }
+.ws-nodes { position: absolute; inset: 0 4%; display: grid; grid-template-columns: repeat(8, 1fr); }
+.ws-node { position: relative; display: grid; grid-template-rows: 1fr auto 1fr; justify-items: center; align-items: center; }
+.ws-num {
+  position: relative; z-index: 2; width: 8cqh; height: 8cqh; border-radius: 50%; display: grid; place-items: center;
+  background: radial-gradient(circle at 40% 35%, #2f4d86, #172a4f); border: 3px solid #f2b63a; box-shadow: 0 3px 0 #3c2a12, 0 0 0 3px #0b1424;
+  font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; font-size: clamp(14px, 4.6cqh, 32px); color: #fff; -webkit-text-stroke: 1px #0b1424;
+}
+.ws-node.done .ws-num { background: radial-gradient(circle at 40% 35%, #ffe27a, #e09a14); color: #4a2200; -webkit-text-stroke: 0; }
+.ws-node.next .ws-num { width: 10cqh; height: 10cqh; background: radial-gradient(circle at 40% 35%, #ffe27a, #f2a91c); color: #4a2200; -webkit-text-stroke: 0; box-shadow: 0 0 0 3px #fff6b0, 0 0 22px 6px #ffd84aaa; animation: ws-pulse 1.6s ease-in-out infinite; }
+@keyframes ws-pulse { 50% { box-shadow: 0 0 0 3px #fff6b0, 0 0 30px 10px #ffd84acc; transform: scale(1.06); } }
+.ws-lock { position: absolute; bottom: -3.2cqh; right: -1.4cqh; height: 4.4cqh; width: auto; z-index: 3; filter: drop-shadow(0 2px 0 #000a); }
+.ws-top, .ws-bottom { display: flex; align-items: center; justify-content: center; }
+.ws-top { align-self: end; padding-bottom: 1cqh; } .ws-bottom { align-self: start; padding-top: 1.6cqh; }
+.ws-tile {
+  position: relative; width: 11cqh; height: 11cqh; border-radius: 14px; display: grid; place-items: center;
+  background: linear-gradient(#2a3d63, #1a2b47); border: 3px solid #4a6593; box-shadow: 0 4px 0 #0b1424, 0 6px 10px #0008;
+}
+.ws-tile img { width: 76%; height: 76%; object-fit: contain; filter: drop-shadow(0 2px 0 #0006); }
+.ws-tile.claimed { background: linear-gradient(#5a5446, #3b372e); border-color: #8a7a55; }
+.ws-tile.claimed img { filter: grayscale(.5) brightness(.75); }
+.ws-check { position: absolute; inset: 0; display: grid; place-items: center; font-style: normal; font-size: 7cqh; color: #7ed84a; -webkit-text-stroke: 2px #0d3d08; paint-order: stroke fill; text-shadow: 0 3px 0 #0008; }
+.ws-tile.stamp { background: linear-gradient(#4b4a40, #34332c); border-color: #6c6a5a; }
+.ws-tile.stamp span {
+  rotate: -14deg; padding: .2em .45em; border: 3px solid #7ed84a; border-radius: 8px; color: #9be35f; font-size: clamp(10px, 2.9cqh, 18px); white-space: nowrap;
+  box-shadow: inset 0 0 0 2px #2c6b16, 0 0 0 2px #2c6b16; background: #2c6b1633; text-shadow: 0 1px 0 #0d3d08;
+}
+.ws-tile.now { width: 14cqh; background: linear-gradient(#c88a3a, #8a531c); border-color: #ffd84a; box-shadow: 0 4px 0 #4a2200, 0 0 18px #ffb84a88; }
+.ws-tile.now b { font-size: clamp(12px, 3.6cqh, 24px); color: #fff6d0; -webkit-text-stroke: 1px #4a2200; paint-order: stroke fill; line-height: 1; }
+.ws-tile.now small { font-size: clamp(10px, 2.8cqh, 18px); color: #ffe6a8; }
+.ws-tile.now { align-content: center; gap: .2cqh; }
+.ws-tile.future { background: linear-gradient(#3a2f6d, #241c47); border-color: #ffd84a; }
+.ws-node.locked .ws-tile.future img { filter: drop-shadow(0 2px 0 #0006) saturate(.9); }
+.ws-bubble {
+  position: absolute; z-index: 5; top: -1cqh; left: calc(4% + var(--x) * 92%); translate: -12% 0; width: max-content; max-width: 64cqw;
+  padding: 1.2cqh 1.6cqw; border-radius: 16px; background: #fff7e3; border: 3px solid #f59e0b; box-shadow: 0 6px 14px #0008;
+  color: #3b2a1a; font-size: clamp(11px, 3.2cqh, 20px); line-height: 1.35; text-align: center;
+}
+.ws-bubble.flip { translate: -88% 0; } .ws-bubble.flip::after { left: auto; right: 10%; }
+.ws-bubble::after { content: ''; position: absolute; left: 10%; bottom: -14px; border: 12px solid transparent; border-top: 16px solid #fff7e3; border-bottom: 0; }
+.ws-bubble b, .ws-foot b { color: #e8652a; }
+.ws-bubble b.gold, .ws-foot b.gold { color: #c98a12; } .ws-bubble b.red, .ws-foot b.red { color: #d63030; }
+.ws-inline { height: 1.3em; width: auto; vertical-align: -.3em; margin-right: .1em; }
+.ws-node.next ~ .ws-node .ws-top, .ws-node.locked .ws-top, .ws-node.next .ws-top { visibility: hidden; }
+.ws-foot { text-align: center; margin-top: .4cqh; }
+.ws-line { margin: 0 0 .6cqh; font-size: clamp(13px, 3.8cqh, 26px); color: #fff; text-shadow: 0 2px 0 #000a; }
+.ws-line b { color: #ffd84a; }
+.ws-big { margin: 0; display: flex; align-items: center; justify-content: center; gap: .6cqw; font-size: clamp(18px, 6.2cqh, 44px); color: #fff; text-shadow: 0 3px 0 #000a; }
+.ws-big b { color: #ffd84a; } .ws-big .ws-fire-ico { height: 1.3em; }
+.ws-ok {
+  position: absolute; left: 50%; bottom: -5cqh; translate: -50% 0; width: 32cqw; height: 10cqh; border-radius: 999px; cursor: pointer;
+  background: linear-gradient(#8ade2e, #458e11); border: 4px solid #2b1704; box-shadow: 0 5px 0 #1e4d08, 0 8px 14px #0008, inset 0 4px 4px #fff6;
+  color: #fff; font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 900; font-size: clamp(18px, 6cqh, 40px); -webkit-text-stroke: 2px #1e4d08; paint-order: stroke fill;
+}
+.ws-ok:active { translate: -50% 3px; box-shadow: 0 2px 0 #1e4d08, inset 0 4px 4px #fff6; }
+@media (prefers-reduced-motion: reduce) { .ws-title .ws-fire-ico, .ws-runner, .ws-node.next .ws-num, .ws-frame { animation: none; } }
+
+/* =====================================================================
+   홈 SPECIAL OFFER 팝업 — popup_home_offer.webp (1600×900 가판대 그림) 위에 겹쳐 그림
+     진열판 x 39~78.4% · y 37.2~80.5% / BUY NOW x 38.4~66.9% · y 80.9~95.3% / 배지 중심 (81.9%, 29.4%)
+   ===================================================================== */
+.stage .ho-popup { position: absolute; }
+.ho-popup { inset: 0; display: grid; place-items: center; background: #000b; animation: screen-in .25s; }
+.ho-stage { position: relative; width: min(96cqw, 170cqh); aspect-ratio: 16 / 9; animation: rs-pop .35s cubic-bezier(.2, 1.4, .4, 1) both; container-type: size; }
+.ho-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 10px 18px #000a); pointer-events: none; }
+.ho-badge {
+  position: absolute; left: 81.9%; top: 29.4%; translate: -50% -50%; rotate: -8deg;
+  display: grid; place-items: center; line-height: .9; color: #fff; text-align: center;
+  font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; text-shadow: 0 3px 0 #7a0a12;
+}
+.ho-badge b { font-size: 9.5cqh; font-weight: 400; }
+.ho-badge small { font-size: 4.8cqh; }
+.ho-panel {
+  position: absolute; left: 41%; top: 39%; width: 35.4%; height: 38%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.4cqh;
+  padding: 1cqh 1.4cqw; border-radius: 2cqh; background: #fff8eecc; box-shadow: inset 0 0 0 .5cqh #f6c14b;
+  color: #4a1a3a; text-align: center;
+}
+.ho-name { font-size: 4.6cqh; font-weight: 800; line-height: 1.1; }
+.ho-items { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1cqh 2cqw; font-size: 4.4cqh; font-weight: 800; }
+.ho-items li { display: flex; align-items: center; gap: .8cqw; }
+.ho-items .ico { width: 1.5em; height: 1.5em; }
+.ho-price { display: flex; align-items: baseline; gap: 1.2cqw; font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; }
+.ho-price s { font-size: 4cqh; color: #9a7088; }
+.ho-price b { font-size: 7.4cqh; font-weight: 400; color: #e8335a; -webkit-text-stroke: .25cqh #4a1a3a; paint-order: stroke fill; }
+.ho-buy { position: absolute; left: 38.4%; top: 80.9%; width: 28.5%; height: 14.4%; border: 0; border-radius: 999px; background: none; cursor: pointer; }
+.ho-buy:active { background: #0002; }
+.ho-close {
+  position: absolute; right: 2%; top: 3%; width: 9cqh; height: 9cqh; border-radius: 50%; cursor: pointer;
+  border: .5cqh solid #4a1a3a; background: radial-gradient(circle at 35% 35%, #ff8aa8, #d81b55); color: #fff;
+  font-size: 4.6cqh; font-weight: 900; box-shadow: 0 .6cqh 0 #4a1a3a;
+}
+.offer-warn .confirm-msg b { color: #ffe066; }
+@media (prefers-reduced-motion: reduce) { .ho-stage { animation: none; } }
+
+/* 별 기준 안내: ★ / ★★ / ★★★ 칩 3개를 한 줄로 */
+.es-rule, .sf-rule { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3em 0.5em; width: 100%; opacity: 1; font-size: 0.95em; }
+.entry-stars { margin-bottom: 0.6em; }   /* 아래 하트 안내 줄과 겹치지 않게 */
+.sr-row { padding: 0.15em 0.6em; border-radius: 999px; background: #0000000f; border: 1px solid #0000001f; white-space: nowrap; }
+.sr-row b { letter-spacing: -0.08em; margin-right: 0.15em; }
+
+/* =====================================================================
+   스테이지 입장 팝업 v2 — 프레임 frame_entry.webp (1297×686, 수사 책상 배경 + 금 테두리, 위쪽 금색 제목판)
+     제목판 x 22~77% · y 0~17% / 안쪽 패널 y 15~96%
+   ===================================================================== */
+.stage .modal.entry.ev2 {
+  position: relative; width: min(94cqw, 172cqh); max-width: none; max-height: none; aspect-ratio: 1297 / 686;
+  padding: 0; border: 0; border-radius: 0; box-shadow: none; overflow: visible; container-type: size;
+  background: url(../game_assets/frame_entry.webp) center / 100% 100% no-repeat;
+  filter: drop-shadow(0 1.4cqh 2cqh #000c); color: #fff;
+}
+.modal.entry.ev2.x2, .modal.entry.ev2.x4 { box-shadow: none; animation: none; }
+.modal.entry.ev2 .ev2-title {
+  position: absolute; left: 22%; right: 22.5%; top: 1.6%; height: 14%; margin: 0;
+  display: grid; place-items: center; white-space: nowrap;
+  font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; font-size: 10cqh; letter-spacing: .04em;
+  color: #fff; -webkit-text-stroke: .5cqh #3a1d00; paint-order: stroke fill; text-shadow: 0 .7cqh 0 #3a1d00;
+}
+.ev2-body { position: absolute; left: 5.5%; right: 5.5%; top: 18.5%; bottom: 5%; display: flex; flex-direction: column; align-items: center; gap: 1.6cqh; }
+.ev2-sub { display: flex; align-items: center; justify-content: center; gap: 1.4cqw; width: 100%; font-size: 3.6cqh; font-weight: 800; }
+.ev2-tier {
+  padding: .3cqh 2cqw; border-radius: 999px; background: #fffbe9; border: .45cqh solid #f2b63a; color: #1d2f8a;
+  font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; font-size: 4cqh; letter-spacing: .04em; box-shadow: 0 .4cqh 0 #0007;
+}
+.ev2-tier.tier-normal { color: #1b7a3a; } .ev2-tier.tier-hard { color: #c2410c; } .ev2-tier.tier-expert { color: #9d174d; }
+.ev2-seed { padding: .4cqh 1cqw; border-radius: .8cqh; background: #ffffff1f; color: #cfe3ff; font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; font-size: 3.2cqh; }
+.ev2-reassure { color: #ffe680; text-shadow: 0 .3cqh 0 #000a; }
+
+/* 배수 카드 3장 */
+.ev2 .mult-list { display: flex; justify-content: center; gap: 2.4cqw; height: 42cqh; width: 100%; }
+.ev2 .mult-opt {
+  position: relative; height: 100%; aspect-ratio: 0.7; padding: 0; border: 0; background: none; color: #fff; cursor: pointer;
+  display: block; transform: none; transition: transform .15s, filter .15s; font: inherit;
+}
+.ev2 .mult-opt:not(.locked):hover { transform: translateY(-.8cqh); }
+.ev2 .mult-opt.selected { transform: translateY(-1cqh) scale(1.04); filter: drop-shadow(0 0 1.6cqh #ffd84a); }
+.ev2 .mult-opt.locked { opacity: 1; cursor: default; }
+.ev2 .mult-opt.locked.x4 .mult-bg { filter: brightness(.62) saturate(.7); }
+.ev2 .mult-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; pointer-events: none; }
+.ev2 .mult-opt > span { position: absolute; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: .5cqw; }
+.ev2 .mult-x {
+  top: 9%; font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; font-size: 11cqh !important; line-height: 1;
+  color: #ffe14d; -webkit-text-stroke: .5cqh #4a2a00; paint-order: stroke fill; text-shadow: 0 .6cqh 0 #4a2a00; filter: none !important;
+}
+.ev2 .mult-opt:not(.selected) .mult-x { color: #c6d6ea; -webkit-text-stroke-color: #1c2b44; text-shadow: 0 .6cqh 0 #1c2b44; }
+.ev2 .mult-fee { top: 41%; font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; font-size: 6.4cqh !important; color: #fff; -webkit-text-stroke: .35cqh #4a2a00; paint-order: stroke fill; }
+.ev2 .mult-fee img { width: 1.1em; height: 1.1em; }
+.ev2 .mult-opt:not(.selected) .mult-fee { -webkit-text-stroke-color: #1c2b44; color: #dfe8f5; }
+.ev2 .mult-opt.locked .mult-fee img { filter: grayscale(1) brightness(.85); }
+.ev2 .mult-reward { top: 62%; font-size: 3.4cqh !important; font-weight: 800; color: #0f2f7a; text-shadow: 0 0 .6cqh #9ff5ff, 0 0 .2cqh #fff; }
+.ev2 .mult-opt:not(.selected) .mult-reward { color: #b9c9de; text-shadow: 0 .25cqh 0 #0008; }
+.ev2 .mult-lock { top: 78.5%; height: 10%; left: 26% !important; right: 10% !important; font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; font-size: 3.4cqh !important; color: #ffd84a; background: none; border: 0; padding: 0; }
+.ev2 .mult-opt:not(.locked) .mult-lock.poor { top: 80%; left: 12% !important; right: 12% !important; color: #ff8a8a; font-family: inherit; font-weight: 800; }
+
+/* 별 줄 · 기준 칩 */
+.ev2 .entry-stars { margin: 0; display: flex; flex-direction: column; align-items: center; gap: .8cqh; font-size: 3.2cqh; color: #fff; }
+.ev2 .es-line { display: flex; align-items: center; gap: 2cqw; }
+.ev2 .es-best i svg { width: 5.4cqh; height: 5.4cqh; fill: #4a5a86; stroke: #0b1d46; stroke-width: 1.4; }
+.ev2 .es-best i.on svg { fill: #ffc93a; stroke: #8a4b00; }
+.ev2 .es-clue { color: #9fe8ff; font-weight: 800; }
+.ev2 .es-total { color: #ffe680; }
+.ev2 .es-rule { font-size: 1em; }
+.ev2 .sr-row { background: #ffffff14; border-color: #ffffff2e; color: #fff; }
+.ev2 .entry-note { margin: 0; min-height: 0; font-size: 3cqh; color: #ffb4b4; }
+.ev2 .entry-note:empty { display: none; }
+.modal.entry.ev2.x4 .entry-note { color: #ff9ad5; }
+
+/* BACK · PLAY (+ 비용 말풍선) */
+.ev2-actions { margin-top: auto; display: flex; justify-content: center; gap: 4cqw; width: 100%; }
+.ev2-back, .ev2-play {
+  position: relative; height: 11.5cqh; border-radius: 3cqh; cursor: pointer;
+  font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-weight: 400; font-size: 7cqh; letter-spacing: .05em; line-height: 1;
+  border: .55cqh solid #2b1704; paint-order: stroke fill;
+}
+.ev2-back { width: 26%; background: linear-gradient(#f0564a, #b31f1a); color: #ffe9c2; -webkit-text-stroke: .35cqh #4a0d08; box-shadow: 0 .9cqh 0 #5a120c, inset 0 .5cqh 0 #ffffff44; }
+.ev2-play { width: 34%; background: linear-gradient(#ffe56a, #f2a91c); color: #fff8e0; -webkit-text-stroke: .35cqh #5a3200; box-shadow: 0 .9cqh 0 #7a4a00, inset 0 .5cqh 0 #ffffff66; }
+.ev2-play.hot { background: linear-gradient(#ff8ad8, #e02a8a); box-shadow: 0 .9cqh 0 #6a0a3a, 0 0 2cqh #ff3cac; animation: cta-bob 1.2s ease-in-out infinite; }
+.ev2-play.blocked { filter: saturate(.75); }
+.ev2-play-label.txt-img { display: flex; justify-content: center; }   /* '골드 충전' · '하트 충전' 글씨 그림 (Higgsfield) */
+.ev2-play-label.txt-img img { height: 10.5cqh; width: auto; display: block; }
+.ev2-back:active, .ev2-play:active { translate: 0 .6cqh; box-shadow: 0 .3cqh 0 #0008; }
+.ev2-cost {
+  position: absolute; right: -24%; top: -48%; display: flex; align-items: center; gap: .4cqw; white-space: nowrap;
+  padding: .6cqh 1.2cqw; border-radius: 3cqh; background: #e9f4ff; border: .45cqh solid #2a4a8a; box-shadow: 0 .4cqh 0 #0006;
+  font-size: 3.6cqh; color: #12203f; -webkit-text-stroke: 0; letter-spacing: 0;
+}
+.ev2-cost::after { content: ''; position: absolute; left: 22%; bottom: -1.6cqh; border: 1cqh solid transparent; border-top: 1.4cqh solid #2a4a8a; border-bottom: 0; }
+.ev2-cost img { width: 4.6cqh; height: 4.6cqh; }
+.ev2-cost i { font-style: normal; color: #2a4a8a; }
+.ev2-heart { position: relative; display: inline-grid; place-items: center; }
+.ev2-heart b { position: absolute; font-size: .75em; color: #fff; -webkit-text-stroke: .2cqh #7a0a12; paint-order: stroke fill; }
+@media (prefers-reduced-motion: reduce) { .ev2-play.hot { animation: none; } }
+
+/* =====================================================================
+   이어하기 팝업 — frame_resume.webp (1145×702, 고양이 포함)
+     제목 띠 x 4~83% · y 10~31% / 안쪽 진한 파랑 x 4~95% · y 33~95%
+   ===================================================================== */
+.stage .rsm-popup { position: absolute; }
+.rsm-popup { inset: 0; display: grid; place-items: center; background: #000a; animation: screen-in .25s; }
+.rsm-frame {
+  position: relative; width: min(84cqw, 132cqh); aspect-ratio: 1145 / 702; container-type: size;
+  background: url(../game_assets/frame_resume.webp) center / 100% 100% no-repeat; filter: drop-shadow(0 1.4cqh 2cqh #000c);
+  animation: rs-pop .35s cubic-bezier(.2, 1.4, .4, 1) both;
+}
+.rsm-title { position: absolute; left: 8%; width: 70%; top: 12%; height: 17%; object-fit: contain; }
+.rsm-body { position: absolute; left: 8%; right: 9%; top: 36%; bottom: 9%; display: flex; flex-direction: column; align-items: center; justify-content: space-between; color: #fff; text-align: center; }
+.rsm-msg { margin: 2cqh 0 0; font-size: 6.4cqh; font-weight: 800; text-shadow: 0 .5cqh 0 #0b2a6a; }
+.rsm-info { margin: 0; width: 100%; padding: 1.6cqh 0; background: #ffffff1a; font-size: 5.6cqh; font-weight: 800; color: #fff6c8; display: flex; align-items: center; justify-content: center; gap: .6cqw; }
+.rsm-info img { width: 1.3em; height: 1.3em; }
+.rsm-actions { display: flex; gap: 4cqw; width: 100%; justify-content: center; }
+.rsm-go, .rsm-quit {
+  flex: 1; max-width: 46%; height: 14cqh; border-radius: 3cqh; border: .6cqh solid #1d1206; cursor: pointer;
+  font-size: 6cqh; font-weight: 800; color: #fff; -webkit-text-stroke: .3cqh #1d1206; paint-order: stroke fill;
+}
+.rsm-go { background: linear-gradient(#8de04a, #3f9a14); box-shadow: 0 1cqh 0 #1f5a08, inset 0 .6cqh 0 #ffffff55; }
+.rsm-go i { font-style: normal; margin-right: .3em; }
+.rsm-quit { background: linear-gradient(#ef5a50, #b3231c); box-shadow: 0 1cqh 0 #5a120c, inset 0 .6cqh 0 #ffffff44; }
+.rsm-go:active, .rsm-quit:active { translate: 0 .6cqh; box-shadow: 0 .3cqh 0 #0008; }

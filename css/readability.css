@@ -1,0 +1,190 @@
+/* =====================================================================
+   가독성 · 홈 UI 시인성 개편 (마지막에 불러와 앞의 스타일을 덮는다)
+   8) 글꼴: 영문·숫자 Luckiest Guy + 한글 나눔스퀘어 (앱에 내장) · 모달 본문 · 설명글 · 단서 글자 약 120~130%
+   9) 홈 상단(SPECIAL OFFER · SHOP · EPISODE · LEVEL · GOLD · 설정)과 WIN STREAK · PLAY 크게,
+      OFFER · SHOP · EPISODE 같은 규격, 짙은 그림자로 배경과 분리
+   ===================================================================== */
+
+/* ---------- 8. 글꼴 ---------- */
+/* 글꼴 (game_assets/fonts 에 내장 · 오프라인 APK에서도 같은 글꼴)
+   - 영문 · 숫자 · 기호: Luckiest Guy (Apache 2.0, LuckiestGuy-LICENSE.txt) — 모든 글꼴 목록의 첫 번째
+   - 한글: 나눔스퀘어 R 400 · B 700 · EB 800 (SIL OFL) — Luckiest Guy에 없는 한글 글자만 자동으로 넘어온다 */
+@font-face {
+  font-family: 'Luckiest Guy';
+  src: url(../game_assets/fonts/LuckiestGuy-Regular.ttf) format('truetype');
+  font-weight: 100 900;   /* 원래 굵은 디자인 → 어떤 굵기에서도 합성 굵기 없이 그대로 */
+  font-display: swap;
+}
+@font-face { font-family: 'NanumSquare'; src: url(../game_assets/fonts/NanumSquareR.ttf) format('truetype'); font-weight: 100 549; font-display: swap; }
+@font-face { font-family: 'NanumSquare'; src: url(../game_assets/fonts/NanumSquareB.ttf) format('truetype'); font-weight: 550 749; font-display: swap; }
+@font-face { font-family: 'NanumSquare'; src: url(../game_assets/fonts/NanumSquareEB.ttf) format('truetype'); font-weight: 750 1000; font-display: swap; }
+/* 굵기는 파일(R · B · EB)로 고르고 합성하지 않는다 */
+body {
+  font-family: 'Luckiest Guy', 'NanumSquare', 'Malgun Gothic', sans-serif;
+  font-weight: 700;
+  font-synthesis: none;
+}
+/* 영문만 있는 글씨: Luckiest Guy (원래 굵은 디자인이라 합성 굵기 없이) */
+.lang-en {
+  font-family: 'Luckiest Guy', 'NanumSquare', sans-serif;
+  font-weight: 400 !important;
+  font-synthesis: none;
+  letter-spacing: 0.03em;
+}
+button, input, select, textarea { font-family: inherit; }
+
+/* 모달 본문 · 설명글 (약 125%) */
+.modal.framed > .paper { font-size: 1.15em; }                /* 0.94em → 1.15em */
+.dialog-body p { line-height: 1.5; }
+.dialog-body .small, .small { font-size: 1rem; }              /* 0.8rem */
+.modal .sub { font-size: 1.05rem; }                           /* 0.85rem */
+.modal h2 { font-size: 1.5rem; }                              /* 1.25rem */
+.result .breakdown { font-size: 1rem; }                       /* 0.8rem */
+.entry-note, .entry-episode, .entry-energy { font-size: 1rem; }
+.entry-clue { font-size: 1.02rem; }
+.info-chip { font-size: 0.95rem; }
+.tier-hint { font-size: 0.98rem; }
+.streak-next { font-size: 1rem; }
+.solution { font-size: 1.06rem; }
+.dialog-footer { font-size: 0.9rem; }
+.product-desc { font-size: 0.92rem; }
+.stage .accuse-banner { font-size: 1.06rem; }
+.stage .banner-actions button { font-size: 1rem; }
+.notebook .modal-head h2, .shop .modal-head h2 { font-size: 1.5rem; }
+.ep-card .ep-desc { font-size: 0.9rem; }
+#settings-modal { font-size: 1.2rem; }
+#settings-modal h3 { font-size: 1.25rem; }
+
+/* 단서(Clue) 글자 (약 125%) */
+.clue { font-size: 1.03rem; line-height: 1.5; }               /* 0.82rem */
+.hint-note { font-size: 1.03rem; }
+.clue-note p { font-size: 1.1rem; line-height: 1.55; }
+.related-clues { font-size: 1rem; }
+.suspect-file dl { font-size: 1.12rem; }
+.cf-text { font-size: 1.3rem; }
+.stage .suspect-name { font-size: 1.15rem; }
+.stage .suspect-job { font-size: 0.9rem; }
+.cleared-by { font-size: 0.78rem; }
+
+/* ---------- 9. 홈 상단 바 (홈 화면에서만 — 게임 화면은 기존 크기, 퍼즐 HUD를 가리지 않게) ---------- */
+.stage[data-screen="lobby"] .hud-top { height: 15cqh; padding: 0 1.4cqw; background: linear-gradient(#000d, #0000); }
+.stage[data-screen="lobby"] .hud-left, .stage[data-screen="lobby"] .hud-right { gap: 1.2cqw; }
+
+/* SPECIAL OFFER · SHOP · EPISODE : 같은 13cqh 원형 규격 + 짙은 그림자 */
+.stage[data-screen="lobby"] .offer-btn,
+.stage[data-screen="lobby"] .round-btn.img-btn {
+  width: 13cqh;
+  height: 13cqh;
+  border-radius: 50%;
+  box-shadow: 0 0.6cqh 0 #000c, 0 1cqh 2.4cqh #000e;
+}
+.stage[data-screen="lobby"] .round-btn.img-btn img { filter: drop-shadow(0 2px 2px #000c); }
+.stage[data-screen="lobby"] .offer-btn small { font-size: 0.78rem; text-shadow: 0 1px 2px #000; box-shadow: 0 2px 4px #000c; }
+
+/* LEVEL */
+.stage[data-screen="lobby"] .level-star { width: 15.5cqh; height: 15.5cqh; filter: drop-shadow(0 3px 0 #000a) drop-shadow(0 4px 10px #000c); }
+
+.stage[data-screen="lobby"] .exp-bar { width: 26cqw; height: 4.8cqh; box-shadow: 0 4px 0 #000a, 0 6px 14px #000c; }
+.stage[data-screen="lobby"] .exp-bar em { font-size: 0.92rem; text-shadow: 0 1px 0 #000, 0 0 4px #000; }
+
+/* GOLD · 설정 */
+.stage[data-screen="lobby"] .hud-top .currency-bar { height: 9.6cqh; filter: drop-shadow(0 3px 0 #000a) drop-shadow(0 4px 10px #000c); }
+.stage[data-screen="lobby"] .hud-top .currency-num { font-size: 1.4rem; text-shadow: 0 1px 0 #000, 0 2px 4px #000; }
+.stage[data-screen="lobby"] .icon-asset.settings {
+  width: 10.5cqh;
+  height: 10.5cqh;
+  border-radius: 50%;
+  box-shadow: 0 0.6cqh 0 #000c, 0 1cqh 2.4cqh #000e;
+}
+
+.stage[data-screen="lobby"] .dev-panel { top: 15.5cqh; }
+.stage[data-screen="lobby"] .stage .ad-banner { inset: 16cqh auto auto 1.6cqw; font-size: 0.85rem; box-shadow: 0 3px 8px #000c; }
+
+/* ---------- 9. 홈 우측: WIN STREAK · PLAY ---------- */
+.stage[data-screen="lobby"] .play-side { width: 23cqw; gap: 2.2cqh; }
+.stage[data-screen="lobby"] .streak-badge {
+  width: 18.5cqh;
+  height: 18.5cqh;
+  filter: drop-shadow(0 4px 0 #000a) drop-shadow(0 6px 14px #000d);
+}
+.stage[data-screen="lobby"] .streak-badge b { font-size: 2.3rem; }
+.stage[data-screen="lobby"] .streak-badge small { font-size: 1rem; }
+.stage[data-screen="lobby"] .streak-track { box-shadow: 3px 3px 0 #000, 0 6px 14px #000a; }
+.stage[data-screen="lobby"] .streak-track i small { font-size: 0.75rem; }
+.stage[data-screen="lobby"] .play-btn {
+  height: 21cqh;
+  box-shadow: 6px 6px 0 #1e1b4b, 0 10px 24px #000c;
+}
+.stage[data-screen="lobby"] .play-word b { font-size: 3.3rem; text-shadow: 0 3px 0 #fff6, 0 4px 10px #0008; }
+.stage[data-screen="lobby"] .play-word i { font-size: 2.2rem; }
+.stage[data-screen="lobby"] .play-btn small { font-size: 0.95rem; text-shadow: 0 1px 2px #000; }
+
+/* 홈 하단 블록 · 제목도 그림자로 분리 */
+.stage[data-screen="lobby"] .episode-title { box-shadow: 0 4px 12px #000c; text-shadow: 0 1px 2px #000; }
+.stage[data-screen="lobby"] .chapter-chip, .stage[data-screen="lobby"] .board-btn { box-shadow: 2px 2px 0 #000, 0 4px 10px #000a; }
+.stage[data-screen="lobby"] .clue-block, .stage[data-screen="lobby"] .life-block { box-shadow: 4px 4px 0 #000, 0 8px 18px #000b; }
+.stage[data-screen="lobby"] .clue-count { font-size: 1rem; }
+.stage[data-screen="lobby"] .clue-count b { font-size: 1.3rem; }
+
+/* Lv.3부터: 낼 수 있는 카드 빛남 · 낼 수 없는 카드 어둡게 표시 끄기 (ui.js 가 .tableau.no-play-hint 를 붙임) */
+.tableau.no-play-hint .card.playable::after { content: none; }
+.tableau.no-play-hint .card.dim .front::after { content: none; }
+.tableau.no-play-hint .card.playable .front { box-shadow: 0 2px 5px #0006; }
+.tableau.no-play-hint > .card.playable:hover { translate: none; rotate: var(--rot, 0deg); }   /* 마우스를 올려도 낼 수 있는지 티 나지 않게 */
+
+/* ---------- 입장 팝업: STAGE 2/20 게임 글씨체 · 본문 크게 ---------- */
+.game-font, .modal.framed > .frame-title.game-font {
+  font-family: 'Luckiest Guy', 'NanumSquare', 'Arial Black', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+.modal.entry.framed > .frame-title {
+  font-size: 2.4em;
+  color: #ffd54a;
+  -webkit-text-stroke: 6px #5a2a00;
+  text-shadow: 0 4px 0 #5a2a00, 0 6px 10px #0009;
+}
+.modal.entry.framed > .paper { font-size: 1.2em; }
+.modal.entry .entry-episode { font-size: 1.3rem; }
+.modal.entry .sub { font-size: 1rem; }
+.modal.entry .info-chip { font-size: 1.1rem; padding: 3px 10px; }
+.modal.entry .stage-info .tier-badge { font-size: 1.05rem; }
+.modal.entry .entry-clue { font-size: 1.3rem; }
+.modal.entry .entry-energy { font-size: 1.3rem; }
+.modal.entry .entry-note { font-size: 1.1rem; }
+.modal.entry .streak-title { font-size: 1.25rem; }
+.modal.entry .streak-title b { font-size: 1.6rem; }
+.modal.entry .pip small { font-size: 0.8rem; }
+.modal.entry .streak-next, .modal.entry .streak-buffs { font-size: 1.1rem; }
+.modal.entry .mult-x { font-size: 2.1rem; }
+.modal.entry .mult-fee { font-size: 1.15rem; }
+.modal.entry .mult-reward, .modal.entry .mult-lock { font-size: 0.98rem; }
+.modal.entry .bar-actions button { font-size: 1.15rem; }
+
+/* ---------- 대륙(챕터) 전환: ui_chapter_transition.webp 위에 안내 ---------- */
+.chapter-transition { background: #0b1a2e; }
+.ct-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: ct-pan 3.4s ease-out both; }
+.chapter-transition .ct-body {
+  position: absolute;
+  top: 4cqh;
+  left: 50%;
+  translate: -50% 0;
+  gap: 0.6cqh;
+  padding: 1.6cqh 3cqw;
+  border-radius: 16px;
+  background: #0b1a2ecc;
+  box-shadow: 0 6px 20px #000a;
+}
+.chapter-transition .ct-chapter { font-family: 'Luckiest Guy', 'NanumSquare', sans-serif; font-size: 1.3rem; letter-spacing: 0.12em; }
+.chapter-transition .ct-body h2 { font-size: 2rem; white-space: nowrap; }
+.chapter-transition .ct-ep { font-size: 1.05rem; }
+.chapter-transition .ct-route { margin-top: 0.6cqh; }
+@media (prefers-reduced-motion: reduce) { .ct-art { animation: none; } }
+/* 비행기 · 탐정 얼굴을 가리지 않게: 안내는 위쪽 하늘에 한 줄 띠로, 대륙 진행 점은 생략 (그림의 진행 막대가 대신함) */
+.chapter-transition .ct-body { top: 1.6cqh; padding: 1cqh 2.4cqw; gap: 0.2cqh; }
+.chapter-transition .ct-route { display: none; }
+.chapter-transition .ct-chapter { font-size: 1.05rem; }
+.chapter-transition .ct-body h2 { font-size: 1.7rem; }
+.chapter-transition .ct-ep { font-size: 0.9rem; }
+.ct-art { animation: ct-art-in 3.4s ease-out both; }
+@keyframes ct-art-in { from { scale: 1.05; } to { scale: 1; } }   /* 확대를 줄여 탐정 모자가 안내 띠 밑으로 들어가지 않게 */

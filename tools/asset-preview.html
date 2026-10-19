@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>에셋 미리보기</title>
+<style>
+  body { margin: 0; padding: 12px; background: #888; font: 11px system-ui, sans-serif; }
+  .grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  figure { margin: 0; padding: 4px; background: #fff; text-align: center; }
+  img { display: block; max-width: 160px; max-height: 160px; background: repeating-conic-gradient(#ddd 0 25%, #fff 0 50%) 0 0 / 12px 12px; }
+  figcaption { max-width: 160px; word-break: break-all; }
+</style>
+</head>
+<body>
+<!-- 개발용: game_assets 폴더 이미지를 체커보드 위에 모아 보여 준다 (투명 배경 확인용).
+     로컬 서버(python -m http.server)의 폴더 목록을 읽으므로 서버로 열어야 한다. -->
+<div class="grid" id="grid"></div>
+<script>
+  fetch('../game_assets/').then(r => r.text()).then(html => {
+    const files = [...html.matchAll(/href="([^"]+\.png)"/g)].map(m => decodeURIComponent(m[1]));
+    document.getElementById('grid').innerHTML = files.map(f =>
+      `<figure><img src="../game_assets/${f}"><figcaption>${f}</figcaption></figure>`).join('');
+  });
+</script>
+</body>
+</html>
