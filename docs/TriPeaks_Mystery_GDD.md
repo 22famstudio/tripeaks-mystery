@@ -287,7 +287,7 @@
 - 묶음은 기기별: `all` = 그림 3묶음(98MB) · `android` = 사운드 OGG(10.7MB) · `ios` = 백업의 사운드 MP3(12.8MB). 기기는 `all` + 자기 플랫폼 묶음만 받는다 (안드로이드 108.7MB · iOS 110.8MB).
 - 빌드: `tools/build_www.py --cdn <version.json 주소>`(또는 `TP_CDN_URL`) → CDN 폴더들을 앱에서 빼고 `js/cdn-config.js` 를 켬. 사운드는 앱에 두고 그림만 CDN 으로 하려면 `--cdn-no-audio`(묶음도 `--no-audio`). 기본 빌드는 지금처럼 모두 앱에 포함(꺼짐).
 - 첫 실행(네이티브): 진행 막대 로딩 화면 '사건 파일을 준비하고 있어요' → zip 을 받으면서 바로 풀어(fflate) 기기 저장소(Directory.DATA `cdn_assets/<버전>/`)에 기록 → 새로 고침. 이후 실행은 그림 경로(`TP.EPISODES`)와 사운드 경로(`TP.AUDIO_FILES`)를 기기 저장소 주소로 바꿔 끼워 오프라인에서도 동작. 새 버전이 올라오면 다시 받고 예전 버전 폴더는 지움. 처음 실행에 오프라인이면 [다시 시도].
-- 비용: 설치 1회당 약 109MB 전송. 버킷은 미국 리전(us-central1) — 항상 무료 등급(저장 5GB · 북미→인터넷 전송 월 100GB ≈ 설치 900회분)이 미국 리전에만 적용. 무료 체험 크레딧이 남은 동안은 모든 요금이 크레딧에서 차감, 체험 종료 시 결제 계정을 유료로 업그레이드해야 버킷이 유지되고 그 뒤에도 무료 등급은 계속 적용. 초과분은 GB당 $0.1대(월 설치 1만 건 ≈ 1.1TB ≈ 대략 $100대). 월 예산 알림 필수(알림만, 자동 중지 아님). Plan B: Cloudflare R2(전송 무료) · Google Play Asset Delivery — 빌드의 version.json 주소만 바꾸면 됨.
+- 비용: 설치 1회당 약 109MB 전송. 버킷은 미국 서해안 리전(us-west1, 한국 · 일본 · 미국 출시 기준) — 항상 무료 등급(저장 5GB · 북미→인터넷 전송 월 100GB ≈ 설치 900회분)이 미국 리전에만 적용. 무료 체험 크레딧이 남은 동안은 모든 요금이 크레딧에서 차감, 체험 종료 시 결제 계정을 유료로 업그레이드해야 버킷이 유지되고 그 뒤에도 무료 등급은 계속 적용. 초과분은 GB당 $0.1대(월 설치 1만 건 ≈ 1.1TB ≈ 대략 $100대). 월 예산 알림 필수(알림만, 자동 중지 아님). Plan B: Cloudflare R2(전송 무료) · Google Play Asset Delivery — 빌드의 version.json 주소만 바꾸면 됨.
 
 ### iOS 오디오 (`js/audio-helper.js`)
 - iOS(Safari · WKWebView)는 OGG Vorbis 재생이 불완전 → `Capacitor.getPlatform() === 'ios'` 이거나 브라우저가 OGG 를 못 튼다고 답하면 `TP.AUDIO_FILES` 의 경로를 `.mp3` 로 바꿔 쓴다. 안드로이드는 `.ogg`.
