@@ -81,7 +81,7 @@ The Game does not collect:
 - Contacts, photos, precise location (GPS), camera, or microphone
 - Sensitive information (such as health or political views)
 
-The only device permissions the Game requests are **internet access, network state, and Google Play billing**. None of these require you to grant access. The Game currently does not use separate behavioral analytics or crash-reporting tools.
+The only device permissions the Game requests are **internet access, network state, Google Play billing, and the advertising ID and ad measurement (Android ad services)**, plus background-task permissions used by the ad SDK. None of these require you to grant access. The Game currently does not use separate behavioral analytics or crash-reporting tools.
 
 ---
 

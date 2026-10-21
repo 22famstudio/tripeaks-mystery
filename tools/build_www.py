@@ -44,7 +44,7 @@ CDN_AUDIO_PATHS = {'sounds/sfx', 'sounds/bgm_mp3'}                              
 BACKUP = os.path.join(os.path.dirname(ROOT), 'assets_original_backup')
 CAP_CONFIG = os.path.join(ROOT, 'mobile', 'capacitor.config.json')
 GOOGLE_SERVICES = os.path.join(ROOT, 'mobile', 'android', 'app', 'google-services.json')
-BASE_PLUGINS = ['@capacitor/filesystem', '@capacitor/app', '@revenuecat/purchases-capacitor']  # 늘 넣는 네이티브 플러그인 (세이브 파일 · 백그라운드 감지 · 결제)
+BASE_PLUGINS = ['@capacitor/filesystem', '@capacitor/app', '@revenuecat/purchases-capacitor', '@capacitor-community/admob']  # 늘 넣는 네이티브 플러그인 (세이브 파일 · 백그라운드 감지 · 결제 · 광고)
 FIREBASE_PLUGINS = ['@capacitor-firebase/authentication']  # google-services.json 이 있을 때만
 
 

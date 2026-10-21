@@ -116,74 +116,7 @@
     node.classList.add('bump');
   }
 
-  // 보상형 광고 (프로토타입: N초 카운트다운 후 보상). 출시 때 AdMob 보상형 광고 호출로 교체한다.
-  // 광고 제거 패키지는 배너·전면 광고만 없애고, 유저가 직접 고르는 보상형 광고는 남겨 둔다.
-  // 보상형 광고 (더미): 시청을 끝까지 하면 true. 실제 광고 SDK 를 붙일 때 이 함수만 바꾸면 된다.
-  async function showRewardAd() {
-    await watchRewardedAd(5);
-    return true;
-  }
-  globalThis.showRewardAd = showRewardAd;
-
-  function watchRewardedAd(seconds = 5) {
-    if (TP.store.state.adPassCount > 0 && TP.store.spend('adPassCount', 1)) {
-      toast(T('🎟 광고 패스권 사용 (남은 {n}장)', { n: TP.store.state.adPassCount }));
-      return Promise.resolve({ ok: true, passUsed: true });
-    }
-    return new Promise(resolve => {
-      const backdrop = document.createElement('div');
-      backdrop.className = 'modal-backdrop';
-      backdrop.style.zIndex = ++zTop;
-      backdrop.innerHTML = `
-        <div class="modal dialog ad-player"><div class="paper">
-          <div class="ad-screen">${T('📺 광고 재생 중')}</div>
-          <p>${T('보상까지 {n}초', { n: `<b class="ad-count">${seconds}</b>` })}</p>
-        </div></div>`;
-      root().append(backdrop);
-      let left = seconds;
-      const timer = setInterval(() => {
-        left--;
-        backdrop.querySelector('.ad-count').textContent = left;
-        if (left <= 0) {
-          clearInterval(timer);
-          backdrop.remove();
-          resolve({ ok: true });
-        }
-      }, 1000);
-    });
-  }
-
-  // 전면 광고 (프로토타입: N초 뒤 닫기 가능). 출시 때 AdMob 전면 광고 호출로 교체한다.
-  function showInterstitial(seconds = 3) {
-    return new Promise(resolve => {
-      const backdrop = document.createElement('div');
-      backdrop.className = 'modal-backdrop interstitial';
-      backdrop.style.zIndex = ++zTop;
-      backdrop.innerHTML = `
-        <div class="modal dialog ad-player"><div class="paper">
-          <div class="ad-screen">${T('📢 전면 광고 (테스트)')}</div>
-          <div class="actions">
-            <button class="ghost" data-act="noads">${T('광고 제거하기')}</button>
-            <button class="primary" data-act="close" disabled>${T('닫기')} <b class="ad-count">${seconds}</b></button>
-          </div>
-        </div></div>`;
-      root().append(backdrop);
-      const closeBtn = backdrop.querySelector('[data-act="close"]');
-      let left = seconds;
-      const timer = setInterval(() => {
-        left--;
-        closeBtn.querySelector('.ad-count').textContent = left;
-        if (left <= 0) {
-          clearInterval(timer);
-          closeBtn.disabled = false;
-          closeBtn.textContent = T('닫기') + ' ✕';
-        }
-      }, 1000);
-      const finish = () => { clearInterval(timer); backdrop.remove(); resolve(); };
-      closeBtn.onclick = finish;
-      backdrop.querySelector('[data-act="noads"]').onclick = () => { finish(); openShop({ tab: 'noads', allowOffer: false }); };
-    });
-  }
+  // 광고: js/ad-manager.js (TP.ads — AdMob 보상형 · 전면, UMP 동의). 예전 타이머 모의 광고는 없앴다.
 
   // =====================================================================
   // 상점 모달: 카테고리 탭 + 상품 카드 (+ 진입 시 확률형 스페셜 오퍼)
@@ -409,6 +342,6 @@
 
   TP.ui = {
     root, openModal, closeModal, showDialog, confirm, showBusy, toast, confettiAt, bigCelebration, bump,
-    watchRewardedAd, showInterstitial, openShop, closeShop, showHomeOffer, showOfferPreview, restorePurchases,
+    openShop, closeShop, showHomeOffer, showOfferPreview, restorePurchases,
   };
 })();

@@ -172,9 +172,5 @@
   };
   TP.shop.buy = TP.shop.buyProduct; // 예전 이름 호환
 
-  // ---------- 광고 정책 ----------
-  // 전면 광고: 스테이지를 INTERSTITIAL_EVERY판 클리어할 때마다 1번. 광고 제거(noAdsActive)면 항상 스킵.
-  TP.ADS = { INTERSTITIAL_EVERY: 2 };
-  TP.shouldShowInterstitial = (state, clearsThisSession) =>
-    !state.noAdsActive && clearsThisSession > 0 && clearsThisSession % TP.ADS.INTERSTITIAL_EVERY === 0;
+  // 광고 정책 (전면 광고 빈도 · 광고 제거 예외)은 js/ad-manager.js 의 TP.INTERSTITIAL_RULES · TP.interstitialDecision
 })();

@@ -565,10 +565,6 @@ TP.LANG_DATA.en = {
   "무한 하트 {t}": "Infinite hearts {t}",
   "광고 패스권 {n}": "Ad Pass {n}",
   "🎟 광고 패스권 사용 (남은 {n}장)": "🎟 Ad Pass used ({n} left)",
-  "📺 광고 재생 중": "📺 Ad playing",
-  "보상까지 {n}초": "Reward in {n}s",
-  "📢 전면 광고 (테스트)": "📢 Ad (test)",
-  "광고 제거하기": "Remove ads",
   "보너스 +{n}%": "Bonus +{n}%",
   "기본": "Base",
   "적용됨": "Active",
@@ -705,4 +701,14 @@ TP.LANG_DATA.en = {
   "🎓 튜토리얼 완료 보상: 🪙 {n} 골드": "🎓 Tutorial reward: 🪙 {n} gold",
   "게임이 끝난 뒤 로비에서 볼 수 있어요": "You can watch it from the lobby after this game",
   "🎓 튜토리얼 다시 보기": "🎓 Watch tutorial again",
+  // 안드로이드 뒤로가기 (js/back-button.js)
+  "게임 종료": "Quit Game",
+  "게임을 종료할까요?": "Quit the game?",
+  "종료": "Quit",
+  // 광고 (js/ad-manager.js · AdMob)
+  "광고 불러오는 중…": "Loading ad…",
+  "광고를 끝까지 봐야 보상을 받을 수 있어요": "Watch the ad to the end to get the reward",
+  "광고를 불러올 수 없습니다. 네트워크를 확인하거나 잠시 후 다시 시도해 주세요.": "Couldn't load an ad. Check your connection or try again in a moment.",
+  "🛠 미리보기: 광고 없이 보상을 받아요 (앱에서는 실제 광고)": "🛠 Preview: reward granted without an ad (the app shows a real ad)",
+  "🛡 광고 개인정보 설정": "🛡 Ad privacy settings",
 };

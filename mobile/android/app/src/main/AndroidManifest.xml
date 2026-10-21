@@ -27,6 +27,11 @@
 
         </activity>
 
+        <!-- AdMob 앱 ID (res/values/strings.xml 의 admob_app_id) — 없으면 광고 SDK 가 시작하자마자 앱을 종료시킨다 -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="@string/admob_app_id"/>
+
         <!-- Google Play 게임즈 서비스 프로젝트 ID (res/values/games_ids.xml — 비어 있으면 클라우드 세이브 꺼짐) -->
         <meta-data
             android:name="com.google.android.gms.games.APP_ID"

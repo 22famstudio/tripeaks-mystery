@@ -386,7 +386,6 @@
     bigCelebration(run.mult + (streakReward ? 2 : 0));
     TP.audio.sfx('win');
     // 입장 때 쓴 하트는 클리어해도 돌려주지 않는다 (충전: 자연 충전 · 광고 · 골드 완충 · 무한 하트 팩)
-    clearsThisSession++;
 
     await view.stockFireworks(e.stockLeft);          // 엔드게임 축포: 남은 덱 카드 수만큼 골드
     await showWinPage(resultMeta.goldEarned);
@@ -428,15 +427,14 @@
       notes,
       accusing,
     });
-    // 전면 광고 (광고 제거 구매 시 스킵)
-    if (TP.shouldShowInterstitial(store.state, clearsThisSession)) await TP.ui.showInterstitial();
+    // 전면 광고 (js/ad-manager.js: 누적 클리어 5판까지 없음 · 그 뒤 2판마다 · 광고 제거 구매 시 영구 생략)
+    await TP.ads.maybeShowInterstitial('clear');
     if (choice === 'accuse') notebook.open();
     else if (choice === 'lobby') showScreen('lobby');
     else if (choice === 'retry') openEntry({ seed: run.seed, tierId: run.tierId, stage: run.stage, episodeId: run.episodeId });
     else if (!isCurrentRun() && run.episodeId && run.stage < 20) openEntry({ stage: run.stage + 1, episodeId: run.episodeId });   // 지난 사건: 그 사건의 다음 스테이지
     else openEntry({});
   }
-  let clearsThisSession = 0;
 
   // =====================================================================
   // 클리어 결과 화면 (기획 이미지: 파란 패널 + INVESTIGATION SUCCESS 배지 + 골드/연승 + BONUS 말풍선 + 버튼 3개)
@@ -644,7 +642,7 @@
         ],
       });
       if (choice !== 'ad') return;
-      if (await showRewardAd()) solutionUnlocked.add(deal.seed);
+      if (await TP.ads.showRewarded('solution')) solutionUnlocked.add(deal.seed);
     }
   }
   TP.showSolution = deal => showSolution(deal || view.deal);   // 개발자 확인용
@@ -720,7 +718,7 @@
 
   // 보상형 광고 부활: 덱 +3장 (첫 장은 바로 낼 수 있는 구조 카드)
   async function adRevive() {
-    await TP.ui.watchRewardedAd(5);
+    if (!(await TP.ads.showRewarded('revive'))) return;   // 끝까지 봤을 때만 덱 +3장
     if (!activeRun()) return;
     if (view.grantAdExtraCards(TP.AD_REVIVE_CARDS)) run.continued = true, TP.audio.sfx('plus'), toast(T('📺 덱 +{n}장! 첫 장은 바로 이어서 낼 수 있어요', { n: TP.AD_REVIVE_CARDS }));
   }
@@ -925,8 +923,7 @@
         if (go) await openShop({ tab: 'coin' });
       }
     } else if (choice === 'ad') {
-      await TP.ui.watchRewardedAd(5);
-      const r = energy.refillWithAd();
+      const r = (await TP.ads.showRewarded('heart')) ? energy.refillWithAd() : { ok: false };   // 끝까지 봤을 때만 하트 +1
       if (r.ok) toast(T('❤️ 수사 생명력 +{n}칸 ({a}/{b})', { n: AD_REFILL_AMOUNT, a: r.energy, b: MAX }));
     } else if (choice === 'shop') {
       await openShop({ tab: 'chance' });
@@ -1446,6 +1443,15 @@
     },
 
     // 법적 고지 (GDD 8장): 이용약관 · 개인정보처리방침을 외부 웹뷰(새 창)로. 주소가 아직 없으면 안내
+    // 안드로이드 뒤로가기에서 팝업이 없을 때 (js/back-button.js): 게임 중 = 일시정지 메뉴, 판이 끝난 게임 화면 = 로비, 로비 = 종료 확인
+    async onBack() {
+      if ($('#stage').dataset.screen === 'game') return activeRun() ? settingsMenu() : showScreen('lobby');
+      const ok = await TP.ui.confirm({ title: T('게임 종료'), message: T('게임을 종료할까요?'), okLabel: T('종료'), cancelLabel: T('취소') });
+      if (!ok) return;
+      await TP.localSave?.flush?.();
+      TP.backButton?.exitApp();
+    },
+
     // 설정 → 튜토리얼 다시 보기 (보상은 처음 한 번만)
     async replayTutorial() {
       app.closeSettings();
@@ -1782,6 +1788,10 @@
   TP.showDailyBonus = showDailyBonus;   // 개발자 확인용
   // 시작 1.6초 뒤(로딩 화면 · 이어하기 안내 뒤): 처음이면 튜토리얼(js/tutorial.js) 먼저, 그다음 받을 수 있으면 보너스 창
   setTimeout(async () => {
+    // 광고 동의(유럽 등 필요한 지역에서만 창이 뜸) → AdMob 초기화를 튜토리얼 · 보너스 창보다 먼저 (js/ad-manager.js)
+    await Promise.race([TP.ads?.init(), new Promise(r => setTimeout(r, 8000))]);
+    const privacyBtn = $('#adPrivacyBtn');
+    if (privacyBtn) privacyBtn.hidden = !TP.ads?.status.privacyOptionsRequired;
     if (store.state.activeRun) return;
     if (TP.tutorial?.shouldAutoStart()) {
       await afterSplash();

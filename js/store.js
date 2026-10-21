@@ -35,6 +35,7 @@
     offerPurchased: false, // 스페셜 오퍼(스타터팩 · 특가 팩)를 한 번이라도 샀는지 → 홈의 SPECIAL OFFER 버튼 숨김
     tutorialDone: null,      // 첫 실행 튜토리얼을 끝냈거나 건너뜀 (js/tutorial.js) — null = 이 필드가 생기기 전 세이브 (sanitize 가 판정)
     tutorialRewarded: false, // 튜토리얼을 끝까지 보고 500G 를 받았는지 (계정당 1번)
+    adClearCounter: 0,       // 전면 광고 규칙: 보호 구간(5판) 뒤 마지막 전면 광고 이후 클리어 수 (js/ad-manager.js)
     ownedCardBacks: ['default'], // 보유한 카드 뒷면 스킨 (js/card-backs.js · 50연승 프레스티지 보상)
     equippedCardBack: 'default', // 장착 중인 카드 뒷면
     gridGuideSeen: false,        // 논리 그리드 사용법 안내를 봤는지 (처음 한 번 자동으로 띄움)
@@ -111,6 +112,7 @@
       // 튜토리얼이 생기기 전 세이브: 이미 플레이한 사람에게는 자동으로 띄우지 않음 (설정에서 다시 보기 가능)
       tutorialDone: s.tutorialDone === true || (s.tutorialDone == null && ((s.totalStagesCleared || 0) > 0 || (s.playerLevel || 1) > 1)),
       tutorialRewarded: s.tutorialRewarded === true,
+      adClearCounter: int(s.adClearCounter, 0, 99, 0),
       gridGuideSeen: s.gridGuideSeen === true,
       ownedCardBacks: [...new Set(['default', ...(Array.isArray(s.ownedCardBacks) ? s.ownedCardBacks.filter(x => typeof x === 'string') : [])])],
       equippedCardBack: typeof s.equippedCardBack === 'string' && (s.ownedCardBacks || ['default']).includes(s.equippedCardBack)

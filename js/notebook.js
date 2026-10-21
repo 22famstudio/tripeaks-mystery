@@ -167,7 +167,7 @@
       if (!r.ok && r.reason === 'verified') return toast(T('이미 확인한 칸이에요'));
       if (!r.ok && r.reason === 'ticket') {
         const go = await TP.ui.confirm({ title: T('힌트권이 없어요'), message: T('광고를 보고 이 칸을 확인할까요?'), okLabel: T('📺 광고 보기') });
-        if (!go || !(await showRewardAd())) return;
+        if (!go || !(await TP.ads.showRewarded('gridCheck'))) return;
         r = mystery.checkGridCell(s, c, { free: true });
         if (!r.ok) return;
       }
@@ -218,10 +218,10 @@
     }
 
     // ---------- 결정적 힌트 (단서 21 · 광고 / 마스터키) ----------
-    //   단서 20개를 다 모으면 수첩 위쪽에 [결정적 힌트 보기] → 보상형 광고(showRewardAd) → 단서 21 해금
+    //   단서 20개를 다 모으면 수첩 위쪽에 [결정적 힌트 보기] → 보상형 광고(TP.ads.showRewarded) → 단서 21 해금
     async function watchHintAd() {
       if (!mystery.canWatchHint()) return;
-      const watched = await showRewardAd();
+      const watched = await TP.ads.showRewarded('keyHint');
       if (!watched) return;
       await showHint(mystery.revealHint());
     }
@@ -531,12 +531,12 @@
           render();
         }
       } else if (choice === 'discount') {
-        await TP.ui.watchRewardedAd(5);
+        if (!(await TP.ads.showRewarded('reaccuse'))) return render();
         const cost = mystery.recordReaccuseAdWatched();
         toast(cost ? T('📉 재지목 비용이 {n}G로 내려갔어요', { n: cost }) : T('🎉 이제 무료로 다시 지목할 수 있어요!'));
         render();
       } else if (choice === 'hintAd') {
-        await TP.ui.watchRewardedAd(5);
+        if (!(await TP.ads.showRewarded('keyHint'))) return render();
         await showHint(mystery.revealHint());
       } else if (choice === 'hintTicket') {
         await showHint(mystery.useHintTicket());

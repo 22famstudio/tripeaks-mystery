@@ -245,7 +245,7 @@
     // 설정 값(배경음악 켜기 · 볼륨) · 지금 화면(상점 안/밖) · 앱이 앞에 있는지를 배경음악에 반영
     apply() {
       const s = TP.settings.get();
-      const on = unlocked && s.bgmOn && s.bgmVol > 0 && !appHidden;
+      const on = unlocked && s.bgmOn && s.bgmVol > 0 && !appHidden && !adPlaying;   // 광고가 화면을 덮는 동안 멈춤
       // 상점 곡
       if (!on || !shopOn) { if (shopEl) shopEl.pause(); }
       else if (!shopEl) playNextShopTrack();
@@ -268,6 +268,8 @@
       this.apply();
     },
 
+    // 광고(js/ad-manager.js)가 재생되는 동안 배경음악 멈춤 → 끝나면 이어서
+    setAdPlaying(on) { adPlaying = !!on; this.apply(); },
     get unlocked() { return unlocked; },
   };
 
@@ -275,6 +277,7 @@
   let shopEl = null;
   let homeEl = null;
   let appHidden = false;
+  let adPlaying = false;
   // 홈 · 게임 배경음악은 효과음 · 대사 뒤에 잔잔하게 — 설정 볼륨의 35% (상점 곡은 설정 볼륨 그대로)
   TP.HOME_BGM_GAIN = 0.35;
   const homeVolume = () => (TP.settings.get().bgmVol / 100) * TP.HOME_BGM_GAIN;

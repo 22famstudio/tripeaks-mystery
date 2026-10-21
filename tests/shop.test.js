@@ -76,13 +76,10 @@ const COUNTED = { gold: 'gold', undo: 'undoCount', wild: 'wildcardCount', hint: 
   assert.equal((await TP.shop.buyProduct('coin_tier_03')).ok, true, '골드 팩은 반복 구매 가능');
   assert.equal((await TP.shop.buyProduct('coin_tier_03')).ok, true);
 
-  // 5) 광고 제거: 플래그 활성화 → 전면 광고 스킵, 다른 광고 제거 팩은 '적용됨'
+  // 5) 광고 제거: 플래그 활성화 (전면 광고 생략 규칙은 tests/ads.test.js), 다른 광고 제거 팩은 '적용됨'
   store.reset();
-  assert.equal(TP.shouldShowInterstitial(store.state, 2), true, '광고 제거 전: 2판마다 전면 광고');
-  assert.equal(TP.shouldShowInterstitial(store.state, 3), false);
   await TP.shop.buyProduct('noads_basic');
   assert.equal(store.state.noAdsActive, true);
-  assert.equal(TP.shouldShowInterstitial(store.state, 2), false, '광고 제거 후: 전면 광고 스킵');
   assert.equal(TP.shop.isOwned(TP.shop.findProduct('noads_vip')), true);
   assert.equal((await TP.shop.buyProduct('noads_vip')).reason, 'owned');
 
