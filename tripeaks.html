@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="css/readability.css">
 <link rel="stylesheet" href="css/cardscene.css">
 <link rel="stylesheet" href="css/shop-crime.css">
+<link rel="stylesheet" href="css/tutorial.css">
 </head>
 <body>
   <!-- 마크 이미지(mark_*.webp)가 투명 배경이 아니어서, 색으로 배경을 걸러 내는 필터 (asset 교체 시 제거 가능) -->
@@ -339,6 +340,7 @@
         <!-- 정보 및 지원 -->
         <h3 style="margin: 10px 0; color: #bdc3c7;">ℹ️ 정보 및 지원</h3>
         <div style="display:flex; flex-direction:column; gap:10px;">
+          <button onclick="app.replayTutorial()" style="padding:12px; border-radius:8px; border:none; background:#8e5a2b; color:white; cursor:pointer; text-align:left;">🎓 튜토리얼 다시 보기</button>
           <button onclick="app.openLegal()" style="padding:12px; border-radius:8px; border:none; background:#34495e; color:white; cursor:pointer; text-align:left;">📜 법적 고지 (Legal Notice)</button>
           <button onclick="app.contactUs()" style="padding:12px; border-radius:8px; border:none; background:#2980b9; color:white; cursor:pointer; text-align:left;">✉️ 고객 문의 (Contact Us)</button>
         </div>
@@ -390,6 +392,7 @@
   <script src="js/emoji-icons.js"></script>
   <script src="js/font-lang.js"></script>
   <script src="js/ui-kit.js"></script>
+  <script src="js/tutorial.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/notebook.js"></script>
   <script src="js/app.js"></script>

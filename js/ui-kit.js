@@ -376,6 +376,14 @@
       page.querySelector('.ho-close').onclick = () => done('close');
     });
   }
+  // 튜토리얼의 SPECIAL OFFER 소개: 같은 가판대 팝업을 보여 주기만 (닫아도 회차가 끝나지 않음, 결제하면 실제 구매)
+  async function showOfferPreview() {
+    const offer = TP.HOME_OFFER;
+    if (!TP.homeOfferAvailable()) return false;
+    if (await homeOfferPage(offer) === 'buy') return buyProduct(offer);
+    return false;
+  }
+
   async function showHomeOffer() {
     const offer = TP.HOME_OFFER;
     if (!TP.homeOfferAvailable()) return false;
@@ -401,6 +409,6 @@
 
   TP.ui = {
     root, openModal, closeModal, showDialog, confirm, showBusy, toast, confettiAt, bigCelebration, bump,
-    watchRewardedAd, showInterstitial, openShop, closeShop, showHomeOffer, restorePurchases,
+    watchRewardedAd, showInterstitial, openShop, closeShop, showHomeOffer, showOfferPreview, restorePurchases,
   };
 })();

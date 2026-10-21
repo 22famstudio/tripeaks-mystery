@@ -100,7 +100,7 @@
 
 | 할 일 | 이유 |
 |---|---|
-| **Play 앱 서명 키의 SHA-1 · SHA-256 등록** | Play 스토어로 받은 앱은 Google 의 앱 서명 키로 다시 서명됩니다. Play Console → 앱 무결성 → 앱 서명 키 인증서의 SHA-1/256 을 Firebase 에 추가하지 않으면 스토어 버전에서 Google 로그인이 실패합니다 (`DEVELOPER_ERROR` · 코드 10). 업로드 키(릴리스 키스토어)의 SHA 도 함께 넣으세요. |
+| **Play 앱 서명 키의 SHA-1 · SHA-256 등록** | Play 스토어로 받은 앱은 Google 의 앱 서명 키로 다시 서명됩니다. Play Console → 앱 무결성 → 앱 서명 키 인증서의 SHA-1/256 을 Firebase 에 추가하지 않으면 스토어 버전에서 Google 로그인이 실패합니다 (`DEVELOPER_ERROR` · 코드 10). 업로드 키(릴리스 키스토어)의 SHA 도 함께 넣으세요 — 업로드 키 SHA-1 `FC:29:E5:81:C9:67:B8:2B:D0:6B:69:A7:10:BB:49:00:1E:31:A7:03` (docs/RELEASE_GUIDE.md). |
 | **계정 삭제 웹 페이지** | Google Play 는 계정을 만들 수 있는 앱에 대해 앱 안 삭제(✅ 구현됨) **와** 앱 밖에서 삭제를 요청할 수 있는 웹 링크를 요구합니다. 간단한 요청 폼이나 안내 페이지(예: 유저 ID 와 메일을 보내면 삭제)를 만들어 Play Console 데이터 보안 항목에 넣으세요. |
 | **데이터 보안(Data safety) 양식** | 수집: 사용자 ID(필수, 앱 기능 · 계정 관리), 이메일 주소(Google 연결 시 선택). 전송 시 암호화 ✅, 삭제 요청 가능 ✅ |
 | **개인정보처리방침** | 위 수집 항목과 Firebase(Google) 처리 위탁을 적고, `js/settings.js` 의 `TP.LEGAL_URLS.privacy` 에 주소를 넣으세요. |

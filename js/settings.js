@@ -6,7 +6,9 @@
 //
 //   효과음: game_assets/sounds/sfx/*.ogg (TP.AUDIO_FILES.sfx). 첫 터치 때 미리 읽어 디코딩해 두고(지연 없이 재생)
 //     파일이 없는 이름(tick · stamp)이나 읽기에 실패하면 Web Audio 합성음으로 대신한다.
-//   배경음악: TP.AUDIO_FILES.bgm 에 파일 경로를 넣으면 반복 재생 (지금은 파일이 없어 null → 재생 안 함)
+//   배경음악: 상점 밖(홈 · 사건 파일 · 추리 수첩 · 카드 플레이)은 TP.AUDIO_FILES.homeBgm, 상점은 shopBgm.
+//     둘 다 무작위 · 곡이 끝나면 방금 곡을 빼고 다른 곡. 홈 곡은 효과음 아래 잔잔하게(HOME_BGM_GAIN), 상점에 들어가면
+//     홈 곡을 줄이며 멈추고 상점 곡, 나오면 홈 곡을 멈춘 자리부터 다시. 앱이 뒤로 가면 멈추고 돌아오면 이어서.
 //   브라우저 정책상 소리는 첫 터치/클릭 이후부터 난다.
 // =====================================================================
 (function () {
@@ -14,7 +16,8 @@
 
   const SFX = 'game_assets/sounds/sfx/';
   TP.AUDIO_FILES = {
-    bgm: null,   // 홈 배경음악 (아직 없음)
+    // 홈 · 게임 배경음악 20곡 (원본은 ../assets_original_backup/game_assets/sounds/bgm — tools/build_bgm.py home 이 OGG · iOS MP3 로)
+    homeBgm: Array.from({ length: 20 }, (_, i) => `game_assets/sounds/bgm_mp3/home_bgm_${i + 1}.ogg`),
     // 상점 배경음악: 파일명이 shop 으로 시작하는 곡 (tools/build_bgm.py 가 WAV → MP3). 상점에 들어가면 무작위로 틀고,
     // 한 곡이 끝나면 다른 곡으로 이어서 재생, 상점을 나가면 멈춘다.
     shopBgm: [1, 2, 3, 4, 5].map(n => `game_assets/sounds/bgm_mp3/shop_bgm_${n}.ogg`),
@@ -54,7 +57,7 @@
   };
 
   // 고객 문의 (GDD 8장): 기본 이메일 앱 호출, 답변 3~10 working days
-  TP.SUPPORT = { email: 'dong2kids@gmail.com', version: '0.9.0 (prototype)' };
+  TP.SUPPORT = { email: 'dong2kids@gmail.com', version: '0.9.1' };   // 버전은 mobile/package.json 과 맞춤
 
   // 법적 고지 (GDD 8장): 외부 브라우저로 여는 이용약관 · 개인정보처리방침 주소 — 언어별 (없는 언어는 en → ko 순으로)
   //   개인정보처리방침 원문: docs/legal/privacy_policy_{ko,en,ja}.md → Notion 게시
@@ -82,7 +85,6 @@
 
   // ---------------- 오디오 ----------------
   let ctx = null;
-  let bgmEl = null;
   let unlocked = false;
   const buffers = {};      // 파일 경로 → 디코딩된 AudioBuffer (첫 터치 때 미리 읽음)
 
@@ -231,31 +233,39 @@
     enterLobby() {
       this.stopTransitionSounds();
       this.stopShopBgm();
-      this.apply();                                   // 홈 BGM (TP.AUDIO_FILES.bgm, 지금은 파일 없음 → 무음)
+      this.apply();                                   // 홈 배경음악 (TP.AUDIO_FILES.homeBgm, 상점에서 나왔으면 멈춘 자리부터)
     },
     get activeSfx() { return [...voices].map(v => v.name); },   // 개발자 확인용
-
-    // 설정 값(배경음악 켜기·볼륨)을 반영
-    apply() {
-      const s = TP.settings.get();
-      if (!TP.AUDIO_FILES.bgm) return;
-      if (!bgmEl) {
-        bgmEl = new Audio(TP.AUDIO_FILES.bgm);
-        bgmEl.loop = true;
-      }
-      bgmEl.volume = s.bgmVol / 100;
-      if (s.bgmOn && s.bgmVol > 0 && unlocked) bgmEl.play().catch(() => {});
-      else bgmEl.pause();
+    // 개발자 확인용: 지금 배경음악 상태
+    get bgmState() {
+      const st = el => el && { file: decodeURIComponent(el.src.split('/').pop()), paused: el.paused, volume: +el.volume.toFixed(2), time: +el.currentTime.toFixed(1) };
+      return { home: st(homeEl), shop: st(shopEl), shopOn, appHidden };
     },
 
-    // ---- 상점 배경음악 (무작위 · 곡이 끝나면 다른 곡) ----
+    // 설정 값(배경음악 켜기 · 볼륨) · 지금 화면(상점 안/밖) · 앱이 앞에 있는지를 배경음악에 반영
+    apply() {
+      const s = TP.settings.get();
+      const on = unlocked && s.bgmOn && s.bgmVol > 0 && !appHidden;
+      // 상점 곡
+      if (!on || !shopOn) { if (shopEl) shopEl.pause(); }
+      else if (!shopEl) playNextShopTrack();
+      else { shopEl.volume = s.bgmVol / 100; if (shopEl.paused) shopEl.play().catch(() => {}); }
+      // 홈 곡 (상점 밖)
+      if (!on || shopOn) { if (homeEl && !homeEl.paused) fadeVolume(homeEl, 0, shopOn ? 500 : 0, () => homeEl && homeEl.pause()); }
+      else if (!homeEl) playNextHomeTrack();
+      else if (homeEl.paused) { homeEl.volume = 0; homeEl.play().catch(() => {}); fadeVolume(homeEl, homeVolume(), 1200); }
+      else fadeVolume(homeEl, homeVolume(), 200);
+    },
+
+    // ---- 상점 배경음악 (무작위 · 곡이 끝나면 다른 곡) — 들어가면 홈 곡은 줄이며 멈춤, 나오면 이어서 ----
     playShopBgm() {
       shopOn = true;
-      playNextShopTrack();
+      this.apply();
     },
     stopShopBgm() {
       shopOn = false;
       if (shopEl) { shopEl.pause(); shopEl = null; }
+      this.apply();
     },
 
     get unlocked() { return unlocked; },
@@ -263,30 +273,56 @@
 
   let shopOn = false;
   let shopEl = null;
-  let lastShopTrack = null;
-  function playNextShopTrack() {
-    const s = TP.settings.get();
-    const list = TP.AUDIO_FILES.shopBgm || [];
-    if (!shopOn || !list.length || !s.bgmOn || s.bgmVol <= 0) return;
-    const pool = list.length > 1 ? list.filter(f => f !== lastShopTrack) : list;   // 방금 곡은 빼고
+  let homeEl = null;
+  let appHidden = false;
+  // 홈 · 게임 배경음악은 효과음 · 대사 뒤에 잔잔하게 — 설정 볼륨의 35% (상점 곡은 설정 볼륨 그대로)
+  TP.HOME_BGM_GAIN = 0.35;
+  const homeVolume = () => (TP.settings.get().bgmVol / 100) * TP.HOME_BGM_GAIN;
+  const last = { home: null, shop: null };
+  // 무작위로 고르되 방금 곡은 빼고
+  function pick(list, key) {
+    const pool = list.length > 1 ? list.filter(f => f !== last[key]) : list;
     const file = pool[Math.floor(Math.random() * pool.length)];
-    lastShopTrack = file;
+    last[key] = file;
+    return file;
+  }
+  // 볼륨을 ms 동안 to 로 (0 이면 바로). 끝나면 then()
+  function fadeVolume(el, to, ms, then) {
+    cancelAnimationFrame(el._fadeId);
+    const from = el.volume, t0 = performance.now();
+    const step = now => {
+      const k = ms > 0 ? Math.min(1, (now - t0) / ms) : 1;
+      el.volume = Math.max(0, Math.min(1, from + (to - from) * k));
+      if (k < 1) el._fadeId = requestAnimationFrame(step); else if (then) then();
+    };
+    if (ms > 0) el._fadeId = requestAnimationFrame(step); else step(t0);
+  }
+  function playNextShopTrack() {
+    const list = TP.AUDIO_FILES.shopBgm || [];
+    if (!shopOn || !list.length) return;
     if (shopEl) shopEl.pause();
-    shopEl = new Audio(file);
-    shopEl.volume = s.bgmVol / 100;
+    shopEl = new Audio(pick(list, 'shop'));
+    shopEl.volume = TP.settings.get().bgmVol / 100;
     shopEl.onended = () => playNextShopTrack();
     shopEl.play().catch(() => {});
   }
-  // 설정에서 배경음악을 끄거나 볼륨을 바꾸면 상점 음악에도 바로 반영
-  const applyBase = TP.audio.apply;
-  TP.audio.apply = function () {
-    applyBase.call(TP.audio);
-    const s = TP.settings.get();
-    if (!shopOn) return;
-    if (!s.bgmOn || s.bgmVol <= 0) { if (shopEl) shopEl.pause(); }
-    else if (!shopEl) playNextShopTrack();
-    else { shopEl.volume = s.bgmVol / 100; if (shopEl.paused) shopEl.play().catch(() => {}); }
-  };
+  function playNextHomeTrack() {
+    const list = TP.AUDIO_FILES.homeBgm || [];
+    if (!list.length) return;
+    if (homeEl) homeEl.pause();
+    const el = homeEl = new Audio(pick(list, 'home'));
+    el.volume = 0;
+    el.onended = () => { if (homeEl === el) { homeEl = null; TP.audio.apply(); } };   // 다음 곡 (상점 안이면 나올 때)
+    el.play().catch(() => {});
+    fadeVolume(el, homeVolume(), 1200);
+  }
+  // 앱이 뒤로 가면(홈 버튼 · 화면 끔) 배경음악을 멈추고, 돌아오면 이어서
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => { appHidden = document.hidden; TP.audio.apply(); });
+    // 안드로이드 앱(Capacitor)은 앱이 뒤로 갈 때 document 에 pause / resume 을 보낸다 (WebView 가 visibilitychange 를 안 줄 때 대비)
+    document.addEventListener('pause', () => { appHidden = true; TP.audio.apply(); });
+    document.addEventListener('resume', () => { appHidden = false; TP.audio.apply(); });
+  }
 
   // 첫 사용자 입력에서 오디오 잠금 해제 + 모든 버튼에 클릭음
   if (typeof document !== 'undefined') {

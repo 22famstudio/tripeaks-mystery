@@ -1,7 +1,7 @@
 ext {
     minSdkVersion = 24   // Play 게임즈 서비스 v2 22.x 가 Android 7.0(24) 이상을 요구
-    compileSdkVersion = 35
-    targetSdkVersion = 35
+    compileSdkVersion = 36
+    targetSdkVersion = 36   // Google Play: 2026-08-31 부터 새 앱 · 업데이트는 Android 16(API 36) 이상 필수
     androidxActivityVersion = '1.9.2'
     androidxAppCompatVersion = '1.7.0'
     androidxCoordinatorLayoutVersion = '1.2.0'

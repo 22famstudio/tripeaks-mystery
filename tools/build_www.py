@@ -84,7 +84,8 @@ def main():
         shutil.copytree(os.path.join(ROOT, d), os.path.join(OUT, d))
     def ignore(src, names):
         rel = os.path.relpath(src, os.path.join(ROOT, 'game_assets')).replace(os.sep, '/')
-        return [n for n in names if (rel == '.' and n in SKIP_ASSET_DIRS) or f'{rel}/{n}' in skip_paths]
+        # .wav 는 어디에 있든 앱에 넣지 않는다 (게임은 OGG · MP3 만 씀 — 작업 중인 원본 WAV 가 APK 를 수백 MB 키우지 않게)
+        return [n for n in names if (rel == '.' and n in SKIP_ASSET_DIRS) or f'{rel}/{n}' in skip_paths or n.lower().endswith('.wav')]
     shutil.copytree(os.path.join(ROOT, 'game_assets'), os.path.join(OUT, 'game_assets'), ignore=ignore)
 
     html = open(os.path.join(ROOT, 'tripeaks.html'), encoding='utf-8').read()

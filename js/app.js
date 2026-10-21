@@ -1217,7 +1217,7 @@
 
   // 접속 후 홈 화면에 (다른 팝업 없이) 5초 머물면 SPECIAL OFFER 팝업 — 접속당 한 번
   let homeOfferShown = false, homeIdle = 0;
-  const popupOpen = () => !!TP.ui.root().querySelector('.modal-backdrop:not([hidden]), .ws-popup, .daily-bonus, .ho-popup, .boot-splash, .rsm-popup');
+  const popupOpen = () => !!TP.ui.root().querySelector('.modal-backdrop:not([hidden]), .ws-popup, .daily-bonus, .ho-popup, .boot-splash, .rsm-popup, .tut');
   setInterval(() => {
     if (homeOfferShown) return;
     homeIdle = $('#stage').dataset.screen === 'lobby' && !popupOpen() && !document.hidden ? homeIdle + 1 : 0;
@@ -1446,6 +1446,14 @@
     },
 
     // 법적 고지 (GDD 8장): 이용약관 · 개인정보처리방침을 외부 웹뷰(새 창)로. 주소가 아직 없으면 안내
+    // 설정 → 튜토리얼 다시 보기 (보상은 처음 한 번만)
+    async replayTutorial() {
+      app.closeSettings();
+      if (activeRun()) return toast(T('게임이 끝난 뒤 로비에서 볼 수 있어요'));
+      showScreen('lobby');
+      await TP.tutorial?.start({ replay: true });
+    },
+
     async openLegal() {
       const choice = await showDialog({
         title: T('📜 법적 고지'),
@@ -1772,8 +1780,18 @@
     });
   }
   TP.showDailyBonus = showDailyBonus;   // 개발자 확인용
-  // 시작 1.6초 뒤(로딩 화면 · 이어하기 안내 뒤): 받을 수 있으면 보너스 창
-  setTimeout(() => { if (!store.state.activeRun) showDailyBonus(); }, 1600);
+  // 시작 1.6초 뒤(로딩 화면 · 이어하기 안내 뒤): 처음이면 튜토리얼(js/tutorial.js) 먼저, 그다음 받을 수 있으면 보너스 창
+  setTimeout(async () => {
+    if (store.state.activeRun) return;
+    if (TP.tutorial?.shouldAutoStart()) {
+      await afterSplash();
+      homeOfferShown = true;          // 튜토리얼에서 SPECIAL OFFER 를 이미 보여 줌 → 이번 접속엔 자동 팝업 안 함
+      showScreen('lobby');
+      const r = await TP.tutorial.start();
+      if (!r.skipped) await new Promise(res => setTimeout(res, 1800));   // 완료 보상 축포 · 안내를 본 뒤
+    }
+    showDailyBonus();
+  }, 1600);
 
   // ?seed=123 으로 특정 판 고정 가능
   showScreen('lobby');

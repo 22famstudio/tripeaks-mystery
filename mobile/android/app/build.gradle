@@ -1,5 +1,16 @@
 apply plugin: 'com.android.application'
 
+// 버전: mobile/package.json 의 "version"(예: 0.9.0) 하나만 고친다
+//   versionName = 그대로, versionCode = 주 × 10000 + 부 × 100 + 수 (0.9.0 → 900, 1.2.3 → 10203)
+//   Play 에 같은 versionCode 는 두 번 못 올리므로, 올릴 때마다 package.json 버전을 올린다
+def appVersion = new groovy.json.JsonSlurper().parse(file('../../package.json')).version
+def (vMajor, vMinor, vPatch) = appVersion.tokenize('.').collect { it.replaceAll(/\D.*/, '') as int }
+
+// 릴리스 서명 (업로드 키): mobile/android/keystore.properties — git 에 넣지 않음 (원본 · 백업: Desktop/TriPeaks-keys)
+def keystoreProps = new Properties()
+def keystorePropsFile = rootProject.file('keystore.properties')
+if (keystorePropsFile.exists()) keystorePropsFile.withInputStream { keystoreProps.load(it) }
+
 android {
     namespace "com.twotwofam.mystery"
     compileSdk rootProject.ext.compileSdkVersion
@@ -7,8 +18,8 @@ android {
         applicationId "com.twotwofam.mystery"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode vMajor * 10000 + vMinor * 100 + vPatch
+        versionName appVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,10 +27,23 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (keystoreProps['storeFile']) {
+                storeFile file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // 키 파일이 없으면 서명 없이 만들어진다 (Play 에 못 올림) — 빌드 로그의 경고 확인
+            signingConfig keystoreProps['storeFile'] ? signingConfigs.release : null
+            minifyEnabled true        // R8: 안 쓰는 자바 코드 제거 · 난독화 (Capacitor · RevenueCat · Firebase 는 자체 keep 규칙 포함)
+            shrinkResources true      // 안 쓰는 안드로이드 리소스 제거 (웹 에셋 public/ 은 그대로)
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }

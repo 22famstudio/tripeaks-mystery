@@ -40,10 +40,10 @@ body {
 button, input, select, textarea { font-family: inherit; }
 /* 영어 화면: 버튼 · 제목 · 숫자는 Luckiest Guy 그대로, 긴 문장(설명 · 단서 · 안내)은 읽기 쉬운 나눔스퀘어의 영문 글자로 */
 html[data-lang="en"] :is(.dialog-body, .confirm-msg, .legal-text, .gg-rules, .gg-goal, .suspect-file dd, .clue, .hint-note,
-  .en-rule, .rsm-msg, .ws-bubble, .ws-line, .ep-desc, .toast, .db-sub, .entry-note, .ev2-reassure, .es-rule, .lg-check-tip, .cs-text, .flee-text) {
+  .en-rule, .rsm-msg, .ws-bubble, .ws-line, .ep-desc, .toast, .db-sub, .entry-note, .ev2-reassure, .es-rule, .lg-check-tip, .cs-text, .flee-text, .tut-text) {
   font-family: 'NanumSquare', 'Luckiest Guy', sans-serif;
 }
-html[data-lang="en"] :is(.dialog-body, .confirm-msg, .legal-text, .gg-rules, .clue, .toast) .lang-en { font-family: 'NanumSquare', sans-serif; font-weight: 700 !important; letter-spacing: 0; }
+html[data-lang="en"] :is(.dialog-body, .confirm-msg, .legal-text, .gg-rules, .clue, .toast, .tut-text) .lang-en { font-family: 'NanumSquare', sans-serif; font-weight: 700 !important; letter-spacing: 0; }
 /* 논리 그리드 (영어 · 일본어): 장소 · 물건 · 이름이 한국어보다 길다 → 좁은 글꼴 · 작은 글씨 · 긴 낱말도 줄바꿈, 이름 칸 조금 넓게 */
 html:is([data-lang="en"], [data-lang="ja"]) .lg-head span {
   font-family: 'NanumSquare', sans-serif; font-size: 0.8rem; letter-spacing: 0; overflow-wrap: anywhere; word-break: normal; hyphens: auto;

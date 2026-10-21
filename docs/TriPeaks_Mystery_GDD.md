@@ -221,8 +221,10 @@
 - [x] 베팅 배수 및 스테이지 결과 정산 로직 구현
 - [x] 인앱 결제 코드 — RevenueCat + Google Play Billing (2026-10-21, `js/billing.js` · 가이드 `docs/REVENUECAT_GUIDE.md`). 남은 일: Play Console 상품 25종 등록 · RevenueCat 설정 · `js/billing-config.js` 에 Public SDK key
 - [x] 로컬 세이브 위조 검사 (`js/save-codec.js`)
+- [x] 릴리스 빌드 · AAB (2026-10-21, `npm run aab` · 업로드 키 서명 · R8 · targetSdk 36 · 버전은 package.json 하나로) — `docs/RELEASE_GUIDE.md`
+- [x] 첫 실행 튜토리얼 (2026-10-22, `js/tutorial.js` · `css/tutorial.css`) — 탐정 고양이 말풍선 + 스포트라이트. 연습 테이블(±1 · A↔2 · A↔K 순환 · 덱 뽑기, 틀린 카드는 흔들고 안내) → 로비 안내(에피소드/스테이지 · 단서 · 추리 수첩 직접 열기 · 용의자 · 논리 그리드 · 하트 · 별 · 연승 · 칭호 · 사건 파일 · 상점 · SPECIAL OFFER 미리보기[닫아도 회차 안 끝남]) → 완료 보상 500G(계정당 1회, `store.tutorialRewarded`). 건너뛰기 가능(보상 없음). 설정 → 🎓 튜토리얼 다시 보기. 예전 세이브(진행 있음)는 자동으로 띄우지 않음. 튜토리얼이 끝난 뒤 데일리 보너스.
 - [x] 플레이어 설정 화면 (오디오 · 닉네임 · 법적 고지 · 고객 문의) — 프로토타입 구현
-- [ ] 배경음악 · 효과음 사운드 파일 제작 및 연결
+- [x] 배경음악 · 효과음 사운드 파일 제작 및 연결 — 홈 · 게임 배경음악 20곡(2026-10-22, `game_assets/sounds/bgm_mp3/home_bgm_1~20.ogg`): 상점 밖 모든 화면에서 무작위 · 방금 곡 제외 · 설정 볼륨의 35%로 잔잔하게(`TP.HOME_BGM_GAIN`) · 상점에 들어가면 줄이며 멈추고 상점 곡, 나오면 멈춘 자리부터 · 앱이 뒤로 가면 멈춤. 원본은 백업 `sounds/bgm`, 변환은 `python tools/build_bgm.py home` (−16 LUFS 로 크기 맞춤 · OGG + iOS MP3)
 - [ ] 구글 계정 연동 (Google Play Games 로그인 · 클라우드 세이브)
 - [ ] 이용약관 · 개인정보처리방침 문서 작성 및 웹 게시 (js/settings.js `TP.LEGAL_URLS`에 주소 연결)
 - [x] 다국어 지원 1단계 — UI 한국어 · English · 日本語 (2026-10-20, 12장)

@@ -44,7 +44,7 @@
       if (modal.hidden) TP.audio?.sfx?.('bookOpen');
       openModal(modal);
       // 처음 수첩을 열면 (보통 에피소드 1) 논리 그리드 사용법을 먼저 보여 준다
-      if (mystery.episode?.logic && !store.state.gridGuideSeen) setTimeout(() => showGridGuide(), 450);
+      if (mystery.episode?.logic && !store.state.gridGuideSeen && !TP.tutorial?.active) setTimeout(() => showGridGuide(), 450);   // 튜토리얼 중엔 안내가 겹치지 않게
       // 새 단서 강조는 한 번 보여 준 뒤 읽음 처리
       setTimeout(() => mystery.markRead(), 1500);
     }
@@ -107,7 +107,7 @@
         tab = btn.dataset.tab;
         TP.audio?.sfx?.('pageFlip');
         render();
-        if (tab === 'grid' && !store.state.gridGuideSeen) showGridGuide();
+        if (tab === 'grid' && !store.state.gridGuideSeen && !TP.tutorial?.active) showGridGuide();
       };
     });
 
