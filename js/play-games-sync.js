@@ -21,6 +21,7 @@
 // =====================================================================
 (function () {
   const TP = (globalThis.TP ??= {});
+  const T = (s, p) => (TP.t ? TP.t(s, p) : p ? s.replace(/\{(\w+)\}/g, (m, k) => (k in p ? p[k] : m)) : s);   // 다국어 (js/i18n.js)
   const SNAPSHOT = 'save_data';
   const INTERVAL_MS = 5 * 60 * 1000;
   const MIN_GAP_MS = 60 * 1000;
@@ -42,7 +43,7 @@
 
   const description = s => {
     const p = TP.saveCodec.progress(s);
-    return `에피소드 ${p.episode} · Lv.${p.level} · 스테이지 ${p.stages} · 골드 ${p.gold.toLocaleString()}`;
+    return T('에피소드 {ep} · Lv.{lv} · 스테이지 {st} · 골드 {g}', { ep: p.episode, lv: p.level, st: p.stages, g: p.gold.toLocaleString() });
   };
 
   async function upload(reason, gap = MIN_GAP_MS) {

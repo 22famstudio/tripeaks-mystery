@@ -33,6 +33,7 @@
 // =====================================================================
 (function () {
   const TP = (globalThis.TP ??= {});
+  const N_ = s => s;   // 다국어: 표시할 때 TP.t() 로 번역하는 이름 (js/i18n.js · tools/i18n_check.js)
 
   // 난이도 등급 (플레이어 레벨로 결정)
   //   wild/bonus : 보드에 깔리는 특수 카드 수   draws : 정답 수순의 덱 뽑기 횟수
@@ -40,10 +41,10 @@
   //   comboBias  : 정답 수순에 긴 콤보 구간이 나오는 정도
   //   winRate    : 목표 무작위 플레이 승률 구간
   TP.DIFFICULTY_TIERS = [
-    { id: 'easy', name: '쉬움', minLevel: 1, wild: [1, 2], bonus: [2, 3], draws: [10, 14], spare: [7, 9], comboBias: 0.35, winRate: [0.5, 1] },
-    { id: 'normal', name: '보통', minLevel: 10, wild: [1, 1], bonus: [1, 2], draws: [12, 16], spare: [3, 4], comboBias: 0.3, winRate: [0.2, 0.6] },
-    { id: 'hard', name: '어려움', minLevel: 25, wild: [0, 1], bonus: [1, 2], draws: [14, 18], spare: [1, 1], comboBias: 0.35, winRate: [0.03, 0.25], candidates: 40 },
-    { id: 'expert', name: '전문가', minLevel: 40, wild: [0, 0], bonus: [1, 1], draws: [15, 20], spare: [0, 0], comboBias: 0.5, requireChest: true, winRate: [0, 0.05], candidates: 90 },
+    { id: 'easy', name: N_('쉬움'), minLevel: 1, wild: [1, 2], bonus: [2, 3], draws: [10, 14], spare: [7, 9], comboBias: 0.35, winRate: [0.5, 1] },
+    { id: 'normal', name: N_('보통'), minLevel: 10, wild: [1, 1], bonus: [1, 2], draws: [12, 16], spare: [3, 4], comboBias: 0.3, winRate: [0.2, 0.6] },
+    { id: 'hard', name: N_('어려움'), minLevel: 25, wild: [0, 1], bonus: [1, 2], draws: [14, 18], spare: [1, 1], comboBias: 0.35, winRate: [0.03, 0.25], candidates: 40 },
+    { id: 'expert', name: N_('전문가'), minLevel: 40, wild: [0, 0], bonus: [1, 1], draws: [15, 20], spare: [0, 0], comboBias: 0.5, requireChest: true, winRate: [0, 0.05], candidates: 90 },
   ];
 
   TP.getTier = id => TP.DIFFICULTY_TIERS.find(t => t.id === id) || TP.DIFFICULTY_TIERS[0];

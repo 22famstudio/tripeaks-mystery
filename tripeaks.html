@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="screen-orientation" content="landscape">
-<title>온천 여관의 비밀 — 트라이픽스</title>
+<title>탐정 솔리테어: 세계 사건 수첩</title>
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/board.css">
@@ -214,7 +214,6 @@
             <button id="shopClose" class="icon-btn" aria-label="닫기">✕</button>
           </div>
           <div class="product-grid" id="productGrid"></div>
-          <p class="fine">프로토타입: 실제 결제 없이 즉시 지급됩니다.</p>
         </div>
       </div>
     </div>
@@ -310,9 +309,11 @@
           <input type="text" id="setting-nickname" value="탐정님" maxlength="12" style="width:90%; padding:8px; border-radius:5px; border:none; margin-bottom:15px;">
 
           <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:14px;">
-            <label>언어 (Language)</label>
-            <select disabled title="추후 업데이트 예정" style="background:#7f8c8d; color:white; border:none; border-radius:4px;">
-              <option>한국어 (추후 업데이트)</option>
+            <label for="setting-lang">언어 (Language)</label>
+            <select id="setting-lang" data-i18n-skip style="background:#34495e; color:white; border:none; border-radius:4px; padding:3px 6px;">
+              <option value="ko">한국어</option>
+              <option value="en">English</option>
+              <option value="ja">日本語</option>
             </select>
           </div>
 
@@ -360,15 +361,23 @@
   <script src="js/save-codec.js"></script>
   <script src="js/store.js"></script>
   <script src="js/local-save.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/lang/en.js"></script>
+  <script src="js/lang/ja.js"></script>
   <script src="js/energy.js"></script>
   <script src="js/core/home_progression_system.js"></script>
   <script src="js/economy.js"></script>
   <script src="js/streak.js"></script>
   <script src="js/shop.js"></script>
+  <script src="js/billing-config.js"></script>
+  <script src="js/billing.js"></script>
   <script src="js/card-backs.js"></script>
   <script src="js/daily-bonus.js"></script>
   <script src="js/assets.js"></script>
   <script src="js/data/episodes.js"></script>
+  <!-- 에피소드 번역: 고른 언어의 파일만 불러와 덮어쓴다 (js/data/episodes.en.js · ja.js — tools/build_episode_i18n.py) -->
+  <script>if (TP.i18n && TP.i18n.lang !== 'ko') document.write('<script src="js/data/episodes.' + TP.i18n.lang + '.js"><\/script>');</script>
+  <script src="js/episode-i18n.js"></script>
   <!-- CDN_VENDOR -->
   <script src="js/cdn-config.js"></script>
   <script src="js/asset-manager.js"></script>

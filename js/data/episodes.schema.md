@@ -9,6 +9,8 @@ python tools/import_episodes_v6.py            # data/TriPeaks_300_Episodes_V6_So
 node tests/episodes-v6.test.js                # 원본 대조 · 대륙 전환 · 해결 보상 검증
 ```
 
+진범의 고백(`confession`)은 `data/confessions_rewrite.json` 에 다시 쓴 문장이 있으면 그것을, 없으면 원본 CSV 고백을 코지 톤으로 순화해 쓴다 (현재 1~100화 다시 씀).
+
 V6 에피소드에 추가된 필드: `continent`(한국어 대륙) · `region`(그림 풀 키) · `city` · `place` · `confession`(진범의 고백) ·
 용의자 `age` · `gender` · `bio`. 파일 맨 위 `TP.EPISODE_CHAPTERS` = 대륙별 에피소드 구간 (챕터 전환 연출에 사용).
 단서 20개 · 광고 힌트 3종은 변환기가 에피소드 번호 고정 시드로 만든다 (V6에는 단서 열이 없음).

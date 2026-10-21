@@ -14,6 +14,7 @@
 // =====================================================================
 (function () {
   const TP = (globalThis.TP ??= {});
+  const T = (s, p) => (TP.t ? TP.t(s, p) : p ? s.replace(/\{(\w+)\}/g, (m, k) => (k in p ? p[k] : m)) : s);   // 다국어 (js/i18n.js)
   const store = () => TP.store;
 
   TP.STREAK = { SAVE_COST: 500, CAP: 50 };
@@ -52,10 +53,10 @@
   TP.nextStreakMilestone = streak => TP.STREAK_MILESTONES.find(m => m.at > streak) || null;
 
   TP.describeBuffs = b => [
-    b.extraCards && `덱 +${b.extraCards}`,
-    b.freeUndo && `무료 되돌리기 ${b.freeUndo}`,
-    b.freeWild && `무료 와일드 ${b.freeWild}`,
-    b.comboBoost && `콤보 배율 +${b.comboBoost}`,
+    b.extraCards && T('덱 +{n}', { n: b.extraCards }),
+    b.freeUndo && T('무료 되돌리기 {n}', { n: b.freeUndo }),
+    b.freeWild && T('무료 와일드 {n}', { n: b.freeWild }),
+    b.comboBoost && T('콤보 배율 +{n}', { n: b.comboBoost }),
   ].filter(Boolean).join(' · ');
 
   // 보상 표시: 숫자 → 그대로, [최소, 최대] → '100~200'
@@ -66,9 +67,9 @@
     has(r.undo) && `↶ ${amount(r.undo)}`,
     has(r.wild) && `★ ${amount(r.wild)}`,
     has(r.life) && `❤️ +${amount(r.life)}`,
-    has(r.hint) && `🎟 힌트권 ${amount(r.hint)}`,
-    r.infiniteMinutes && `♾️ 무한 하트 ${r.infiniteMinutes}분`,
-    r.prestige && '🂠 카드 뒷면 스킨',
+    has(r.hint) && T('🎟 힌트권 {n}', { n: amount(r.hint) }),
+    r.infiniteMinutes && T('♾️ 무한 하트 {n}분', { n: r.infiniteMinutes }),
+    r.prestige && T('🂠 카드 뒷면 스킨'),
   ].filter(Boolean).join(' + ');
 
   TP.streak = {

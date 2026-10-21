@@ -23,6 +23,7 @@
 // =====================================================================
 (function () {
   const TP = (globalThis.TP ??= {});
+  const T = (s, p) => (TP.t ? TP.t(s, p) : p ? s.replace(/\{(\w+)\}/g, (m, k) => (k in p ? p[k] : m)) : s);   // 다국어 (js/i18n.js)
   const HP = TP.HP || globalThis.HomeProgressionSystem
     || (typeof require === 'function' ? require('./core/home_progression_system.js') : null);
 
@@ -175,7 +176,7 @@
       const no = ep ? ep.no : s.episode.index + 1;
       const themeIndex = ((Math.max(1, no) - 1) % 30) + 1;
       const art = (ep && ep.background) || TP.EPISODE_THEME_BACKGROUNDS[themeIndex] || null;
-      const m = this.getHomeUIModel(ep ? { title: ep.title, background: art || undefined } : { title: '모든 사건 해결!' });
+      const m = this.getHomeUIModel(ep ? { title: ep.title, background: art || undefined } : { title: T('모든 사건 해결!') });
 
       // 배경: 전용/테마 배경 → 없으면 기본 배경 위에 테마 색(30종 순환)을 반투명으로 덮는다
       const bg = m.centerStage.background;
@@ -186,12 +187,12 @@
       // 칭호·코스튬: 레벨 구간 + 사건 해결 승급 (economy.js) · 아바타 일러스트
       Object.assign(m.profileWidget, {
         title: TP.titleOf(s),
-        costumeName: TP.costumeNameOf(s),
+        costumeName: T(TP.costumeNameOf(s)),
         avatarUrl: TP.avatarOf(s),
       });
       // 한정 특가 가격은 실제 상점 상품(초보 탐정 스타터팩) 기준
       const starter = TP.SHOP_PRODUCTS && TP.SHOP_PRODUCTS.find(p => p.id === STARTER.shop);
-      if (starter) m.topBar.specialOffer.priceText = `$${starter.price} / ${starter.priceKRW.toLocaleString()}원`;
+      if (starter) m.topBar.specialOffer.priceText = T('${usd} / {krw}원', { usd: starter.price, krw: starter.priceKRW.toLocaleString() });
       // 단서 총개수는 에피소드 데이터 기준
       if (ep) {
         const total = ep.clues.length;

@@ -9,13 +9,14 @@
 // =====================================================================
 (function () {
   const TP = (globalThis.TP ??= {});
+  const T = (s, p) => (TP.t ? TP.t(s, p) : p ? s.replace(/\{(\w+)\}/g, (m, k) => (k in p ? p[k] : m)) : s);   // 다국어 (js/i18n.js)
   const store = () => TP.store;
 
   TP.CARD_BACKS = [
-    { id: 'default', name: '기본 탐정 고양이', src: 'game_assets/card_back.webp' },
+    { id: 'default', name: T('기본 탐정 고양이'), src: 'game_assets/card_back.webp' },
     ...Array.from({ length: 18 }, (_, i) => {
       const n = i + 2;
-      return { id: `back_${n}`, name: `컬렉션 #${n - 1}`, src: `game_assets/derived/card_backs/card_back_${n}.webp` };
+      return { id: `back_${n}`, name: T('컬렉션 #{n}', { n: n - 1 }), src: `game_assets/derived/card_backs/card_back_${n}.webp` };
     }),
   ];
   TP.PRESTIGE_STREAK = 50;

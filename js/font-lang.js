@@ -10,7 +10,7 @@
 // =====================================================================
 (function () {
   const TP = (globalThis.TP ??= {});
-  const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힣]/;
+  const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힣ぁ-ゟ゠-ヿ一-鿿]/;   // 한글 · 가나 · 한자 — 하나라도 섞이면 영문 전용 글꼴을 쓰지 않음
   const LATIN = /[A-Za-z]/;
   const INLINE = new Set(['B', 'I', 'EM', 'STRONG', 'SMALL', 'SPAN', 'A', 'SUB', 'SUP', 'U', 'S', 'MARK', 'LABEL', 'CODE']);
   const SKIP = new Set(['SCRIPT', 'STYLE', 'INPUT', 'TEXTAREA', 'SELECT', 'OPTION', 'SVG', 'IMG']);

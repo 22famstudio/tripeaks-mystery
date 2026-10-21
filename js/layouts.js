@@ -13,6 +13,7 @@
 // =====================================================================
 (function () {
   const TP = (globalThis.TP ??= {});
+  const N_ = s => s;   // 다국어: 표시할 때 TP.t() 로 번역하는 이름 (js/i18n.js · tools/i18n_check.js)
   const EPS = 1e-6;
 
   function finalize(id, name, cards) {
@@ -55,7 +56,7 @@
       for (let m = 0; m < 6; m++) cards.push({ x: m + Math.floor(m / 2) + 1, y: 0.5, z: 1 });
       for (let k = 0; k < 9; k++) cards.push({ x: k + 0.5, y: 1, z: 2 });
       for (let j = 0; j < 10; j++) cards.push({ x: j, y: 1.5, z: 3 });
-      return finalize('peaks', '세 봉우리', cards);
+      return finalize('peaks', N_('세 봉우리'), cards);
     },
 
     // 하트: 뒤층 16장(하트 실루엣) + 앞층 11장이 반 칸씩 엇갈려 덮음 = 27장
@@ -72,7 +73,7 @@
         [1.5, 2.5], [2.5, 2.5], [3.5, 2.5],
         [2.5, 3.5],
       ];
-      return finalize('heart', '하트', [
+      return finalize('heart', N_('하트'), [
         ...back.map(([x, y]) => ({ x, y, z: 0 })),
         ...front.map(([x, y]) => ({ x, y, z: 1 })),
       ]);
@@ -80,7 +81,7 @@
 
     // 섬: 작은 피라미드 5개(각 6장)가 떨어져 있는 군도 = 30장
     islands() {
-      return finalize('islands', '온천 섬', [
+      return finalize('islands', N_('온천 섬'), [
         ...pyramid(0, 0, 3),
         ...pyramid(3.5, 0, 3),
         ...pyramid(7, 0, 3),

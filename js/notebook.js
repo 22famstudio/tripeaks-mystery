@@ -12,6 +12,7 @@
 // =====================================================================
 (function () {
   const { TP } = globalThis;
+  const T = (s, p) => (TP.t ? TP.t(s, p) : p ? s.replace(/\{(\w+)\}/g, (m, k) => (k in p ? p[k] : m)) : s);   // 다국어 (js/i18n.js)
   const $ = sel => document.querySelector(sel);
   const { openModal, closeModal, showDialog, toast, confettiAt, bigCelebration } = TP.ui;
   const mystery = TP.mystery;
@@ -66,10 +67,10 @@
       $('#nbClose').hidden = accusing;
 
       if (!ep) {
-        $('#nbSub').textContent = '모든 사건을 해결했어요! 다음 에피소드를 준비 중입니다.';
+        $('#nbSub').textContent = T('모든 사건을 해결했어요! 다음 에피소드를 준비 중입니다.');
         $('#nbBanner').hidden = true;
         $('#nbClueCount').textContent = '';
-        $('#nbClues').innerHTML = '<li class="clue intro">자유 플레이로 골드를 모으며 새 사건을 기다려 주세요.</li>';
+        $('#nbClues').innerHTML = `<li class="clue intro">${T('자유 플레이로 골드를 모으며 새 사건을 기다려 주세요.')}</li>`;
         $('#nbHints').innerHTML = '';
         $('#nbSuspects').innerHTML = '';
         return;
@@ -82,15 +83,15 @@
       const newFrom = p.cleared - p.unread;
       const lockedCount = ep.clues.length - p.cleared;
       $('#nbClues').innerHTML =
-        `<li class="clue intro"><b>사건 개요</b> ${esc(ep.intro)}</li>` +
+        `<li class="clue intro"><b>${T('사건 개요')}</b> ${esc(ep.intro)}</li>` +
         ep.clues.slice(0, p.cleared).map((c, i) =>
           `<li class="clue pinned ${i >= newFrom ? 'new' : ''}" data-stage="${c.stage}" style="--tilt:${((i * 37) % 7) - 3}deg">
              <span class="pin"></span><b>#${c.stage}</b> ${esc(c.text)}</li>`
         ).join('') +
-        (lockedCount ? `<li class="clue locked">🔒 다음 단서: 스테이지 ${p.cleared + 1} 클리어 시 획득 · 남은 단서 ${lockedCount}개</li>` : '');
+        (lockedCount ? `<li class="clue locked">${T('🔒 다음 단서: 스테이지 {s} 클리어 시 획득 · 남은 단서 {n}개', { s: p.cleared + 1, n: lockedCount })}</li>` : '');
 
       $('#nbHints').innerHTML = mystery.revealedHints()
-        .map(h => `<div class="hint-note">💡 <b>${h.master ? '단서 #21 · 결정적 힌트' : '결정적 힌트'}</b> ${esc(h.text)}</div>`).join('');
+        .map(h => `<div class="hint-note">💡 <b>${h.master ? T('단서 #21 · 결정적 힌트') : T('결정적 힌트')}</b> ${esc(h.text)}</div>`).join('');
 
       renderBanner(ep, p, accusing);
       renderSuspects(ep, p, accusing);
@@ -120,7 +121,7 @@
       modal.querySelector('.notebook').classList.toggle('grid-mode', onGrid);   // 그리드가 보드 대부분을 차지 (휴대폰에서도 칸이 크게)
       $('#nbSuspects').hidden = onGrid;
       wrap.hidden = !onGrid;
-      $('#nbTabHelp').textContent = onGrid ? '' : '사진을 누르면 용의자 파일 · ☆ 유력 · ✕ 제외 메모';
+      $('#nbTabHelp').textContent = onGrid ? '' : T('사진을 누르면 용의자 파일 · ☆ 유력 · ✕ 제외 메모');
       if (!onGrid) return;
       const { places, items } = ep.logic;
       const people = ep.logic.suspects.map(id => ep.suspects.find(s => s.id === id)).filter(Boolean);
@@ -130,24 +131,24 @@
         const v = mystery.gridCell(s.id, col) || (implied.has(`${s.id}|${col}`) ? 'auto' : '');
         const ok = mystery.isGridCellVerified(s.id, col);
         return `<td class="${first ? 'split' : ''}"><button class="lg-cell ${v}${ok ? ' verified' : ''}" data-s="${s.id}" data-c="${col}"
-          aria-label="${esc(s.name)}${ok ? ' (확인됨)' : ''}">${v ? '<i></i>' : ''}${ok ? '<em>✓</em>' : ''}</button></td>`;
+          aria-label="${esc(s.name)}${ok ? ` (${T('확인됨')})` : ''}">${v ? '<i></i>' : ''}${ok ? '<em>✓</em>' : ''}</button></td>`;
       };
       const tickets = store.state.hintCount;
       const head = (t, i, first) => `<th class="lg-head${i === 5 ? ' crime' : ''}${first ? ' split' : ''}">
           <span>${label(t)}</span></th>`;   // 6번째 칸 = 사건 현장 · 범행 도구 (빨간 점, CSS .crime)
       wrap.innerHTML = `
         <div class="lg-bar">
-          <span class="lg-legend"><i class="lg-mini x"></i>아니다 <i class="lg-mini o"></i>맞다 <i class="lg-mini auto"></i>자동</span>
-          <span class="lg-goal">🎯 범인 = <b>사건 현장</b>에서 <b>범행 도구</b>를 가진 사람</span>
-          <button class="lg-check${checkMode ? ' on' : ''}" title="표시한 ✕·○ 한 칸이 맞는지 확인해요 (힌트권 1장 · 없으면 광고)">🎟 칸 확인 <b>${tickets || '📺'}</b></button>
-          <button class="lg-help" aria-label="논리 그리드 사용법">?</button>
-          <button class="lg-clear">지우기</button>
+          <span class="lg-legend"><i class="lg-mini x"></i>${T('아니다')} <i class="lg-mini o"></i>${T('맞다')} <i class="lg-mini auto"></i>${T('자동')}</span>
+          <span class="lg-goal">${T('🎯 범인 = <b>사건 현장</b>에서 <b>범행 도구</b>를 가진 사람')}</span>
+          <button class="lg-check${checkMode ? ' on' : ''}" title="${T('표시한 ✕·○ 한 칸이 맞는지 확인해요 (힌트권 1장 · 없으면 광고)')}">${T('🎟 칸 확인')} <b>${tickets || '📺'}</b></button>
+          <button class="lg-help" aria-label="${T('논리 그리드 사용법')}">?</button>
+          <button class="lg-clear">${T('지우기')}</button>
         </div>
-        ${checkMode ? '<p class="lg-check-tip">확인할 ✕ 또는 ○ 칸을 누르세요 (틀렸다면 정답으로 고쳐 드려요)</p>' : ''}
+        ${checkMode ? `<p class="lg-check-tip">${T('확인할 ✕ 또는 ○ 칸을 누르세요 (틀렸다면 정답으로 고쳐 드려요)')}</p>` : ''}
         <table class="logic-grid${checkMode ? ' checking' : ''}">
           <colgroup><col class="lg-col-who">${'<col>'.repeat(12)}</colgroup>
           <thead>
-            <tr><th></th><th class="lg-group places" colspan="6">📍 장소 <small class="lg-corridor">현관 → 복도 순서 →</small></th><th class="lg-group items split" colspan="6">🔍 물건 · 특징</th></tr>
+            <tr><th></th><th class="lg-group places" colspan="6">${T('📍 장소')} <small class="lg-corridor">${T('현관 → 복도 순서 →')}</small></th><th class="lg-group items split" colspan="6">${T('🔍 물건 · 특징')}</th></tr>
             <tr><th></th>${places.map((t, i) => head(t, i)).join('')}${items.map((t, i) => head(t, i, i === 0)).join('')}</tr>
           </thead>
           <tbody>${people.map(s => `
@@ -162,17 +163,17 @@
     async function checkCell(btn) {
       const { s, c } = btn.dataset;
       let r = mystery.checkGridCell(s, c);
-      if (!r.ok && r.reason === 'empty') return toast('먼저 ✕ 또는 ○를 표시한 칸을 고르세요');
-      if (!r.ok && r.reason === 'verified') return toast('이미 확인한 칸이에요');
+      if (!r.ok && r.reason === 'empty') return toast(T('먼저 ✕ 또는 ○를 표시한 칸을 고르세요'));
+      if (!r.ok && r.reason === 'verified') return toast(T('이미 확인한 칸이에요'));
       if (!r.ok && r.reason === 'ticket') {
-        const go = await TP.ui.confirm({ title: '힌트권이 없어요', message: '광고를 보고 이 칸을 확인할까요?', okLabel: '📺 광고 보기' });
+        const go = await TP.ui.confirm({ title: T('힌트권이 없어요'), message: T('광고를 보고 이 칸을 확인할까요?'), okLabel: T('📺 광고 보기') });
         if (!go || !(await showRewardAd())) return;
         r = mystery.checkGridCell(s, c, { free: true });
         if (!r.ok) return;
       }
       checkMode = false;
-      if (r.correct) { TP.audio?.sfx?.('collect'); toast('✅ 맞아요! 이 칸은 확실해요'); }
-      else { TP.audio?.sfx?.('error'); toast(`❌ 틀렸어요 — 이 칸은 ${r.truth === 'o' ? '○ 맞다' : '✕ 아니다'}예요. 정답으로 고쳐 두었어요`); }
+      if (r.correct) { TP.audio?.sfx?.('collect'); toast(T('✅ 맞아요! 이 칸은 확실해요')); }
+      else { TP.audio?.sfx?.('error'); toast(T('❌ 틀렸어요 — 이 칸은 {v}예요. 정답으로 고쳐 두었어요', { v: r.truth === 'o' ? T('○ 맞다') : T('✕ 아니다') })); }
       render();
     }
     $('#nbGrid').addEventListener('click', e => {
@@ -186,7 +187,7 @@
       if (e.target.closest('.lg-check')) { checkMode = !checkMode; TP.audio?.sfx?.('click'); render(); return; }
       if (e.target.closest('.lg-help')) { showGridGuide(); return; }
       if (e.target.closest('.lg-clear')) {
-        TP.ui.confirm({ title: '그리드 지우기', message: '논리 그리드의 ✕ · ○ 표시를 모두 지울까요?', okLabel: '지우기' })
+        TP.ui.confirm({ title: T('그리드 지우기'), message: T('논리 그리드의 ✕ · ○ 표시를 모두 지울까요?'), okLabel: T('지우기') })
           .then(ok => ok && mystery.clearGrid());
       }
     });
@@ -195,24 +196,24 @@
     function showGridGuide() {
       store.update(s => { s.gridGuideSeen = true; });
       return showDialog({
-        title: '📓 논리 그리드 사용법',
+        title: T('📓 논리 그리드 사용법'),
         className: 'grid-guide',
         sfx: 'pageFlip',
         body: `
           <ol class="gg-rules">
-            <li><b>한 사람 = 장소 1곳 + 물건 1개.</b> 용의자 6명은 각자 정확히 한 곳에 있었고, 물건도 정확히 하나씩 가지고 있어요.</li>
-            <li><b>한 장소 · 한 물건 = 한 사람.</b> 같은 장소에 두 사람이 있거나, 같은 물건을 두 사람이 가질 수는 없어요.</li>
-            <li>칸을 누를 때마다 <span class="gg-cell"><i class="lg-mini x"></i> ✕ 아니다</span> → <span class="gg-cell"><i class="lg-mini o"></i> ○ 맞다</span> → 빈칸으로 바뀌어요.</li>
-            <li>○를 하나 찾으면 <b>같은 줄의 다른 장소(또는 물건)</b>와 <b>같은 칸의 다른 사람</b>은 자동으로 흐린 ✕가 돼요.</li>
-            <li><b>장소는 왼쪽부터 복도를 따라 한 줄.</b> "옆방" = 그리드에서 바로 이웃한 칸, "앞쪽 · 현관에 가까운" = 더 왼쪽 칸이에요.</li>
-            <li>"만약 ~라면", "둘 중 하나", "둘 다 참이거나 둘 다 거짓" 같은 단서는 다른 단서와 엮어서 풀어요.</li>
-            <li>단서를 하나씩 읽으며 ✕를 채워 가다 보면 남는 칸이 ○예요. 범인 후보는 단서 20번까지 다 모아야 한 명으로 좁혀져요.</li>
-            <li><b>"거짓으로 밝혀졌다"</b>는 주장은 반대로 읽으면 돼요. <b>"확인되지 않았다"</b>는 소문은 참일 수도 거짓일 수도 있으니 그리드에 적지 마세요.</li>
-            <li>막히면 <b>🎟 칸 확인</b>: 표시한 ✕·○ 한 칸이 맞는지 알려 줘요 (힌트권 1장, 없으면 광고).</li>
+            <li>${T('<b>한 사람 = 장소 1곳 + 물건 1개.</b> 용의자 6명은 각자 정확히 한 곳에 있었고, 물건도 정확히 하나씩 가지고 있어요.')}</li>
+            <li>${T('<b>한 장소 · 한 물건 = 한 사람.</b> 같은 장소에 두 사람이 있거나, 같은 물건을 두 사람이 가질 수는 없어요.')}</li>
+            <li>${T('칸을 누를 때마다 <span class="gg-cell"><i class="lg-mini x"></i> ✕ 아니다</span> → <span class="gg-cell"><i class="lg-mini o"></i> ○ 맞다</span> → 빈칸으로 바뀌어요.')}</li>
+            <li>${T('○를 하나 찾으면 <b>같은 줄의 다른 장소(또는 물건)</b>와 <b>같은 칸의 다른 사람</b>은 자동으로 흐린 ✕가 돼요.')}</li>
+            <li>${T('<b>장소는 왼쪽부터 복도를 따라 한 줄.</b> "옆방" = 그리드에서 바로 이웃한 칸, "앞쪽 · 현관에 가까운" = 더 왼쪽 칸이에요.')}</li>
+            <li>${T('"만약 ~라면", "둘 중 하나", "둘 다 참이거나 둘 다 거짓" 같은 단서는 다른 단서와 엮어서 풀어요.')}</li>
+            <li>${T('단서를 하나씩 읽으며 ✕를 채워 가다 보면 남는 칸이 ○예요. 범인 후보는 단서 20번까지 다 모아야 한 명으로 좁혀져요.')}</li>
+            <li>${T('<b>"거짓으로 밝혀졌다"</b>는 주장은 반대로 읽으면 돼요. <b>"확인되지 않았다"</b>는 소문은 참일 수도 거짓일 수도 있으니 그리드에 적지 마세요.')}</li>
+            <li>${T('막히면 <b>🎟 칸 확인</b>: 표시한 ✕·○ 한 칸이 맞는지 알려 줘요 (힌트권 1장, 없으면 광고).')}</li>
           </ol>
-          <div class="gg-goal">🎯 <b>범인</b>은 <b>사건 현장</b>(빨간 장소 칸)에서 <b>범행 도구</b>(빨간 물건 칸)를 가진 사람!</div>
-          <p class="small">예) "민지는 서재에 있었다" → 민지 줄의 <b>서재 칸 ○</b>. "만년필은 민지 것이 아니다" → 민지 줄의 <b>만년필 칸 ✕</b>.</p>`,
-        buttons: [{ label: '알겠어요!', value: true, cls: 'primary' }],
+          <div class="gg-goal">${T('🎯 <b>범인</b>은 <b>사건 현장</b>(빨간 장소 칸)에서 <b>범행 도구</b>(빨간 물건 칸)를 가진 사람!')}</div>
+          <p class="small">${T('예) "민지는 서재에 있었다" → 민지 줄의 <b>서재 칸 ○</b>. "만년필은 민지 것이 아니다" → 민지 줄의 <b>만년필 칸 ✕</b>.')}</p>`,
+        buttons: [{ label: T('알겠어요!'), value: true, cls: 'primary' }],
       });
     }
 
@@ -282,14 +283,14 @@
       if (!accusing) return;
       if (p.canAccuse) {
         banner.className = 'accuse-banner';
-        banner.innerHTML = `🔎 <b>모든 단서가 모였습니다. 진범을 지목하세요!</b>
-          <span class="small">단서와 논리 그리드로 정리한 뒤, 보드 아래 [최종 범인 지목하기]를 누르세요.</span>
-          ${mystery.canWatchHint() ? `<button class="hint-ad-btn"><img class="btn-icon" src="${TP.ASSETS.btnAdHint}" alt="">결정적 힌트 보기 <small>(광고 · 단서 21)</small></button>` : ''}`;
+        banner.innerHTML = `🔎 <b>${T('모든 단서가 모였습니다. 진범을 지목하세요!')}</b>
+          <span class="small">${T('단서와 논리 그리드로 정리한 뒤, 보드 아래 [최종 범인 지목하기]를 누르세요.')}</span>
+          ${mystery.canWatchHint() ? `<button class="hint-ad-btn"><img class="btn-icon" src="${TP.ASSETS.btnAdHint}" alt="">${T('결정적 힌트 보기')} <small>${T('(광고 · 단서 21)')}</small></button>` : ''}`;
         banner.querySelector('.hint-ad-btn')?.addEventListener('click', watchHintAd);
         return;
       }
       banner.className = 'accuse-banner flee';
-      banner.innerHTML = `🚨 <b>용의자가 도망가려 합니다!</b>${discountLadderHtml()}<div class="banner-actions"></div>`;
+      banner.innerHTML = `🚨 <b>${T('용의자가 도망가려 합니다!')}</b>${discountLadderHtml()}<div class="banner-actions"></div>`;
       const actions = banner.querySelector('.banner-actions');
       for (const o of fleeOptions()) {
         const btn = document.createElement('button');
@@ -307,9 +308,9 @@
       const steps = TP.REACCUSE_COST_STEPS;
       const current = p.hasFreeReaccuse ? -1 : Math.min(p.reaccuseAdWatchCount, steps.length - 1);
       const chips = steps.map((c, i) =>
-        `<span class="step ${i === current ? 'now' : i < current ? 'done' : ''}">${c ? `${c}G` : '무료'}</span>`
+        `<span class="step ${i === current ? 'now' : i < current ? 'done' : ''}">${c ? `${c}G` : T('무료')}</span>`
       ).join('<i>›</i>');
-      return `<div class="cost-ladder">${p.hasFreeReaccuse ? '<span class="step now ticket">🎟 무료 재지목권 보유</span>' : chips}</div>`;
+      return `<div class="cost-ladder">${p.hasFreeReaccuse ? `<span class="step now ticket">${T('🎟 무료 재지목권 보유')}</span>` : chips}</div>`;
     }
 
     // 지목 실패 후 선택지 (팝업과 배너가 같은 목록을 쓴다)
@@ -321,22 +322,22 @@
       const nextCost = steps[Math.min(p.reaccuseAdWatchCount + 1, steps.length - 1)];
       const hintsLeft = ep.hints.length - p.hintsShown;
       const tickets = store.state.hintCount;
-      const freeNote = p.freeReaccuseGranted ? '' : ' · 3개 모두 보면 무료 재지목';
+      const freeNote = p.freeReaccuseGranted ? '' : T(' · 3개 모두 보면 무료 재지목');
 
       const options = [{
         value: 'pay',
         cls: 'primary hot',
-        label: p.hasFreeReaccuse ? '🎟 무료 재지목권으로 다시 지목하기'
-          : cost === 0 ? '🫵 무료로 다시 지목하기'
-          : `🪙 ${cost} 지불하고 다시 지목하기`,
+        label: p.hasFreeReaccuse ? T('🎟 무료 재지목권으로 다시 지목하기')
+          : cost === 0 ? T('🫵 무료로 다시 지목하기')
+          : T('🪙 {n} 지불하고 다시 지목하기', { n: cost }),
       }];
       if (mystery.canDiscountWithAd()) {
-        options.push({ value: 'discount', label: `📺 광고 보고 비용 할인 <small>(${cost}G → ${nextCost ? `${nextCost}G` : '무료'})</small>` });
+        options.push({ value: 'discount', label: `${T('📺 광고 보고 비용 할인')} <small>(${cost}G → ${nextCost ? `${nextCost}G` : T('무료')})</small>` });
       }
-      if (!hintsLeft) options.push({ value: 'none', label: '💡 결정적 힌트 <small>(모두 확인함)</small>', disabled: true });
-      else if (tickets > 0) options.push({ value: 'hintTicket', label: `💡 힌트권 사용 <small>(보유 ${tickets} · ${hintsLeft}개 남음${freeNote})</small>` });
-      else options.push({ value: 'hintAd', cls: 'ad-hint', label: `<img class="btn-icon" src="${TP.ASSETS.btnAdHint}" alt="">광고 보고 결정적 힌트 <small>(${hintsLeft}개 남음${freeNote})</small>` });
-      options.push({ value: 'reset', cls: 'danger-link', label: '에피소드 초기화 (처음부터 다시)' });
+      if (!hintsLeft) options.push({ value: 'none', label: T('💡 결정적 힌트 <small>(모두 확인함)</small>'), disabled: true });
+      else if (tickets > 0) options.push({ value: 'hintTicket', label: `${T('💡 힌트권 사용')} <small>(${T('보유 {t} · {n}개 남음', { t: tickets, n: hintsLeft })}${freeNote})</small>` });
+      else options.push({ value: 'hintAd', cls: 'ad-hint', label: `<img class="btn-icon" src="${TP.ASSETS.btnAdHint}" alt="">${T('광고 보고 결정적 힌트')} <small>(${T('{n}개 남음', { n: hintsLeft })}${freeNote})</small>` });
+      options.push({ value: 'reset', cls: 'danger-link', label: T('에피소드 초기화 (처음부터 다시)') });
       return options;
     }
 
@@ -356,11 +357,11 @@
         card.innerHTML = `
           <div class="suspect-photo">${avatar(s)}${markImg('star')}${markImg('x')}</div>
           <div class="suspect-name">${esc(s.name)}</div>
-          <div class="suspect-job">${esc(s.job)}${s.age ? ` · ${s.age}세` : ''}</div>
+          <div class="suspect-job">${esc(s.job)}${s.age ? ` · ${T('{n}세', { n: s.age })}` : ''}</div>
           <div class="suspect-trait">${esc(s.trait)}</div>
           <div class="mark-btns">
-            <button class="mark star ${mark === 'star' ? 'on' : ''}" aria-label="유력 용의자 표시">${markImg('star')}</button>
-            <button class="mark x ${mark === 'x' ? 'on' : ''}" aria-label="용의 선상 제외 표시">${markImg('x')}</button>
+            <button class="mark star ${mark === 'star' ? 'on' : ''}" aria-label="${T('유력 용의자 표시')}">${markImg('star')}</button>
+            <button class="mark x ${mark === 'x' ? 'on' : ''}" aria-label="${T('용의 선상 제외 표시')}">${markImg('x')}</button>
           </div>`;
         card.querySelector('.mark.star').onclick = e => { e.stopPropagation(); mystery.toggleMark(s.id, 'star'); };
         card.querySelector('.mark.x').onclick = e => { e.stopPropagation(); mystery.toggleMark(s.id, 'x'); };
@@ -379,8 +380,8 @@
       const need = TP.culpritIds(ep).length;
       bar.innerHTML = `
         <button class="final-accuse-btn" ${p.canAccuse ? '' : 'disabled'}>
-          <span>🫵 최종 범인 지목하기</span>
-          <small>${p.canAccuse ? (need > 1 ? `공범 사건 — ${need}명을 지목하세요` : '진범 1명을 지목하세요') : '재지목 기회를 먼저 얻으세요'}</small>
+          <span>${T('🫵 최종 범인 지목하기')}</span>
+          <small>${p.canAccuse ? (need > 1 ? T('공범 사건 — {n}명을 지목하세요', { n: need }) : T('진범 1명을 지목하세요')) : T('재지목 기회를 먼저 얻으세요')}</small>
         </button>`;
       bar.querySelector('.final-accuse-btn').onclick = () => openAccusePicker();
     }
@@ -390,27 +391,27 @@
       const ep = mystery.episode;
       if (!ep) return;
       const related = mystery.collectedClues().filter(c => c.facts.some(f => f.suspect === s.id));
-      const gender = s.gender === '여' ? '여성' : s.gender === '남' ? '남성' : '';
+      const gender = s.gender === '여' ? T('여성') : s.gender === '남' ? T('남성') : '';
       const accusing = mystery.isAccusationPhase() && mystery.progress.canAccuse;
       const v = await showDialog({
-        title: '🗂 용의자 파일',
+        title: T('🗂 용의자 파일'),
         className: 'suspect-info',
         sfx: 'pageFlip',
         body: `
           <div class="suspect-file">
             <div class="file-photo">${avatar(s, 'lg')}</div>
             <dl>
-              <dt>이름</dt><dd><b>${esc(s.name)}</b></dd>
-              ${s.age ? `<dt>나이</dt><dd>${s.age}세${gender ? ` · ${gender}` : ''}</dd>` : ''}
-              <dt>직업</dt><dd>${esc(s.job)}</dd>
-              <dt>배경</dt><dd>${esc(s.bio || s.trait)}</dd>
+              <dt>${T('이름')}</dt><dd><b>${esc(s.name)}</b></dd>
+              ${s.age ? `<dt>${T('나이')}</dt><dd>${T('{n}세', { n: s.age })}${gender ? ` · ${gender}` : ''}</dd>` : ''}
+              <dt>${T('직업')}</dt><dd>${esc(s.job)}</dd>
+              <dt>${T('배경')}</dt><dd>${esc(s.bio || s.trait)}</dd>
             </dl>
           </div>
           ${related.length ? `<ul class="related-clues">${related.map(c => `<li><b>#${c.stage}</b> ${esc(c.text)}</li>`).join('')}</ul>`
-            : '<p class="small">이 용의자를 언급한 단서를 아직 찾지 못했어요.</p>'}`,
+            : `<p class="small">${T('이 용의자를 언급한 단서를 아직 찾지 못했어요.')}</p>`}`,
         buttons: accusing
-          ? [{ label: '닫기', value: false, cls: 'ghost' }, { label: '🫵 이 사람을 지목', value: 'accuse', cls: 'primary' }]
-          : [{ label: '닫기', value: false, cls: 'primary' }],
+          ? [{ label: T('닫기'), value: false, cls: 'ghost' }, { label: T('🫵 이 사람을 지목'), value: 'accuse', cls: 'primary' }]
+          : [{ label: T('닫기'), value: false, cls: 'primary' }],
       });
       if (v === 'accuse') openAccusePicker([s.id]);
     }
@@ -423,18 +424,18 @@
       const need = TP.culpritIds(ep).length;
       let picked = preselect.slice(0, need);
       const pending = showDialog({
-        title: '🫵 최종 범인 지목',
+        title: T('🫵 최종 범인 지목'),
         className: 'accuse-picker-dialog',
         body: `
-          <p class="picker-guide">${need > 1 ? `공범 사건입니다. 진범 <b>${need}명</b>을 모두 고르세요.` : '단 한 명의 <b>진범</b>을 고르세요.'}
+          <p class="picker-guide">${need > 1 ? T('공범 사건입니다. 진범 <b>{n}명</b>을 모두 고르세요.', { n: need }) : T('단 한 명의 <b>진범</b>을 고르세요.')}
             <span class="pick-count"></span></p>
           <div class="accuse-picker">${ep.suspects.map(s => `
             <button class="pick ${mystery.progress.marks[s.id] === 'x' ? 'memo-x' : ''}" data-id="${esc(s.id)}">
               ${avatar(s)}
               <b>${esc(s.name)}</b><small>${esc(s.job)}</small>
             </button>`).join('')}</div>
-          <p class="small">틀리면 진범이 도망가려 해요! 재지목에는 골드나 광고가 필요합니다.</p>`,
-        buttons: [{ label: '다시 생각하기', value: null, cls: 'ghost' }, { label: '🫵 지목한다!', value: 'go', cls: 'primary', disabled: true }],
+          <p class="small">${T('틀리면 진범이 도망가려 해요! 재지목에는 골드나 광고가 필요합니다.')}</p>`,
+        buttons: [{ label: T('다시 생각하기'), value: null, cls: 'ghost' }, { label: T('🫵 지목한다!'), value: 'go', cls: 'primary', disabled: true }],
       });
       const dlg = [...TP.ui.root().querySelectorAll('.accuse-picker-dialog')].pop();
       const go = dlg.querySelector('.actions .primary');
@@ -476,7 +477,7 @@
       const overlay = document.createElement('div');
       overlay.className = 'suspense-scene';
       overlay.style.zIndex = 99000;
-      overlay.innerHTML = `<div class="suspense-avatars">${chosen.map(c => avatar(c, 'lg')).join('')}</div><p>과연 진범은…?</p>`;
+      overlay.innerHTML = `<div class="suspense-avatars">${chosen.map(c => avatar(c, 'lg')).join('')}</div><p>${T('과연 진범은…?')}</p>`;
       TP.ui.root().append(overlay);
       const ms = reducedMotion() ? 500 : 1400;
       return new Promise(resolve => setTimeout(() => { overlay.remove(); resolve(); }, ms));
@@ -500,13 +501,13 @@
     async function showFleePopup(suspect) {
       const ep = mystery.episode;
       const choice = await showDialog({
-        title: '🚨 추리가 틀렸습니다!',
+        title: T('🚨 추리가 틀렸습니다!'),
         className: 'flee',
         body: `
-          <p class="flee-text">용의자가 도망가려 합니다!</p>
-          ${suspect ? `<p class="small">${esc(josa(suspect.name, '은', '는'))} 범인이 아니었어요. <b>단서를 다시 확인해 보세요.</b></p>` : ''}
+          <p class="flee-text">${T('용의자가 도망가려 합니다!')}</p>
+          ${suspect ? `<p class="small">${T('{who} 범인이 아니었어요. <b>단서를 다시 확인해 보세요.</b>', { who: esc(TP.i18n && TP.i18n.lang !== 'ko' ? suspect.name : josa(suspect.name, '은', '는')) })}</p>` : ''}
           ${discountLadderHtml()}
-          <p class="small">에피소드를 초기화하면 모은 단서 ${ep.clues.length}개가 모두 사라져요.</p>`,
+          <p class="small">${T('에피소드를 초기화하면 모은 단서 {n}개가 모두 사라져요.', { n: ep.clues.length })}</p>`,
         buttons: fleeOptions(),
       });
       handleFleeChoice(choice);
@@ -516,15 +517,15 @@
       if (choice === 'pay') {
         const r = mystery.buyReaccuse();
         if (r.ok) {
-          toast(r.usedFreeTicket ? '🎟 무료 재지목권 사용! 다시 지목하세요'
-            : r.cost ? `🪙 -${r.cost} · 다시 지목할 수 있어요!`
-            : '무료로 다시 지목할 수 있어요!');
+          toast(r.usedFreeTicket ? T('🎟 무료 재지목권 사용! 다시 지목하세요')
+            : r.cost ? T('🪙 -{n} · 다시 지목할 수 있어요!', { n: r.cost })
+            : T('무료로 다시 지목할 수 있어요!'));
           render();
         } else if (r.reason === 'gold') {
           const go = await TP.ui.confirm({
-            title: '골드가 부족해요',
-            message: `재지목에 필요한 골드가 부족합니다. (필요: ${r.cost} G / 보유: ${r.gold} G)\n골드를 충전할 수 있는 상점으로 이동하시겠습니까?`,
-            okLabel: '상점 이동',
+            title: T('골드가 부족해요'),
+            message: T('재지목에 필요한 골드가 부족합니다. (필요: {need} G / 보유: {have} G)\n골드를 충전할 수 있는 상점으로 이동하시겠습니까?', { need: r.cost, have: r.gold }),
+            okLabel: T('상점 이동'),
           });
           if (go) await TP.ui.openShop({ tab: 'coin' });
           render();
@@ -532,7 +533,7 @@
       } else if (choice === 'discount') {
         await TP.ui.watchRewardedAd(5);
         const cost = mystery.recordReaccuseAdWatched();
-        toast(cost ? `📉 재지목 비용이 ${cost}G로 내려갔어요` : '🎉 이제 무료로 다시 지목할 수 있어요!');
+        toast(cost ? T('📉 재지목 비용이 {n}G로 내려갔어요', { n: cost }) : T('🎉 이제 무료로 다시 지목할 수 있어요!'));
         render();
       } else if (choice === 'hintAd') {
         await TP.ui.watchRewardedAd(5);
@@ -541,15 +542,15 @@
         await showHint(mystery.useHintTicket());
       } else if (choice === 'reset') {
         const sure = await showDialog({
-          title: '정말 처음부터 다시 할까요?',
+          title: T('정말 처음부터 다시 할까요?'),
           className: 'flee',
-          body: `<p>모은 단서 <b>${mystery.progress.cleared}개</b>, 수첩 메모, 힌트가 <b>모두 사라지고</b><br>스테이지 1부터 다시 시작합니다.</p>`,
-          buttons: [{ label: '아니요, 돌아갈래요', value: false, cls: 'primary' }, { label: '초기화', value: true, cls: 'danger-link' }],
+          body: `<p>${T('모은 단서 <b>{n}개</b>, 수첩 메모, 힌트가 <b>모두 사라지고</b><br>스테이지 1부터 다시 시작합니다.', { n: mystery.progress.cleared })}</p>`,
+          buttons: [{ label: T('아니요, 돌아갈래요'), value: false, cls: 'primary' }, { label: T('초기화'), value: true, cls: 'danger-link' }],
         });
         if (!sure) return;
         mystery.resetEpisode();
         closeModal(modal);
-        toast('에피소드를 처음부터 다시 시작합니다');
+        toast(T('에피소드를 처음부터 다시 시작합니다'));
         onReset?.();
       }
     }
@@ -560,11 +561,11 @@
       const { hint, grantedFreeReaccuse } = result;
       const names = (hint.eliminate || []).map(id => mystery.episode.suspects.find(s => s.id === id)?.name).filter(Boolean).join(', ');
       await showDialog({
-        title: '💡 결정적 힌트',
+        title: T('💡 결정적 힌트'),
         className: 'hint-dialog',
         body: `<p>${esc(hint.text)}</p>
-          ${names ? `<p class="small">수첩에서 <b>${esc(names)}</b>에게 ✕ 표시를 해 두었어요.</p>` : ''}
-          ${grantedFreeReaccuse ? '<p class="free-ticket">🎟 힌트 3종 완성! <b>무료 재지목권 1회</b>를 받았어요.</p>' : ''}`,
+          ${names ? `<p class="small">${T('수첩에서 <b>{names}</b>에게 ✕ 표시를 해 두었어요.', { names: esc(names) })}</p>` : ''}
+          ${grantedFreeReaccuse ? `<p class="free-ticket">${T('🎟 힌트 3종 완성! <b>무료 재지목권 1회</b>를 받았어요.')}</p>` : ''}`,
       });
     }
 
@@ -588,19 +589,19 @@
 
       const levelAfter = store.state.playerLevel;
       await showDialog({
-        title: '🎉 사건 해결!',
+        title: T('🎉 사건 해결!'),
         className: 'solved',
         art: { src: TP.ASSETS.congrats, cls: 'congrats-art' },
         body: `
-          ${culprits.map(c => `<div class="culprit-reveal">${avatar(c, 'lg')}<div><small>${culprits.length > 1 ? '공범' : '진범'}</small><b>${esc(c.name)}</b> ${esc(c.job)}</div></div>`).join('')}
+          ${culprits.map(c => `<div class="culprit-reveal">${avatar(c, 'lg')}<div><small>${culprits.length > 1 ? T('공범') : T('진범')}</small><b>${esc(c.name)}</b> ${esc(c.job)}</div></div>`).join('')}
           <p class="solution">${esc(ep.solutionText)}</p>
           <div class="episode-rewards">
             <span>🪙 ${ep.rewards.gold.toLocaleString()}</span><span>↶ ${ep.rewards.undo}</span><span>★ ${ep.rewards.wild}</span>${TP.home ? '<span>EXP +200</span>' : ''}
           </div>
-          ${levelAfter > levelBefore ? `<p class="title-up">⬆ 레벨 업! Lv.${levelBefore} → <b>Lv.${levelAfter}</b></p>` : ''}
-          ${titleAfter !== titleBefore ? `<p class="title-up">🏅 칭호 승급! ${esc(titleBefore)} → <b>${esc(titleAfter)}</b></p>` : ''}
-          <p class="small">${next ? `다음 사건: <b>EP${next.no} · ${esc(next.title)}</b>` : '준비된 모든 사건을 해결했어요!'}</p>`,
-        buttons: [{ label: next ? '다음 사건으로 ▶' : '확인', value: true, cls: 'primary' }],
+          ${levelAfter > levelBefore ? `<p class="title-up">${T('⬆ 레벨 업!')} Lv.${levelBefore} → <b>Lv.${levelAfter}</b></p>` : ''}
+          ${titleAfter !== titleBefore ? `<p class="title-up">${T('🏅 칭호 승급!')} ${esc(titleBefore)} → <b>${esc(titleAfter)}</b></p>` : ''}
+          <p class="small">${next ? `${T('다음 사건:')} <b>EP${next.no} · ${esc(next.title)}</b>` : T('준비된 모든 사건을 해결했어요!')}</p>`,
+        buttons: [{ label: next ? T('다음 사건으로 ▶') : T('확인'), value: true, cls: 'primary' }],
       });
       onSolvedNext?.({ solvedEpisode: ep, next, chapterChange: res.chapterChange });
     }
@@ -617,13 +618,13 @@
         <div class="cf-card">
           <div class="cf-head">
             <div class="cf-portraits">${culprits.map(x => avatar(x, 'lg')).join('')}</div>
-            <div class="cf-who"><small>${culprits.length > 1 ? '공범의 고백' : '진범의 고백'}</small>
+            <div class="cf-who"><small>${culprits.length > 1 ? T('공범의 고백') : T('진범의 고백')}</small>
               <b>${culprits.map(x => esc(x.name)).join(' · ')}</b>
-              <span>${esc(c.job)}${c.age ? ` · ${c.age}세` : ''} — ${esc(ep.place || ep.subtitle || '')}</span></div>
+              <span>${esc(c.job)}${c.age ? ` · ${T('{n}세', { n: c.age })}` : ''} — ${esc(ep.place || ep.subtitle || '')}</span></div>
           </div>
           <p class="cf-text"><span class="cf-typed"></span><i class="cf-caret"></i></p>
-          <div class="cf-stamp" aria-hidden="true"><span>사건 해결 완료</span><small>CASE CLOSED · EP${ep.no}</small></div>
-          <button class="cf-next">탭하여 넘기기 ▶</button>
+          <div class="cf-stamp" aria-hidden="true"><span>${T('사건 해결 완료')}</span><small>CASE CLOSED · EP${ep.no}</small></div>
+          <button class="cf-next">${T('탭하여 넘기기 ▶')}</button>
         </div>`;
       TP.ui.root().append(overlay);
       const typed = overlay.querySelector('.cf-typed');
@@ -642,7 +643,7 @@
           setTimeout(() => {
             overlay.classList.add('stamped');
             TP.audio?.sfx?.('stamp');
-            nextBtn.textContent = '사건 종결 ▶';
+            nextBtn.textContent = T('사건 종결 ▶');
             phase = 'done';
           }, reducedMotion() ? 0 : 350);
         };
@@ -675,14 +676,14 @@
       page.className = 'clue-screen';
       page.style.zIndex = 98600;
       page.innerHTML = `
-        <div class="cs-panel" role="dialog" aria-modal="true" aria-label="단서 획득">
-          <div class="cs-badge"><img src="game_assets/popup_clue_badge.webp" alt=""><span>단서 획득</span></div>
+        <div class="cs-panel" role="dialog" aria-modal="true" aria-label="${T('단서 획득')}">
+          <div class="cs-badge"><img src="game_assets/popup_clue_badge.webp" alt=""><span>${T('단서 획득')}</span></div>
           <div class="cs-note">
-            <b>단서 #${clue.stage}</b>
+            <b>${T('단서 #{n}', { n: clue.stage })}</b>
             <p>${esc(clue.text)}</p>
           </div>
-          <p class="cs-saved"><img src="game_assets/icons/notebook.webp" alt="">탐정 수첩에 저장되었습니다 (${mystery.progress.cleared}/${ep.clues.length})</p>
-          <button class="cs-collect" data-nosfx aria-label="확인"><img src="game_assets/btn_collect.webp" alt=""></button>
+          <p class="cs-saved"><img src="game_assets/icons/notebook.webp" alt="">${T('탐정 수첩에 저장되었습니다 ({a}/{b})', { a: mystery.progress.cleared, b: ep.clues.length })}</p>
+          <button class="cs-collect" data-nosfx aria-label="${T('확인')}"><img src="game_assets/btn_collect.webp" alt=""></button>
         </div>`;
       TP.ui.root().append(page);
       return new Promise(resolve => {

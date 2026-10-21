@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- 홈 화면 아이콘 아래 이름 (기기 언어별). 기본(values)은 영어 -->
+<resources>
+    <string name="app_name">探偵ソリティア</string>
+    <string name="title_activity_main">探偵ソリティア</string>
+</resources>

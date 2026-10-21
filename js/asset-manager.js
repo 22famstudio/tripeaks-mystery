@@ -27,6 +27,7 @@
 // =====================================================================
 (function () {
   const TP = (globalThis.TP ??= {});
+  const T = (s, p) => (TP.t ? TP.t(s, p) : p ? s.replace(/\{(\w+)\}/g, (m, k) => (k in p ? p[k] : m)) : s);   // 다국어 (js/i18n.js)
   const CFG = TP.CDN_CONFIG || { enabled: false };
   const LS_KEY = 'tp.cdnAssets.v2';                 // { version, dir, webBase, prefixes, platform }
   const ROOT = 'game_assets/';                       // zip 안의 경로 기준
@@ -75,11 +76,11 @@
         .cdn-loader button { margin-top: 16px; padding: 10px 28px; border-radius: 999px; border: 3px solid #000; background: #8ade2e; font: inherit; font-weight: 800; }
       </style>
       <div class="box">
-        <h2>사건 파일을 준비하고 있어요</h2>
-        <p>처음 한 번만 받아요 (Wi-Fi 권장)</p>
+        <h2>${T('사건 파일을 준비하고 있어요')}</h2>
+        <p>${T('처음 한 번만 받아요 (Wi-Fi 권장)')}</p>
         <div class="bar"><div class="fill"></div></div>
         <div class="num">0%</div>
-        <button hidden>다시 시도</button>
+        <button hidden>${T('다시 시도')}</button>
       </div>`;
     document.body.append(el);
     const mb = n => (n / 1048576).toFixed(1);
@@ -90,13 +91,13 @@
         el.querySelector('.num').textContent = total ? `${pct}% · ${mb(done)} / ${mb(total)} MB` : `${mb(done)} MB`;
       },
       fail(msg, retry) {
-        el.querySelector('h2').textContent = '사건 파일을 받지 못했어요';
+        el.querySelector('h2').textContent = T('사건 파일을 받지 못했어요');
         el.querySelector('p').textContent = msg;
         const b = el.querySelector('button');
         b.hidden = false;
         b.onclick = () => { el.remove(); retry(); };
       },
-      done() { el.querySelector('.num').textContent = '완료! 잠시만요…'; },
+      done() { el.querySelector('.num').textContent = T('완료! 잠시만요…'); },
     };
   }
 
@@ -166,7 +167,7 @@
       remote = await r.json();
     } catch (e) {
       if (installed) return { status: 'offline', version: installed.version };   // 받아 둔 것으로 계속
-      return new Promise(resolve => overlay().fail('인터넷 연결을 확인한 뒤 다시 시도해 주세요.', () => resolve(ensure())));
+      return new Promise(resolve => overlay().fail(T('인터넷 연결을 확인한 뒤 다시 시도해 주세요.'), () => resolve(ensure())));
     }
     if (installed && installed.version === remote.version && installed.platform === platform) {
       return { status: 'ready', version: installed.version };
@@ -186,7 +187,7 @@
         await streamPack(packUrl, dir, n => { done += n; ui.progress(done, total); });
       }
     } catch (e) {
-      return new Promise(resolve => ui.fail(`받는 중 문제가 생겼어요 (${e.message || e}). 다시 시도해 주세요.`, () => resolve(ensure())));
+      return new Promise(resolve => ui.fail(T('받는 중 문제가 생겼어요 ({e}). 다시 시도해 주세요.', { e: e.message || e }), () => resolve(ensure())));
     }
     const { uri } = await FS.getUri({ path: dir, directory: DATA });
     const webBase = cap.convertFileSrc(uri).replace(/\/?$/, '/');

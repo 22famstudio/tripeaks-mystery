@@ -11,6 +11,7 @@
 // =====================================================================
 (function () {
   const TP = (globalThis.TP ??= {});
+  const T = (s, p) => (TP.t ? TP.t(s, p) : p ? s.replace(/\{(\w+)\}/g, (m, k) => (k in p ? p[k] : m)) : s);   // 다국어 (js/i18n.js)
   const store = () => TP.store;
 
   // 7일 보상 (예시 화면 기준 · 경제: 7일 합계 골드 4,800 ≈ 1단계 입장료 48판 — 첫 주 이탈 방지용 스타터)
@@ -72,9 +73,9 @@
 
   TP.describeDailyReward = r => [
     r.gold && `🪙 ${r.gold.toLocaleString()}`,
-    r.undo && `↶ 되돌리기 ×${r.undo}`,
-    r.wild && `★ 와일드 ×${r.wild}`,
-    r.hint && `🎟 힌트권 ×${r.hint}`,
-    r.life && `❤️ 하트 ×${r.life}`,
+    r.undo && T('↶ 되돌리기 ×{n}', { n: r.undo }),
+    r.wild && T('★ 와일드 ×{n}', { n: r.wild }),
+    r.hint && T('🎟 힌트권 ×{n}', { n: r.hint }),
+    r.life && T('❤️ 하트 ×{n}', { n: r.life }),
   ].filter(Boolean).join(' + ');
 })();

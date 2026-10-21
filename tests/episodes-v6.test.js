@@ -46,6 +46,7 @@ const person = t => {
   return { name: m[1], age: Number(m[2]), gender: m[3], job: m[4].replace('음악 가', '음악가') };
 };
 const csv = parseCsv(fs.readFileSync(path.join(__dirname, '../data/TriPeaks_300_Episodes_V6_Sorted.csv'), 'utf8'));
+const REWRITE = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/confessions_rewrite.json'), 'utf8'));
 
 // A) 원본 대조
 assert.equal(csv.length, 300);
@@ -69,9 +70,10 @@ for (const row of csv) {
     assert(ep.suspects.some(s => s.name === o.name && s.age === o.age && s.gender === o.gender && s.job === o.job),
       `${ep.episodeId}: 용의자 ${o.name} 프로필`);
   }
-  // 고백: 코지 톤 순화 외에는 원문 그대로 (문장 수 동일, 비어 있지 않음)
+  // 고백: 다시 쓴 고백(data/confessions_rewrite.json)이 있으면 그 문장 그대로, 없으면 코지 톤 순화 외에는 원문 그대로 (문장 수 동일)
   const sentences = t => t.split(/(?<=[.?!])\s+/).length;
-  assert(ep.confession && sentences(ep.confession) === sentences(row['스토리(진범의 고백)']), `${ep.episodeId} 고백`);
+  if (REWRITE[no]) assert.equal(ep.confession, REWRITE[no], `${ep.episodeId} 다시 쓴 고백`);
+  else assert(ep.confession && sentences(ep.confession) === sentences(row['스토리(진범의 고백)']), `${ep.episodeId} 고백`);
   assert(ep.background, `${ep.episodeId} 배경`);
 }
 console.log('A) V6 원본 대조 통과 (300화 · 장소 · 진범/용의자 프로필 · 동기 · 고백)');
@@ -186,7 +188,7 @@ console.log('B) 대륙 전환 5곳:', changes.join(' / '));
     for (const w of BANNED) {
       let i = -1;
       while ((i = t.indexOf(w, i + 1)) >= 0) {
-        if (w[0] === '피' && '커소혈갈포알창'.includes(t[i - 1])) continue;   // 커피를 · 책갈피를 · 창피를 …
+        if (w[0] === '피' && '커소혈갈포알창시'.includes(t[i - 1])) continue;   // 커피를 · 책갈피를 · 창피를 · 레시피를 …
         assert.fail(`${ep.episodeId}: 코지 톤 금지어 '${w}' — ${t.slice(Math.max(0, i - 20), i + 20)}`);
       }
     }

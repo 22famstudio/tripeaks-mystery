@@ -44,7 +44,7 @@ CDN_AUDIO_PATHS = {'sounds/sfx', 'sounds/bgm_mp3'}                              
 BACKUP = os.path.join(os.path.dirname(ROOT), 'assets_original_backup')
 CAP_CONFIG = os.path.join(ROOT, 'mobile', 'capacitor.config.json')
 GOOGLE_SERVICES = os.path.join(ROOT, 'mobile', 'android', 'app', 'google-services.json')
-BASE_PLUGINS = ['@capacitor/filesystem', '@capacitor/app']  # 늘 넣는 네이티브 플러그인 (세이브 파일 · 백그라운드 감지)
+BASE_PLUGINS = ['@capacitor/filesystem', '@capacitor/app', '@revenuecat/purchases-capacitor']  # 늘 넣는 네이티브 플러그인 (세이브 파일 · 백그라운드 감지 · 결제)
 FIREBASE_PLUGINS = ['@capacitor-firebase/authentication']  # google-services.json 이 있을 때만
 
 
@@ -59,6 +59,10 @@ def sync_plugin_allowlist():
             json.dump(cfg, fp, ensure_ascii=False, indent=2)
     print('Firebase 로그인: ' + ('켜짐 (google-services.json 있음)' if has_firebase
                                  else '꺼짐 — mobile/android/app/google-services.json 을 넣으면 켜짐'))
+    billing = open(os.path.join(ROOT, 'js', 'billing-config.js'), encoding='utf-8').read()
+    has_key = re.search(r"revenuecatGoogleApiKey:\s*'goog_\w+'", billing)
+    print('결제(RevenueCat): ' + ('켜짐 (Public SDK key 있음)' if has_key
+                                 else '꺼짐 — js/billing-config.js 에 키를 넣기 전에는 휴대폰에서 결제가 막힘 (docs/REVENUECAT_GUIDE.md)'))
 
 
 def main():

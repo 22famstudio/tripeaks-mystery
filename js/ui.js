@@ -2,6 +2,7 @@
 // 규칙 판단은 전부 TriPeaksGame에 맡기고, 재화·정산 같은 메타 기능은 app.js가 붙인다.
 (function () {
   const { TP } = globalThis;
+  const T = (s, p) => (TP.t ? TP.t(s, p) : p ? s.replace(/\{(\w+)\}/g, (m, k) => (k in p ? p[k] : m)) : s);   // 다국어 (js/i18n.js)
   const $ = sel => document.querySelector(sel);
 
   const FLY_MS = 220; // 카드 비행 시간 (0.22초)
@@ -12,10 +13,10 @@
     let front;
     if (card.special === 'bonus') {
       // +1 덱 보너스 카드 (game_assets/card_plus1.webp)
-      front = `<div class="face front img bonus" role="img" aria-label="덱 +1 보너스 카드" style="background-image:url('${TP.ASSETS.cardPlus[1]}')"></div>`;
+      front = `<div class="face front img bonus" role="img" aria-label="${T('덱 +1 보너스 카드')}" style="background-image:url('${TP.ASSETS.cardPlus[1]}')"></div>`;
     } else {
       // 숫자 카드·와일드는 이미지 (game_assets/card_*.webp). 무늬는 규칙과 무관해 그림 하나로 공용.
-      const label = card.wild || card.special === 'wild' ? '와일드 카드' : `${TP.rankLabel(card.rank)}${card.suit}`;
+      const label = card.wild || card.special === 'wild' ? T('와일드 카드') : `${TP.rankLabel(card.rank)}${card.suit}`;
       const src = TP.cardImage(card);
       front = `<div class="face front img" role="img" aria-label="${label}"${src ? ` style="background-image:url('${src}')"` : ''}></div>`;
     }
@@ -24,7 +25,7 @@
   };
 
   // 콤보 목표 보상 표시: 덱 +1~3 (목표 5·7) / 덱 +5 · 와일드 · 되돌리기 (목표 10·15)
-  TP.chestRewardLabel = reward => (reward.wildItem ? '와일드카드' : reward.undoItem ? '되돌리기' : `덱 +${reward.cards}장`);
+  TP.chestRewardLabel = reward => (reward.wildItem ? T('와일드카드') : reward.undoItem ? T('되돌리기') : T('덱 +{n}장', { n: reward.cards }));
   // 콤보 게이지 끝 보상 아이콘: 와일드 → 와일드카드 그림, 되돌리기 → 되돌리기 아이템, 덱 추가 → +N 카드 그림
   TP.chestRewardImage = reward => (reward.wildItem ? TP.ASSETS.cardWild : reward.undoItem ? TP.ASSETS.btnUndo
     : TP.plusCardImage(reward.cards || 1));
@@ -463,9 +464,9 @@
       const hint = stuck && TP.stuckHintEnabled();   // Lv.3부터는 덱 빛남·안내 문구 없음
       el.stock.classList.toggle('nudge', hint);
       el.message.textContent =
-        hint ? '낼 카드가 없어요. 덱을 터치해 한 장 뽑으세요.'
-        : status === 'lost' ? '덱이 바닥났어요!'
-        : game.activeCard.wild ? '와일드! 앞면 카드 아무거나 낼 수 있어요.'
+        hint ? T('낼 카드가 없어요. 덱을 터치해 한 장 뽑으세요.')
+        : status === 'lost' ? T('덱이 바닥났어요!')
+        : game.activeCard.wild ? T('와일드! 앞면 카드 아무거나 낼 수 있어요.')
         : '';
       refreshHud();
     }

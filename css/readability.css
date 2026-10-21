@@ -15,9 +15,15 @@
   font-weight: 100 900;   /* 원래 굵은 디자인 → 어떤 굵기에서도 합성 굵기 없이 그대로 */
   font-display: swap;
 }
-@font-face { font-family: 'NanumSquare'; src: url(../game_assets/fonts/NanumSquareR.ttf) format('truetype'); font-weight: 100 549; font-display: swap; }
-@font-face { font-family: 'NanumSquare'; src: url(../game_assets/fonts/NanumSquareB.ttf) format('truetype'); font-weight: 550 749; font-display: swap; }
-@font-face { font-family: 'NanumSquare'; src: url(../game_assets/fonts/NanumSquareEB.ttf) format('truetype'); font-weight: 750 1000; font-display: swap; }
+@font-face { font-family: 'NanumSquare'; src: url(../game_assets/fonts/NanumSquareR.ttf) format('truetype'); font-weight: 100 549; font-display: swap; unicode-range: U+0-2FFF, U+3100-33FF, U+A000-F8FF, U+FB00-FEFF, U+FFF0-10FFFF; }
+@font-face { font-family: 'NanumSquare'; src: url(../game_assets/fonts/NanumSquareB.ttf) format('truetype'); font-weight: 550 749; font-display: swap; unicode-range: U+0-2FFF, U+3100-33FF, U+A000-F8FF, U+FB00-FEFF, U+FFF0-10FFFF; }
+@font-face { font-family: 'NanumSquare'; src: url(../game_assets/fonts/NanumSquareEB.ttf) format('truetype'); font-weight: 750 1000; font-display: swap; unicode-range: U+0-2FFF, U+3100-33FF, U+A000-F8FF, U+FB00-FEFF, U+FFF0-10FFFF; }
+/* 일본어 (가나 · 한자): M PLUS Rounded 1c (SIL OFL 1.1 — fonts/MPLUSRounded1c-OFL.txt, tools/build_jp_font.py 로 필요한 글자만)
+   같은 'NanumSquare' 이름에 가나 · 한자 범위(unicode-range)로만 등록 → CSS 곳곳의 글꼴 목록을 바꾸지 않아도
+   한글은 나눔스퀘어, 가나 · 한자는 M PLUS Rounded 로 그려진다 (위 나눔스퀘어는 이 범위를 빼고 등록 — 나눔스퀘어의 빈 가나 · 한자 글리프가 쓰이지 않게) */
+@font-face { font-family: 'NanumSquare'; src: url(../game_assets/fonts/MPLUSRounded1c-Bold.woff2) format('woff2'); font-weight: 100 549; font-display: swap; unicode-range: U+3000-30FF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FF00-FFEF; }
+@font-face { font-family: 'NanumSquare'; src: url(../game_assets/fonts/MPLUSRounded1c-Bold.woff2) format('woff2'); font-weight: 550 749; font-display: swap; unicode-range: U+3000-30FF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FF00-FFEF; }
+@font-face { font-family: 'NanumSquare'; src: url(../game_assets/fonts/MPLUSRounded1c-ExtraBold.woff2) format('woff2'); font-weight: 750 1000; font-display: swap; unicode-range: U+3000-30FF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FF00-FFEF; }
 /* 굵기는 파일(R · B · EB)로 고르고 합성하지 않는다 */
 body {
   font-family: 'Luckiest Guy', 'NanumSquare', 'Malgun Gothic', sans-serif;
@@ -32,6 +38,19 @@ body {
   letter-spacing: 0.03em;
 }
 button, input, select, textarea { font-family: inherit; }
+/* 영어 화면: 버튼 · 제목 · 숫자는 Luckiest Guy 그대로, 긴 문장(설명 · 단서 · 안내)은 읽기 쉬운 나눔스퀘어의 영문 글자로 */
+html[data-lang="en"] :is(.dialog-body, .confirm-msg, .legal-text, .gg-rules, .gg-goal, .suspect-file dd, .clue, .hint-note,
+  .en-rule, .rsm-msg, .ws-bubble, .ws-line, .ep-desc, .toast, .db-sub, .entry-note, .ev2-reassure, .es-rule, .lg-check-tip, .cs-text, .flee-text) {
+  font-family: 'NanumSquare', 'Luckiest Guy', sans-serif;
+}
+html[data-lang="en"] :is(.dialog-body, .confirm-msg, .legal-text, .gg-rules, .clue, .toast) .lang-en { font-family: 'NanumSquare', sans-serif; font-weight: 700 !important; letter-spacing: 0; }
+/* 논리 그리드 (영어 · 일본어): 장소 · 물건 · 이름이 한국어보다 길다 → 좁은 글꼴 · 작은 글씨 · 긴 낱말도 줄바꿈, 이름 칸 조금 넓게 */
+html:is([data-lang="en"], [data-lang="ja"]) .lg-head span {
+  font-family: 'NanumSquare', sans-serif; font-size: 0.8rem; letter-spacing: 0; overflow-wrap: anywhere; word-break: normal; hyphens: auto;
+}
+html:is([data-lang="en"], [data-lang="ja"]) .lg-who b { font-family: 'NanumSquare', sans-serif; font-size: 0.85rem; letter-spacing: 0; }
+html:is([data-lang="en"], [data-lang="ja"]) .lg-col-who { width: 13%; }
+html[data-lang="en"] .lg-head { height: 11cqh; }
 
 /* 모달 본문 · 설명글 (약 125%) */
 .modal.framed > .paper { font-size: 1.15em; }                /* 0.94em → 1.15em */
@@ -188,3 +207,8 @@ button, input, select, textarea { font-family: inherit; }
 .chapter-transition .ct-ep { font-size: 0.9rem; }
 .ct-art { animation: ct-art-in 3.4s ease-out both; }
 @keyframes ct-art-in { from { scale: 1.05; } to { scale: 1; } }   /* 확대를 줄여 탐정 모자가 안내 띠 밑으로 들어가지 않게 */
+/* 홈 사건 제목 (영어 · 일본어): 번역 제목이 한국어보다 길어 줄임표로 잘리지 않게 좁은 글꼴 · 작은 글씨 */
+html:is([data-lang="en"], [data-lang="ja"]) .title-row .episode-title {
+  font-family: 'NanumSquare', sans-serif; font-size: 0.78rem; letter-spacing: 0; line-height: 1.15; text-align: center;
+  white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+}

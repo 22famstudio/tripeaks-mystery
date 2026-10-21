@@ -2,6 +2,7 @@
 // app.js(게임 메타)와 notebook.js(탐정 수첩)가 함께 쓴다. 상품·결제 로직은 shop.js(TP.shop).
 (function () {
   const TP = (globalThis.TP ??= {});
+  const T = (s, p) => (TP.t ? TP.t(s, p) : p ? s.replace(/\{(\w+)\}/g, (m, k) => (k in p ? p[k] : m)) : s);   // 다국어 (js/i18n.js)
   const $ = sel => document.querySelector(sel);
 
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -25,7 +26,7 @@
   //   buttons: [{ label, value, cls, disabled }]   footer: 버튼 아래에 붙는 안내 문구(HTML)
   //   art: 제목 위 일러스트 { src, cls }           framed: 파란 패널 팝업 프레임(frame_modal_popup_plain.webp) 사용 여부 — 제목은 프레임 위쪽 띠
   function showDialog({
-    title, body = '', buttons = [{ label: '확인', value: true, cls: 'primary' }],
+    title, body = '', buttons = [{ label: T('확인'), value: true, cls: 'primary' }],
     className = '', footer = '', art = null, framed = true, sfx = 'popup',
   }) {
     if (sfx) TP.audio?.sfx?.(sfx);            // 팝업 효과음 (단서 획득 'clue' · 용의자 파일 'pageFlip' 등으로 바꿀 수 있음, null = 무음)
@@ -58,7 +59,7 @@
   }
 
   // 예/아니오 확인창 → true / false. message의 줄바꿈(\n)은 그대로 줄바꿈으로 보인다.
-  function confirm({ title, message, okLabel = '확인', cancelLabel = '취소', className = '' }) {
+  function confirm({ title, message, okLabel = T('확인'), cancelLabel = T('취소'), className = '' }) {
     return showDialog({
       title,
       className: `confirm ${className}`,
@@ -126,7 +127,7 @@
 
   function watchRewardedAd(seconds = 5) {
     if (TP.store.state.adPassCount > 0 && TP.store.spend('adPassCount', 1)) {
-      toast(`🎟 광고 패스권 사용 (남은 ${TP.store.state.adPassCount}장)`);
+      toast(T('🎟 광고 패스권 사용 (남은 {n}장)', { n: TP.store.state.adPassCount }));
       return Promise.resolve({ ok: true, passUsed: true });
     }
     return new Promise(resolve => {
@@ -135,8 +136,8 @@
       backdrop.style.zIndex = ++zTop;
       backdrop.innerHTML = `
         <div class="modal dialog ad-player"><div class="paper">
-          <div class="ad-screen">📺 광고 재생 중</div>
-          <p>보상까지 <b class="ad-count">${seconds}</b>초</p>
+          <div class="ad-screen">${T('📺 광고 재생 중')}</div>
+          <p>${T('보상까지 {n}초', { n: `<b class="ad-count">${seconds}</b>` })}</p>
         </div></div>`;
       root().append(backdrop);
       let left = seconds;
@@ -160,10 +161,10 @@
       backdrop.style.zIndex = ++zTop;
       backdrop.innerHTML = `
         <div class="modal dialog ad-player"><div class="paper">
-          <div class="ad-screen">📢 전면 광고 (테스트)</div>
+          <div class="ad-screen">${T('📢 전면 광고 (테스트)')}</div>
           <div class="actions">
-            <button class="ghost" data-act="noads">광고 제거하기</button>
-            <button class="primary" data-act="close" disabled>닫기 <b class="ad-count">${seconds}</b></button>
+            <button class="ghost" data-act="noads">${T('광고 제거하기')}</button>
+            <button class="primary" data-act="close" disabled>${T('닫기')} <b class="ad-count">${seconds}</b></button>
           </div>
         </div></div>`;
       root().append(backdrop);
@@ -175,7 +176,7 @@
         if (left <= 0) {
           clearInterval(timer);
           closeBtn.disabled = false;
-          closeBtn.textContent = '닫기 ✕';
+          closeBtn.textContent = T('닫기') + ' ✕';
         }
       }, 1000);
       const finish = () => { clearInterval(timer); backdrop.remove(); resolve(); };
@@ -208,6 +209,7 @@
     if (offer) await showSpecialOffer(offer);
     renderShop();
     openModal(shopModal);
+    TP.billing.init().then(() => { if (!shopModal.hidden) renderShop(); });   // 스토어 현지 가격이 오면 다시 그림
     TP.audio?.playShopBgm?.();                   // 상점 배경음악 (shop_bgm_* 무작위, 곡이 끝나면 다음 곡)
     return closed;
   }
@@ -226,7 +228,7 @@
       btn.className = 'shop-tab' + (c.id === shopTab ? ' on' : '');
       btn.setAttribute('role', 'tab');
       btn.setAttribute('aria-selected', c.id === shopTab);
-      btn.textContent = c.name;
+      btn.textContent = T(c.name);
       btn.onclick = () => {
         shopTab = c.id;
         renderShop();
@@ -234,6 +236,9 @@
       };
       return btn;
     }));
+    // 탭이 넘치면(영어 · 일본어) 고른 탭이 가운데 보이게
+    const on = tabs.querySelector('.on');
+    if (on && tabs.scrollWidth > tabs.clientWidth) tabs.scrollLeft = on.offsetLeft - (tabs.clientWidth - on.offsetWidth) / 2;
     const grid = $('#productGrid');
     grid.className = `product-grid cat-${shopTab}`;
     // 철제 선반 한 단에 상품 3개 — 아이콘이 크게 보이도록 (design/shop/components.md)
@@ -249,7 +254,21 @@
       shelf.insertAdjacentHTML('beforeend', '<div class="shelf-beam"><i class="rivet"></i><i class="rivet"></i><i class="rivet"></i><i class="rivet"></i></div>');
       shelves.push(shelf);
     }
-    grid.replaceChildren(...shelves);
+    const foot = document.createElement('div');
+    foot.className = 'shop-foot';
+    foot.innerHTML = `<button class="shop-restore">${T('구매 복원')}</button>`
+      + (TP.billing.status.mode === 'dummy' ? `<small>${T('개발용: 실제 결제 없이 바로 지급돼요')}</small>` : '');
+    foot.querySelector('.shop-restore').onclick = restorePurchases;
+    grid.replaceChildren(...shelves, foot);
+  }
+
+  // 구매 복원 (광고 제거 · 스타터팩 보유 상태를 Google Play 구매 내역에서 되살림 — js/billing.js)
+  async function restorePurchases() {
+    const done = showBusy(T('구매 내역 확인 중…'));
+    const r = await TP.billing.restore();
+    done();
+    if (!r.ok) return toast(r.reason === 'unavailable' ? T('지금은 결제를 사용할 수 없어요') : T('구매 내역을 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요'));
+    toast(r.noAds ? T('구매 내역을 복원했어요 (광고 제거 적용 중)') : T('구매 내역을 복원했어요'));
   }
 
   function productCard(p) {
@@ -257,46 +276,52 @@
     const card = document.createElement('div');
     card.className = `product cat-${p.category}` + (p.category === 'starter' ? ' featured' : '') + (owned ? ' owned' : '');
     const isCoin = p.category === 'coin';
-    const price = TP.formatPrice(p.price, p.currency) + (p.priceKRW ? ` <small>${TP.formatPrice(p.priceKRW, 'KRW')}</small>` : '');
+    const price = p.currency === 'GOLD' ? TP.formatPrice(p.price, p.currency) : TP.billing.priceLabel(p);   // 현금 상품: Play 스토어의 현지 가격
     // 광고 제거만 있는 상품은 이름이 곧 설명이라 구성품 줄을 생략 ('광고 제거 광고 제거' 중복 방지)
     const onlyNoAds = p.rewards.removeAds && !p.rewards.gold && !p.rewards.undo && !p.rewards.wild && !p.rewards.hint && !p.rewards.adPass;
     const img = TP.productImage(p);
     // 광고 제거 탭: '광고 제거'는 이름에 이미 있으므로 구성품 줄에서는 뺀다
     card.innerHTML = `
-      ${p.tag ? `<span class="tag">${esc(p.tag)}</span>` : ''}
+      ${p.tag ? `<span class="tag">${esc(T(p.tag))}</span>` : ''}
       <div class="product-glow"></div>
       <i class="sparkle" style="left:14%; top:2cqh;">✦</i><i class="sparkle" style="right:12%; top:9cqh; animation-delay:.8s;">✦</i>
       <div class="product-icon ${img ? '' : 'emoji'}">${img ? `<img src="${img}" alt="">` : p.icon}</div>
       <div class="price-paper">
-        <div class="product-name">${esc(p.name)}</div>
+        <div class="product-name">${esc(T(p.name))}</div>
         ${isCoin ? `<div class="coin-amount"><i class="ico gold"></i>${p.rewards.gold.toLocaleString()}</div>` : ''}
-        ${isCoin ? `<span class="bonus-badge ${p.bonusPct ? '' : 'none'}">${p.bonusPct ? `보너스 +${p.bonusPct}%` : '기본'}</span>` : ''}
+        ${isCoin ? `<span class="bonus-badge ${p.bonusPct ? '' : 'none'}">${p.bonusPct ? T('보너스 +{n}%', { n: p.bonusPct }) : T('기본')}</span>` : ''}
         ${isCoin || onlyNoAds ? '' : `<ul class="reward-icons">${rewardIcons(p.category === 'noads' ? { ...p.rewards, removeAds: false } : p.rewards)}</ul>`}
       </div>
       <button class="price" ${owned ? 'disabled' : ''}>
-        ${owned ? (p.category === 'noads' ? '적용됨' : '구매 완료') : price}
+        ${owned ? (p.category === 'noads' ? T('적용됨') : T('구매 완료')) : price}
       </button>`;
     card.querySelector('.price').onclick = () => buyProduct(p);
     return card;
   }
 
   async function buyProduct(product) {
-    const done = showBusy('결제 진행 중…');
+    const done = showBusy(T('결제 진행 중…'));
     const result = await TP.shop.buyProduct(product.id);
     done();
     if (!result.ok) {
       if (result.reason === 'gold') {
-        const go = await TP.ui.confirm({ title: '골드가 부족해요', message: `필요 🪙 ${result.required.toLocaleString()} / 보유 🪙 ${TP.store.state.gold.toLocaleString()}\n골드 코인 탭으로 이동할까요?`, okLabel: '골드 충전' });
+        const go = await TP.ui.confirm({ title: T('골드가 부족해요'), message: T('필요 🪙 {need} / 보유 🪙 {have}\n골드 코인 탭으로 이동할까요?', { need: result.required.toLocaleString(), have: TP.store.state.gold.toLocaleString() }), okLabel: T('골드 충전') });
         if (go) { shopTab = 'coin'; renderShop(); }
         return false;
       }
-      toast('이미 구매한 상품이에요');
+      toast({
+        owned: T('이미 구매한 상품이에요'),
+        cancelled: T('결제를 취소했어요'),
+        pending: T('결제가 승인 대기 중이에요. 완료되면 자동으로 지급돼요'),
+        unavailable: T('지금은 결제를 사용할 수 없어요'),
+        network: T('인터넷 연결을 확인해 주세요'),
+      }[result.reason] || T('결제하지 못했어요. 잠시 뒤 다시 시도해 주세요'));
       return false;
     }
     TP.audio?.sfx?.('purchase');
     toast(result.paidGold
-      ? `✅ 🪙 -${result.paidGold.toLocaleString()}<br><small>${TP.describeRewards(product.rewards)} 지급</small>`
-      : `✅ 결제가 완료되었습니다!<br><small>${TP.describeRewards(product.rewards)} 지급</small>`);
+      ? `✅ 🪙 -${result.paidGold.toLocaleString()}<br><small>${T('{r} 지급', { r: TP.describeRewards(product.rewards) })}</small>`
+      : `✅ ${T('결제가 완료되었습니다!')}<br><small>${T('{r} 지급', { r: TP.describeRewards(product.rewards) })}</small>`);
     confettiAt(null, { particleCount: 60, origin: { x: 0.5, y: 0.2 } });
     return true;
   }
@@ -304,7 +329,7 @@
   // 보상 구성 → 아이콘 목록 (아이콘 이미지는 CSS .ico.* 가 game_assets/에서 가져온다)
   function rewardIcons({ gold, undo, wild, hint, adPass, infiniteMinutes, removeAds }) {
     return [
-      removeAds && ['noads', '광고 제거'],
+      removeAds && ['noads', T('광고 제거')],
       gold && ['gold', gold.toLocaleString()],
       undo && ['undo', `×${undo}`],
       wild && ['wild', `×${wild}`],
@@ -325,8 +350,8 @@
   //   [✕] → 경고 '지금 닫으면 같은 오퍼를 다시 받지 못할 수 있어요' (10일 쉬는 규칙은 사용자에게 알리지 않음) [포기하기] [돌아가기] → 돌아가기면 오퍼로 복귀, 포기하면 회차 끝
   const OFFER_STALL = 'game_assets/popup_home_offer.webp';   // 가판대 + 탐정 고양이 (홈 · 상점 스페셜 오퍼 공통)
   function homeOfferPage(offer) {
-    const price = TP.formatPrice(offer.price, offer.currency);
-    const original = offer.originalPrice ? TP.formatPrice(offer.originalPrice, offer.currency) : '';
+    const price = TP.billing.priceLabel(offer);
+    const original = TP.billing.originalPriceLabel(offer);
     const off = offer.originalPrice ? Math.round((1 - offer.price / offer.originalPrice) * 100) : 0;
     const page = document.createElement('div');
     page.className = 'ho-popup';
@@ -336,12 +361,12 @@
         <img class="ho-art" src="${OFFER_STALL}" alt="">
         ${off ? `<div class="ho-badge" data-no-icons><b>${off}%</b><small>OFF</small></div>` : '<div class="ho-badge" data-no-icons><small>SPECIAL</small></div>'}
         <div class="ho-panel">
-          <div class="ho-name">${esc(offer.name)}</div>
+          <div class="ho-name">${esc(T(offer.name))}</div>
           <ul class="ho-items reward-icons">${rewardIcons(offer.rewards)}</ul>
           <div class="ho-price">${original ? `<s>${original}</s>` : ''}<b>${price}</b></div>
         </div>
-        <button class="ho-buy" aria-label="${price} 지금 결제하기"></button>
-        <button class="ho-close" aria-label="닫기">✕</button>
+        <button class="ho-buy" aria-label="${T('{p} 지금 결제하기', { p: price })}"></button>
+        <button class="ho-close" aria-label="${T('닫기')}">✕</button>
       </div>`;
     root().append(page);
     TP.audio?.sfx?.('popup');
@@ -358,12 +383,12 @@
       const choice = await homeOfferPage(offer);
       if (choice === 'buy') { if (await buyProduct(offer)) return true; continue; }   // 결제 실패 · 취소면 오퍼로 복귀
       const back = await showDialog({
-        title: '잠깐만요!',
+        title: T('잠깐만요!'),
         className: 'confirm offer-warn',
-        body: `<p class="confirm-msg">지금 이 창을 닫으면<br><b>같은 오퍼를 다시 받지 못할 수 있어요.</b><br>정말 포기하시겠어요?</p>`,
+        body: `<p class="confirm-msg">${T('지금 이 창을 닫으면<br><b>같은 오퍼를 다시 받지 못할 수 있어요.</b><br>정말 포기하시겠어요?')}</p>`,
         buttons: [
-          { label: '포기하기', value: false, cls: 'ghost' },
-          { label: '돌아가기', value: true, cls: 'primary' },
+          { label: T('포기하기'), value: false, cls: 'ghost' },
+          { label: T('돌아가기'), value: true, cls: 'primary' },
         ],
       });
       if (!back) { TP.endHomeOfferRound(); return false; }
@@ -376,6 +401,6 @@
 
   TP.ui = {
     root, openModal, closeModal, showDialog, confirm, showBusy, toast, confettiAt, bigCelebration, bump,
-    watchRewardedAd, showInterstitial, openShop, closeShop, showHomeOffer,
+    watchRewardedAd, showInterstitial, openShop, closeShop, showHomeOffer, restorePurchases,
   };
 })();

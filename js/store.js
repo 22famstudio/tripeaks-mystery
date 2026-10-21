@@ -12,6 +12,7 @@
 
   // 시간은 전부 여기서 읽는다 (테스트에서 TP.now를 바꿔 시간 경과를 흉내 낸다)
   TP.now ??= () => Date.now();
+  const N_ = s => s;   // 다국어: 표시할 때 TP.t() 로 번역하는 이름 (js/i18n.js · tools/i18n_check.js)
 
   const STORAGE_KEY = 'tripeaks-mystery.player.v1';
   const MAX_LEVEL = 999;
@@ -30,6 +31,7 @@
     energyAdDay: '',
     energyAdCount: 0,
     purchasedOnce: [],   // 1회 한정 상품 구매 기록
+    paidTx: [],          // 보상을 지급한 결제 거래 ID (js/billing.js — 같은 결제를 두 번 지급하지 않게 · 최근 300건)
     offerPurchased: false, // 스페셜 오퍼(스타터팩 · 특가 팩)를 한 번이라도 샀는지 → 홈의 SPECIAL OFFER 버튼 숨김
     ownedCardBacks: ['default'], // 보유한 카드 뒷면 스킨 (js/card-backs.js · 50연승 프레스티지 보상)
     equippedCardBack: 'default', // 장착 중인 카드 뒷면
@@ -54,7 +56,7 @@
     solvedEpisodes: [],  // 해결한 에피소드 id (칭호 승급에 반영)
     stageStars: {},      // 스테이지 최고 별 { [episodeId]: { [stage]: 1~3 } }
     dailyBonus: { installDay: '', claimed: 0, lastClaimDay: '' },   // 설치 후 7일 로그인 보너스 (js/daily-bonus.js)
-    settings: { bgmOn: true, bgmVol: 70, sfxOn: true, sfxVol: 80, nickname: '탐정님' },   // 플레이어 설정 (settings.js)
+    settings: { bgmOn: true, bgmVol: 70, sfxOn: true, sfxVol: 80, nickname: N_('탐정님'), lang: '' },   // lang: '' = 기기 언어 (js/i18n.js)   // 플레이어 설정 (settings.js)
   });
 
   // 닉네임: 앞뒤 공백 제거, 제어문자·꺾쇠 제거, 최대 12자, 비면 기본값
@@ -102,6 +104,7 @@
       energyAdDay: typeof s.energyAdDay === 'string' ? s.energyAdDay : '',
       energyAdCount: int(s.energyAdCount, 0, 99, 0),
       purchasedOnce: Array.isArray(s.purchasedOnce) ? s.purchasedOnce.filter(x => typeof x === 'string') : [],
+      paidTx: Array.isArray(s.paidTx) ? s.paidTx.filter(x => typeof x === 'string').slice(-300) : [],
       offerPurchased: s.offerPurchased === true,
       gridGuideSeen: s.gridGuideSeen === true,
       ownedCardBacks: [...new Set(['default', ...(Array.isArray(s.ownedCardBacks) ? s.ownedCardBacks.filter(x => typeof x === 'string') : [])])],
@@ -138,6 +141,7 @@
       sfxOn: st.sfxOn !== false,
       sfxVol: int(st.sfxVol, 0, 100, d.sfxVol),
       nickname: TP.sanitizeNickname(st.nickname),
+      lang: ['ko', 'en', 'ja'].includes(st.lang) ? st.lang : '',
     };
   }
 

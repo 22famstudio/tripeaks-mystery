@@ -3,6 +3,7 @@
 require('../js/store.js');
 require('../js/energy.js');
 require('../js/shop.js');
+require('../js/billing.js');   // 휴대폰이 아니면 가짜 결제 (바로 지급)
 
 const { TP } = globalThis;
 const assert = require('assert');
@@ -14,7 +15,7 @@ TP.now = () => T0;
 const COUNTED = { gold: 'gold', undo: 'undoCount', wild: 'wildcardCount', hint: 'hintCount', adPass: 'adPassCount' };
 
 (async () => {
-  TP.PaymentGateway.purchase = async product => ({ ok: true, transactionId: `test_${product.id}` });
+  TP.billing.dummyDelayMs = 0;
 
   // 1) 카탈로그: 카테고리별 개수, id 중복 없음, 골드 보너스율이 실제 지급량과 맞는지 (오타 방지)
   const count = id => TP.shop.productsIn(id).length;

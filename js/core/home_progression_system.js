@@ -20,6 +20,7 @@
   }
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
+  const N_ = s => s;   // 다국어: 표시할 때 TP.t() 로 번역하는 이름 (js/i18n.js · tools/i18n_check.js)
 
   const LIFE_MAX = 5;
   const LIFE_REGEN_MS = 20 * 60 * 1000; // 20분 (1,200,000ms)
@@ -32,9 +33,9 @@
   const LEVEL_TIERS = [
     {
       minLv: 1, maxLv: 13,
-      title: '오지랖 넓은 시민',
+      title: N_('오지랖 넓은 시민'),
       costumeId: 'costume_citizen_1',
-      costumeName: '동네 산책 조끼와 돋보기',
+      costumeName: N_('동네 산책 조끼와 돋보기'),
       avatarEmoji: '🧐',
       baseEntryFee: 100,
       baseRewardMin: 150,
@@ -42,9 +43,9 @@
     },
     {
       minLv: 14, maxLv: 33,
-      title: '흥신소 수습 인턴',
+      title: N_('흥신소 수습 인턴'),
       costumeId: 'costume_intern_2',
-      costumeName: '체크무늬 수습생 트렌치코트',
+      costumeName: N_('체크무늬 수습생 트렌치코트'),
       avatarEmoji: '🕵️',
       baseEntryFee: 150,
       baseRewardMin: 225,
@@ -52,9 +53,9 @@
     },
     {
       minLv: 34, maxLv: 53,
-      title: '흥신소 베테랑 소장',
+      title: N_('흥신소 베테랑 소장'),
       costumeId: 'costume_chief_3',
-      costumeName: '클래식 브라운 중절모와 코트',
+      costumeName: N_('클래식 브라운 중절모와 코트'),
       avatarEmoji: '🕵️‍♂️',
       baseEntryFee: 250,
       baseRewardMin: 375,
@@ -62,9 +63,9 @@
     },
     {
       minLv: 54, maxLv: 103,
-      title: '동네 골목 명탐정',
+      title: N_('동네 골목 명탐정'),
       costumeId: 'costume_detective_4',
-      costumeName: '셜록 케이프 코트와 사냥모자',
+      costumeName: N_('셜록 케이프 코트와 사냥모자'),
       avatarEmoji: '🎩',
       baseEntryFee: 400,
       baseRewardMin: 600,
@@ -72,9 +73,9 @@
     },
     {
       minLv: 104, maxLv: 153,
-      title: '미스터리 특수 해결사',
+      title: N_('미스터리 특수 해결사'),
       costumeId: 'costume_solver_5',
-      costumeName: '네이비 시크릿 에이전트 수트',
+      costumeName: N_('네이비 시크릿 에이전트 수트'),
       avatarEmoji: '🕶️',
       baseEntryFee: 600,
       baseRewardMin: 900,
@@ -82,9 +83,9 @@
     },
     {
       minLv: 154, maxLv: 199,
-      title: '국가대표 추리 거장',
+      title: N_('국가대표 추리 거장'),
       costumeId: 'costume_master_6',
-      costumeName: '골드 엠블럼 마스터 망토',
+      costumeName: N_('골드 엠블럼 마스터 망토'),
       avatarEmoji: '👑',
       baseEntryFee: 850,
       baseRewardMin: 1275,
@@ -92,9 +93,9 @@
     },
     {
       minLv: 200, maxLv: 999,
-      title: '글로벌 전설의 명탐정',
+      title: N_('글로벌 전설의 명탐정'),
       costumeId: 'costume_legend_7',
-      costumeName: '로열 다이아몬드 명탐정 예복',
+      costumeName: N_('로열 다이아몬드 명탐정 예복'),
       avatarEmoji: '🌟',
       baseEntryFee: 1200,
       baseRewardMin: 1800,
@@ -106,9 +107,9 @@
    * 배수(Multiplier) 해금 조건 정의 (GDD 4장 반영)
    */
   const MULTIPLIER_OPTIONS = [
-    { multiplier: 1, unlockLevel: 1,  label: '1배속 (안전 추리)' },
-    { multiplier: 2, unlockLevel: 20, label: '2배속 (대담한 추리)' },
-    { multiplier: 4, unlockLevel: 40, label: '4배속 (하이리스크 베팅)' }
+    { multiplier: 1, unlockLevel: 1,  label: N_('1배속 (안전 추리)') },
+    { multiplier: 2, unlockLevel: 20, label: N_('2배속 (대담한 추리)') },
+    { multiplier: 4, unlockLevel: 40, label: N_('4배속 (하이리스크 베팅)') }
   ];
 
   /**
@@ -120,12 +121,12 @@
   // 값이 [최소, 최대] 배열이면 달성 순간에 그 범위에서 무작위 (정수). life = 하트(생명력)
   // 50연승 프레스티지: 카드 뒷면 스킨 1종 해제 (모두 모았으면 대체 보상, 지급은 바깥 — js/card-backs.js) 후 연승 0으로 리셋
   const WIN_STREAK_MILESTONES = [
-    { streak: 3,  gold: 0,          undo: 0,      wild: 0, life: 1, label: '3연승 달성!' },
-    { streak: 7,  gold: [100, 200], undo: 0,      wild: 0, life: 1, hint: 1, label: '7연승 달성!' },
-    { streak: 10, gold: [100, 200], undo: 0,      wild: 0, life: 2, label: '10연승 달성!' },
-    { streak: 20, gold: [200, 500], undo: [1, 2], wild: 0, life: 0, hint: 1, label: '20연승 달성!' },
-    { streak: 30, gold: 500,        undo: 1,      wild: 1, life: 0, hint: 2, label: '30연승 마스터!' },
-    { streak: 50, gold: 0,          undo: 0,      wild: 0, life: 0, prestige: true, label: '50연승 프레스티지!' }
+    { streak: 3,  gold: 0,          undo: 0,      wild: 0, life: 1, label: N_('3연승 달성!') },
+    { streak: 7,  gold: [100, 200], undo: 0,      wild: 0, life: 1, hint: 1, label: N_('7연승 달성!') },
+    { streak: 10, gold: [100, 200], undo: 0,      wild: 0, life: 2, label: N_('10연승 달성!') },
+    { streak: 20, gold: [200, 500], undo: [1, 2], wild: 0, life: 0, hint: 1, label: N_('20연승 달성!') },
+    { streak: 30, gold: 500,        undo: 1,      wild: 1, life: 0, hint: 2, label: N_('30연승 마스터!') },
+    { streak: 50, gold: 0,          undo: 0,      wild: 0, life: 0, prestige: true, label: N_('50연승 프레스티지!') }
   ];
   const WIN_STREAK_RESET_AT = 50;
 

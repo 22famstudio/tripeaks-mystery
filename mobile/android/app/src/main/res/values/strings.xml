@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">온천 여관의 비밀</string>
-    <string name="title_activity_main">온천 여관의 비밀</string>
+    <string name="app_name">Detective Solitaire</string>
+    <string name="title_activity_main">Detective Solitaire</string>
     <string name="package_name">com.twotwofam.mystery</string>
     <string name="custom_url_scheme">com.twotwofam.mystery</string>
 </resources>

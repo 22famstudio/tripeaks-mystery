@@ -279,7 +279,7 @@ def text_of(c, names, places, items, n=0):
             f"그 시각 {J(S(), '은')} {P()}에 있지 않았다.",
             f"{P()}의 출입 기록에 {S()}의 이름은 없었다.",
             f"{P()}에 남은 발자국은 {S()}의 신발과 맞지 않았다.",
-            f"여러 사람이 '{J(S(), '은')} {P()} 근처에도 오지 않았다'고 증언했다.",
+            f"여러 사람이 '{J(S(), '은')} {P()}에 발을 들인 적도 없다'고 증언했다.",   # '근처에도'는 옆방 뜻으로 읽힐 수 있어 바꿈
         ])
     if t == 'IS_PLACE':
         return pick([
@@ -352,7 +352,7 @@ def text_of(c, names, places, items, n=0):
     if t == 'OR_HOLDER':
         return pick([
             f"{J(I(), '을')} 가진 사람은 {J(S(), '이나')} {S('s2')} 중 한 명이다.",
-            f"{I()}에 묻은 향수 냄새는 {J(S(), '이나')} {S('s2')}의 것이었다.",
+            f"{J(I(), '은')} {J(S(), '이나')} {S('s2')} 둘 중 한 명의 소지품이었다.",   # 예전 '향수 냄새' 문장은 주인 뜻과 연결이 약해 바꿈
         ])
     if t == 'PLACE_NOT_ITEM':
         return pick([
@@ -377,7 +377,7 @@ def text_of(c, names, places, items, n=0):
     if t == 'IF_THEN':
         return pick([
             f"만약 {J(S(), '이')} {P()}에 있었다면, {J(S(), '은')} {J(I(), '을')} 가지고 있었을 것이다.",
-            f"{J(S(), '이')} {P()}에 있었다는 증언이 맞다면, {I()}의 주인도 {J(S(), '이다')}.",
+            f"{J(S(), '이')} {P()}에 있었다는 증언이 맞다면, {I()}의 주인은 {J(S(), '이다')}.",
         ])
     if t == 'IF_THEN_X':
         return pick([
@@ -545,6 +545,15 @@ DEFAULT_WITNESSES = ['목격자', '경비원', '이웃', '지나가던 행인']
 LEADS_TESTIMONY = ["{w}의 증언: ", "{w}{이} 기억하기로, ", "{w}{은} 이렇게 말했다. ", "{w}{이} 조용히 귀띔했다. ", "{w}의 진술서 — "]
 LEADS_EVIDENCE = ["감식반 보고 — ", "현장 사진을 다시 보니, ", "탐정의 수첩: ", "수사 메모 — ", "{w}{이} 가져온 기록에 따르면, "]
 EVIDENCE_TYPES = {'NOT_ITEM', 'IS_ITEM', 'NOT_ITEMS', 'NOT_HOLDERS', 'PLACE_NOT_ITEM', 'ITEM_AT_PLACE', 'ITEM_NEIGHBOR', 'ITEM_LEFT_OF', 'HOLDER_NEAR_PLACE'}
+# 두 조건을 엮는 단서('만약 ~라면' · '둘 중 하나' · '둘 다 참이거나 둘 다 거짓' · 옆방/앞쪽)는 증인이 할 말이 아니라 탐정의 정리 → 수사 메모 머리말만
+COMPOUND_TYPES = {'XOR', 'IFF', 'IF_THEN', 'IF_THEN_X', 'OR_PLACE', 'OR_AT', 'OR_HOLDER', 'ITEM_NEIGHBOR', 'ITEM_LEFT_OF', 'HOLDER_NEAR_PLACE', 'LEFT_OF'}
+LEADS_COMPOUND = ["수사 메모 — ", "탐정의 수첩: "]
+
+
+def witness_ok(role, jobs):
+    """증인 역할이 그 사건 용의자의 직업과 겹치지 않는가 (예: 증인 '바텐더' + 용의자 바텐더 → 같은 사람으로 오해)"""
+    r = {'신부님': '신부', '수녀님': '수녀'}.get(role, role)   # 높임 '님'만 뗀다 ('단골 손님'의 '님'은 그대로)
+    return not any(j == r or j.endswith(r) or r.endswith(j) for j in jobs)
 DRESS_RATE = 0.45
 
 
@@ -553,12 +562,14 @@ def J2(w, kind):
     return J(w, kind)
 
 
-def dress(text, c, theme, rng):
-    """단서 앞에 증인 · 자료 출처 붙이기 (약 45%). 이미 출처로 시작하는 문장은 그대로"""
+def dress(text, c, theme, rng, jobs=()):
+    """단서 앞에 증인 · 자료 출처 붙이기 (약 45%). 이미 출처로 시작하는 문장은 그대로
+    jobs: 그 사건 용의자들의 직업 — 겹치는 증인 역할은 쓰지 않는다"""
     if rng.random() > DRESS_RATE or text.startswith(('감식', '복도 CCTV', '여러 사람이', '목격자', '수사 기록', '결정적')):
         return text
-    w = rng.choice(WITNESSES.get(theme, DEFAULT_WITNESSES))
-    lead = rng.choice(LEADS_EVIDENCE if c['t'] in EVIDENCE_TYPES else LEADS_TESTIMONY)
+    pool = [w for w in WITNESSES.get(theme, DEFAULT_WITNESSES) if witness_ok(w, jobs)] or            [w for w in DEFAULT_WITNESSES if witness_ok(w, jobs)]
+    w = rng.choice(pool)
+    lead = rng.choice(LEADS_COMPOUND if c['t'] in COMPOUND_TYPES else LEADS_EVIDENCE if c['t'] in EVIDENCE_TYPES else LEADS_TESTIMONY)
     lead = lead.replace('{w}{이}', J2(w, '이')).replace('{w}{은}', J2(w, '은')).replace('{w}', w)
     return lead + text
 
@@ -670,7 +681,7 @@ def generate(no, names, killer_name, places, items, tries=200):
     raise RuntimeError(f'Ep.{no}: 조건에 맞는 단서 세트를 {tries}번 안에 못 만듦')
 
 
-def build_entry(ep_no, ep_id, place_desc, puzzle, places, items, theme=None, motive=None):
+def build_entry(ep_no, ep_id, place_desc, puzzle, places, items, theme=None, motive=None, jobs=()):
     names = puzzle['order']
     pl, it = puzzle['pl'], puzzle['it']
     rng = random.Random(ep_no * 977 + 11)
@@ -688,7 +699,7 @@ def build_entry(ep_no, ep_id, place_desc, puzzle, places, items, theme=None, mot
         if k - 1 == liar:
             text = liar_text(c, names, places, items)
         else:
-            text = dress(text_of(c, names, places, items, seen.get(c['t'], 0)), c, theme, rng)
+            text = dress(text_of(c, names, places, items, seen.get(c['t'], 0)), c, theme, rng, jobs)
         if k - 1 in rumors:
             text += rumor_tail(names, places, pl, rng)
         entry[f'단서 {k}'] = text
@@ -719,6 +730,44 @@ def verify(entry):
 
 
 # ---------------------------------------------------------------------------
+TIER_BY_NAME = {v['name']: k for k, v in TIERS.items()}
+
+
+def retext(args, jobs_of):
+    """--retext: 기존 JSON 의 퍼즐(용의자 순서 · 정답 · 단서 구조 · 검증)을 그대로 두고 단서 문장만 다시 만든다.
+    문장 틀 · 머리말 규칙을 고친 뒤 쓴다 — 정답 배치 · 사건 현장 · 범행 도구가 바뀌지 않아 고백 · 그림과 어긋나지 않는다."""
+    data = json.load(open(args.out, encoding='utf-8'))
+    changed = 0
+    for i, old in enumerate(data):
+        no = old['에피소드']
+        if not args.start <= no <= args.end:
+            continue
+        names, places, items = old['용의자'], old['그리드 장소'], old['그리드 물건']
+        killer = names.index(old['진범'])
+        pl = tuple(places.index(old['정답'][n]['장소']) for n in names)
+        it = tuple(items.index(old['정답'][n]['물건']) for n in names)
+        clues = old['단서 구조']
+        st = State()
+        for c in clues[:19]:
+            st = st.apply(c)
+        decoy = next(iter(State(pairs=st.to_pairs()).killers() - {killer}))
+        puzzle = dict(order=names, killer=killer, pl=pl, it=it, clues=clues, decoy=decoy, tier=TIER_BY_NAME[old['난이도']],
+                      counts=old['검증']['남은 배치 수'], killers=old['검증']['범인 후보 수'])
+        scene = old.get('장면', {})
+        entry = build_entry(no, old['에피소드 ID'], old['장소'], puzzle, places, items, theme=scene.get('공간') or None,
+                            motive=scene.get('동기') or None, jobs=[jobs_of[no].get(n, '') for n in names])
+        assert entry[HINT_KEY] == old[HINT_KEY], (no, '힌트 문장이 달라짐')
+        assert entry['단서 구조'] == clues and entry['정답'] == old['정답'] and entry['진범'] == old['진범'], no
+        n, culprits, trail = verify(entry)
+        assert n == 1 and culprits == {old['진범']} and min(trail) >= 2, (no, n, culprits, trail)
+        for k in ['장소', '에피소드 ID']:
+            entry[k] = old[k]
+        changed += sum(entry[f'단서 {k}'] != old[f'단서 {k}'] for k in range(1, 21))
+        data[i] = {**old, **entry}
+    json.dump(data, open(args.out, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    print(f'→ {args.out}: 단서 문장 {changed}개 바뀜 (퍼즐 · 정답 · 힌트 그대로)')
+
+
 def main():
     import import_episodes_v6 as imp
     import logic_themes
@@ -728,9 +777,13 @@ def main():
     ap.add_argument('--to', dest='end', type=int, default=300)
     ap.add_argument('--print', action='store_true')
     ap.add_argument('--out', default=OUT)
+    ap.add_argument('--retext', action='store_true', help='퍼즐(단서 구조 · 정답)은 그대로 두고 문장만 지금 규칙으로 다시 쓴다')
     args = ap.parse_args()
 
     rows = sorted((imp.parse(r) for r in imp.load_rows(os.path.join(ROOT, imp.DEFAULT_SRC))), key=lambda e: e['no'])
+    jobs_of = {e['no']: {p['name']: p['job'] for p in [e['culprit']] + e['others']} for e in rows}
+    if args.retext:
+        return retext(args, jobs_of)
     out = []
     for e in rows:
         if not args.start <= e['no'] <= args.end:
@@ -742,7 +795,8 @@ def main():
         puzzle = generate(e['no'], names, e['culprit']['name'], places, items)
         motive = cozy_rules.MOTIVE_LABEL.get(e['motive_type'], e['motive_type'])
         entry = build_entry(e['no'], f"ep{e['no']:03d}", e['place'], puzzle, places, items,
-                            theme=logic_themes.theme_for(e['place']), motive=motive)
+                            theme=logic_themes.theme_for(e['place']), motive=motive,
+                            jobs=[jobs_of[e['no']][n] for n in names])
         n, culprits, trail = verify(entry)
         assert n == 1 and culprits == {e['culprit']['name']} and min(trail) >= 2, (e['no'], n, culprits, trail)
         out.append(entry)

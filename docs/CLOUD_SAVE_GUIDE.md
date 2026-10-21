@@ -66,7 +66,7 @@
 ### 1. Play Console 에 앱 만들기
 
 1. https://play.google.com/console 에서 **앱 만들기**를 누릅니다.
-   - 앱 이름: 온천 여관의 비밀
+   - 앱 이름: 탐정 솔리테어: 세계 사건 수첩 (영어 Detective Solitaire: World Case Files · 일본어 探偵ソリティア：世界の事件手帳)
    - 기본 언어: 한국어
    - 앱/게임: **게임**, 무료/유료 선택
 2. 패키지 이름은 처음 올리는 AAB/APK 의 `com.twotwofam.mystery` 로 정해집니다.

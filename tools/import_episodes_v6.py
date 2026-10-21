@@ -37,6 +37,7 @@ from collections import Counter
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # python -P 실행 대비
 import sanitize_episodes as sanitize
 import cozy_rules
+import episode_text                                         # tools/episode_text.py (용의자 배경 · 사건 개요 틀 — 번역과 같이 씀)
 import episode_art
 import deduction_clues                                      # tools/deduction_clues.py (추리형 단서 20개 — 논리 그리드 데이터가 없을 때)
 import logic_clues                                          # tools/logic_clues.py (조사 교정 fix_josa)
@@ -47,6 +48,10 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 DEFAULT_SRC = 'data/TriPeaks_300_Episodes_V6_Sorted.csv'
 LOGIC_SRC = 'data/V6_300_Episodes_Logic_Clues.json'   # 논리 그리드 단서 20개 + 단서 21(광고) — 있으면 이 단서를 쓴다
+CONFESSION_SRC = 'data/confessions_rewrite.json'       # 다시 쓴 진범의 고백 { "에피소드 번호": 문장 } — 있으면 원본 고백 대신 그대로 (코지 순화 생략)
+CONFESSIONS = ({int(k): v for k, v in json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), CONFESSION_SRC),
+                                                     encoding='utf-8')).items() if k.isdigit()}
+               if os.path.exists(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), CONFESSION_SRC)) else {})
 ROOT_OUT = 'js/data/episodes.js'
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -362,10 +367,13 @@ def convert(ep, seen_titles, stats):
 
     suspects = []
     for p, portrait in zip(people, portraits):
-        bio = (rng.choice(BIO_REASONS).format(spot=ep['spot'], city=ep['city']) + ' ' + rng.choice(BIO_TRAITS))
+        # 고르는 순서(rng)는 예전과 같게: 이유 6개 · 성격 10개 중 번호만 뽑고, 문장은 공간에 맞는 틀로 (tools/episode_text.py)
+        r = BIO_REASONS.index(rng.choice(BIO_REASONS))
+        t = BIO_TRAITS.index(rng.choice(BIO_TRAITS))
+        bio = episode_text.bio_text(ep['spot'], r, t, 'ko', ep['spot'], ep['city'])
         bio = fix_josa(re.sub(r'(\S+)을 찾았다', lambda m: josa(m.group(1), '을', '를') + ' 찾았다', bio))
         suspects.append(dict(
-            id=p['id'], name=p['name'], age=p['age'], gender=p['gender'], job=p['job'], bio=bio,
+            id=p['id'], name=p['name'], age=p['age'], gender=p['gender'], job=p['job'], bio=bio, bioKey=[r, t],   # bioKey: 번역용 틀 번호
             trait=f"{p['gender']} · {p['age']}세. {bio}",
             attrs=p['attrs'],                      # 프로필로 이미 알려진 속성 (성별 · 나이대) — 추리 대조용
             emoji=emoji_for(p['job']), color=color_for(p['id']), portrait=portrait,
@@ -376,7 +384,7 @@ def convert(ep, seen_titles, stats):
     hints = sanitize.generate_smart_ad_hints(
         [dict(name=p['name'], job=p['job'], age=p['age'], gender=p['gender'], culprit=p['culprit']) for p in people],
         motive_desc)
-    confession = cozy(ep['confession'])
+    confession = CONFESSIONS[no] if no in CONFESSIONS else cozy(ep['confession'])
     return dict(
         episodeId=f'ep{no:03d}',
         no=no,
@@ -454,11 +462,8 @@ def apply_logic(ep, logic, stats):
                    # 정답 (칸 확인 — 힌트권/광고로 ✕·○ 하나를 검증): { 용의자ID: { p: 장소 번호, i: 물건 번호 } }
                    answer={by_name[n]['id']: dict(p=logic['그리드 장소'].index(a['장소']), i=logic['그리드 물건'].index(a['물건']))
                            for n, a in logic['정답'].items()}),
-        intro=logic_clues.fix_josa(
-            f"{ep['place']}에서 한밤중에 기묘한 소동이 벌어졌다. 용의자는 {len(suspects)}명. "
-            f"단서를 모아 수첩의 논리 그리드로 누가 어디에서 무엇을 가졌는지 맞혀 보자. "
-            f"장소는 그리드 왼쪽부터 복도를 따라 한 줄로 이어져 있다. "
-            f"범인은 사건 현장에서 범행 도구를 가진 사람이다.", words),
+        # 첫 문장은 동기별 3가지 (에피소드 번호로 고정), 뒤는 규칙 안내 — tools/episode_text.py
+        intro=logic_clues.fix_josa(episode_text.intro_text(ep['motiveType'], ep['no'], 'ko', ep['place'], len(suspects)), words),
     )
     ep.pop('attributes', None)
     for s in ep['suspects']:

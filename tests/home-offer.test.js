@@ -4,9 +4,11 @@ require('../js/store.js');
 require('../js/energy.js');
 require('../js/economy.js');
 require('../js/shop.js');
+require('../js/billing.js');   // 휴대폰이 아니면 가짜 결제 (바로 지급)
 const assert = require('assert');
 const { TP } = globalThis;
 (async () => {
+  TP.billing.dummyDelayMs = 0;
   const offer = TP.HOME_OFFER;
   const shopIds = [...TP.SHOP_PRODUCTS, ...TP.SPECIAL_OFFERS].map(p => p.id);
   assert(!shopIds.includes(offer.id), '상점 · 상점 특가 목록에 없는 홈 전용 상품');

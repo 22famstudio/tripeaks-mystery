@@ -3,13 +3,15 @@
 //   추리 진행: settleWin에서 단서 획득 → 20개가 모이면 탐정 수첩(notebook.js)이 강제로 열려 범인 지목
 (function () {
   const { TP } = globalThis;
+  const T = (s, p) => (TP.t ? TP.t(s, p) : p ? s.replace(/\{(\w+)\}/g, (m, k) => (k in p ? p[k] : m)) : s);   // 다국어 (js/i18n.js)
+  TP.i18n?.applyStatic();   // tripeaks.html 고정 문구 번역 (한국어면 아무것도 안 함)
   const $ = sel => document.querySelector(sel);
   const store = TP.store;
   const randomSeed = () => 1 + Math.floor(Math.random() * 1e9);
 
   const { openModal, closeModal, showDialog, toast, confettiAt, bigCelebration, bump } = TP.ui;
 
-  const tierBadge = tier => `<span class="tier-badge tier-${tier.id}">${tier.name}</span>`;
+  const tierBadge = tier => `<span class="tier-badge tier-${tier.id}">${T(tier.name)}</span>`;
 
   // =====================================================================
   // 게임 보드 + 현재 판(run)
@@ -45,8 +47,8 @@
     fx.innerHTML = `
       <img class="ct-art" src="${TP.ASSETS.uiChapterTransition}" alt="">
       <div class="ct-body">
-        <small class="ct-chapter">CHAPTER ${idx >= 0 ? idx + 1 : ''}${change.from ? ` · ${esc(change.from)} 수사 완료` : ''}</small>
-        <h2>새로운 대륙 <b>[${esc(change.to)}]</b>로 이동합니다!</h2>
+        <small class="ct-chapter">CHAPTER ${idx >= 0 ? idx + 1 : ''}${change.from ? ` · ${T('{c} 수사 완료', { c: esc(change.from) })}` : ''}</small>
+        <h2>${T('새로운 대륙 <b>[{c}]</b>로 이동합니다!', { c: esc(change.to) })}</h2>
         ${ep ? `<p class="ct-ep">EP${ep.no} · ${esc(ep.title)}</p>` : ''}
         <ol class="ct-route">${chapters.map((c, i) =>
           `<li class="${i < idx ? 'done' : i === idx ? 'now' : ''}"><i></i><span>${esc(c.continent)}</span></li>`).join('')}</ol>
@@ -99,13 +101,13 @@
       `<span class="pip ${streak >= t.at ? 'on' : ''} ${t.reward ? 'gift' : 'buff'}">${t.reward ? `<img src="${TP.ASSETS.iconGift}" alt="">` : '⚡'}<small>${t.at}</small></span>`).join('');
     return `
       <div class="streak-meter">
-        <div class="streak-title">🔥 <b>${streak}</b>연승${streak >= TP.STREAK.CAP ? ' · 최고 단계' : ''}</div>
+        <div class="streak-title">🔥 ${T('<b>{n}</b>연승', { n: streak })}${streak >= TP.STREAK.CAP ? T(' · 최고 단계') : ''}</div>
         <div class="pips">${pips}</div>
-        ${buffs ? `<div class="streak-buffs">⚡ 자동 장착 버프: ${buffs}</div>` : ''}
+        ${buffs ? `<div class="streak-buffs">${T('⚡ 자동 장착 버프: {b}', { b: buffs })}</div>` : ''}
         <div class="streak-next">${nextGift
-          ? `🎁 ${nextGift.at}연승까지 <b>${nextGift.at - streak}승</b> → ${TP.describeStreakReward(nextGift.reward)}`
-          : '최고 단계 버프 유지 중 (20연승 이후 추가 보상 없음)'}${nextBuff && nextBuff.at !== (nextGift && nextGift.at)
-          ? `<br>⚡ ${nextBuff.at}연승 버프: ${TP.describeBuffs(nextBuff.buffs)}` : ''}</div>
+          ? T('🎁 {at}연승까지 <b>{left}승</b> → {r}', { at: nextGift.at, left: nextGift.at - streak, r: TP.describeStreakReward(nextGift.reward) })
+          : T('최고 단계 버프 유지 중 (20연승 이후 추가 보상 없음)')}${nextBuff && nextBuff.at !== (nextGift && nextGift.at)
+          ? `<br>${T('⚡ {at}연승 버프: {b}', { at: nextBuff.at, b: TP.describeBuffs(nextBuff.buffs) })}` : ''}</div>
       </div>`;
   }
 
@@ -151,16 +153,16 @@
     $('#entryTier').className = `ev2-tier tier-${tier.id}`;
     $('#entrySeed').textContent = deal.seed;
     const clueNote = !ep || !stage ? ''
-      : !isCurrent ? '해결한 사건 다시하기'
-      : stage <= s.episode.cleared ? '단서 획득 완료 · 골드 · 별만'
-      : `🔍 클리어하면 단서 #${stage}`;
+      : !isCurrent ? T('해결한 사건 다시하기')
+      : stage <= s.episode.cleared ? T('단서 획득 완료 · 골드 · 별만')
+      : T('🔍 클리어하면 단서 #{n}', { n: stage });
     const best = ep && stage ? (s.stageStars[ep.episodeId]?.[stage] || 0) : 0;
     const epStars = ep ? Object.values(s.stageStars[ep.episodeId] || {}).reduce((a, b) => a + b, 0) : 0;
     $('#entryStars').innerHTML = ep && stage ? `
       <span class="es-line">
         ${clueNote ? `<span class="es-clue">${clueNote}</span>` : ''}
-        <span class="es-best" aria-label="최고 기록 별 ${best}개">${[1, 2, 3].map(i => `<i class="${i <= best ? 'on' : ''}">${STAR_SVG}</i>`).join('')}</span>
-        <span class="es-total">이 사건 <b>★</b> ${epStars}/${ep.clues.length * 3}</span>
+        <span class="es-best" aria-label="${T('최고 기록 별 {n}개', { n: best })}">${[1, 2, 3].map(i => `<i class="${i <= best ? 'on' : ''}">${STAR_SVG}</i>`).join('')}</span>
+        <span class="es-total">${T('이 사건')} <b>★</b> ${epStars}/${ep.clues.length * 3}</span>
       </span>
       <span class="es-rule">${starRuleHtml(TP.starTarget(deal))}</span>` : '';
 
@@ -177,10 +179,10 @@
       btn.innerHTML = `
         <img class="mult-bg" src="${A}${selected ? 'card_mult_gold' : locked ? 'card_mult_locked' : 'card_mult_blue'}.webp" alt="">
         <span class="mult-x">×${o.multiplier}</span>
-        <span class="mult-fee"><img src="${A}icon_gold.webp" alt="골드">${o.cost.toLocaleString()}</span>
-        <span class="mult-reward">보상 ${o.rewardMin.toLocaleString()}~${o.rewardMax.toLocaleString()}</span>
-        ${locked ? `<span class="mult-lock">LV.${o.unlockLevel} 해제</span>`
-          : poor ? `<span class="mult-lock poor">골드 부족</span>` : ''}`;
+        <span class="mult-fee"><img src="${A}icon_gold.webp" alt="${T('골드')}">${o.cost.toLocaleString()}</span>
+        <span class="mult-reward">${T('보상 {a}~{b}', { a: o.rewardMin.toLocaleString(), b: o.rewardMax.toLocaleString() })}</span>
+        ${locked ? `<span class="mult-lock">${T('LV.{n} 해제', { n: o.unlockLevel })}</span>`
+          : poor ? `<span class="mult-lock poor">${T('골드 부족')}</span>` : ''}`;
       btn.onclick = () => selectMult(o.multiplier);
       return btn;
     }));
@@ -199,16 +201,16 @@
     // '하트 충전' · '골드 충전' 은 Luckiest Guy 풍 글씨 그림 (txt_heart_charge / txt_gold_charge.webp, Higgsfield)
     const goLabel = $('#entryGoLabel');
     goLabel.classList.toggle('txt-img', noEnergy || poor);
-    goLabel.innerHTML = noEnergy ? `<img src="${A}txt_heart_charge.webp" alt="하트 충전">`
-      : poor ? `<img src="${A}txt_gold_charge.webp" alt="골드 충전">` : 'PLAY';
+    goLabel.innerHTML = noEnergy ? `<img src="${TP.i18n ? TP.i18n.img(A + 'txt_heart_charge.webp') : A + 'txt_heart_charge.webp'}" alt="${T('하트 충전')}">`
+      : poor ? `<img src="${TP.i18n ? TP.i18n.img(A + 'txt_gold_charge.webp') : A + 'txt_gold_charge.webp'}" alt="${T('골드 충전')}">` : 'PLAY';
     // PLAY 말풍선: 입장 비용 (골드 × 배수 입장료 + 하트 1 — 무한 하트면 하트 생략)
-    $('#entryCost').innerHTML = `<img src="${A}icon_gold.webp" alt="골드"><b>×${m.cost.toLocaleString()}</b>${st.infinite ? '' : `<i>+</i><span class="ev2-heart"><img src="${A}icon_heart.webp" alt="하트"><b>1</b></span>`}`;
+    $('#entryCost').innerHTML = `<img src="${A}icon_gold.webp" alt="${T('골드')}"><b>×${m.cost.toLocaleString()}</b>${st.infinite ? '' : `<i>+</i><span class="ev2-heart"><img src="${A}icon_heart.webp" alt="${T('하트')}"><b>1</b></span>`}`;
 
     $('#entryCancel').textContent = 'BACK';
     $('#entryNote').textContent =
-      activeRun() ? `새로 입장하면 진행 중인 판은 실패 처리돼요${s.winStreak ? ` (🔥 ${s.winStreak}연승 초기화)` : ''}.`
-      : noEnergy ? `❤️ 하트가 없어요 · 다음 충전까지 ${TP.formatDuration(st.nextInMs)}`
-      : selectedX === 4 ? '하이리스크 하이리턴! 클리어하면 보상이 4배예요.'
+      activeRun() ? T('새로 입장하면 진행 중인 판은 실패 처리돼요{s}.', { s: s.winStreak ? T(' (🔥 {n}연승 초기화)', { n: s.winStreak }) : '' })
+      : noEnergy ? T('❤️ 하트가 없어요 · 다음 충전까지 {t}', { t: TP.formatDuration(st.nextInMs) })
+      : selectedX === 4 ? T('하이리스크 하이리턴! 클리어하면 보상이 4배예요.')
       : '';
   }
 
@@ -244,7 +246,7 @@
     if (!bet.ok) {
       if (bet.reason === 'NO_LIFE_REMAINING') openEnergyPanel();
       else if (bet.reason === 'INSUFFICIENT_GOLD') noGoldPopup(multOption(selectedX));
-      else toast(bet.reason === 'LEVEL_TOO_LOW' ? `🔒 Lv.${bet.requiredLevel}에 해금돼요` : '입장할 수 없어요');
+      else toast(bet.reason === 'LEVEL_TOO_LOW' ? T('🔒 Lv.{n}에 해금돼요', { n: bet.requiredLevel }) : T('입장할 수 없어요'));
       return;
     }
     const { deal, tier, stage, ep } = pending;
@@ -265,7 +267,7 @@
     if (buffs.extraCards) view.addCards(buffs.extraCards);
     saveRunState();
     const buffText = TP.describeBuffs(buffs);
-    toast(`입장료 🪙 -${run.fee} (×${run.mult})${buffText ? `<br><small>🔥 연승 버프 장착: ${buffText}</small>` : ''}`);
+    toast(`${T('입장료 🪙 -{fee} (×{m})', { fee: run.fee, m: run.mult })}${buffText ? `<br><small>${T('🔥 연승 버프 장착: {b}', { b: buffText })}</small>` : ''}`);
     refreshItemButtons();
     if (run.mult === 4) setTimeout(() => bigCelebration(2), 100);
   };
@@ -275,15 +277,15 @@
     const have = store.state.gold;
     const lower = multOptions().filter(o => o.unlocked && o.multiplier < m.multiplier && o.cost <= have).pop();
     const choice = await showDialog({
-      title: '골드가 부족해요',
+      title: T('골드가 부족해요'),
       className: 'no-gold',
       body: `
-        <p>×${m.multiplier} 판돈을 낼 골드가 부족해서 시작할 수 없어요.</p>
-        <div class="ng-row"><span>필요</span><b>🪙 ${m.cost.toLocaleString()}</b><span>보유</span><b class="have">🪙 ${have.toLocaleString()}</b></div>`,
+        <p>${T('×{m} 판돈을 낼 골드가 부족해서 시작할 수 없어요.', { m: m.multiplier })}</p>
+        <div class="ng-row"><span>${T('필요')}</span><b>🪙 ${m.cost.toLocaleString()}</b><span>${T('보유')}</span><b class="have">🪙 ${have.toLocaleString()}</b></div>`,
       buttons: [
-        ...(lower ? [{ label: `×${lower.multiplier}로 바꾸기 · 🪙 ${lower.cost}`, value: 'lower' }] : []),
-        { label: '🛒 상점에서 골드 충전', value: 'shop', cls: 'primary' },
-        { label: '닫기', value: 'close', cls: 'ghost' },
+        ...(lower ? [{ label: T('×{m}로 바꾸기 · 🪙 {c}', { m: lower.multiplier, c: lower.cost }), value: 'lower' }] : []),
+        { label: T('🛒 상점에서 골드 충전'), value: 'shop', cls: 'primary' },
+        { label: T('닫기'), value: 'close', cls: 'ghost' },
       ],
     });
     if (choice === 'shop') openShop({ tab: 'coin' });
@@ -407,12 +409,12 @@
 
     // 클리어 화면 (INVESTIGATION SUCCESS 배지 · 획득 골드 + 연승 · 연승 보너스 말풍선 · HOME / REPLAY / NEXT STAGE)
     const notes = [
-      r.levelUp.leveledUp && `레벨 업! <b>Lv.${r.levelUp.newLevel}</b>${titleChanged ? ` · 새 칭호 <b>${TP.titleOf(after)}</b>` : ''}`,
-      r.levelUp.costumeChanged && `👔 새 코스튬: <b>${TP.costumeNameOf(after)}</b>`,
-      feeAfter > feeBefore && `📈 레벨 구간 상승 · 입장료 ${feeBefore}→${feeAfter}G · 보상 ${range.min}~${range.max}G`,
-      unlocked && `🔓 ×${unlocked.x} 배수가 해금됐어요!`,
-      newTier !== oldTier && `다음 판부터 난이도 ${tierBadge(newTier)}`,
-      !resultMeta.streakCounted && '🔁 이미 단서를 받은 스테이지라 연승은 그대로예요',
+      r.levelUp.leveledUp && `${T('레벨 업!')} <b>Lv.${r.levelUp.newLevel}</b>${titleChanged ? ` · ${T('새 칭호')} <b>${TP.titleOf(after)}</b>` : ''}`,
+      r.levelUp.costumeChanged && `${T('👔 새 코스튬:')} <b>${T(TP.costumeNameOf(after))}</b>`,
+      feeAfter > feeBefore && T('📈 레벨 구간 상승 · 입장료 {a}→{b}G · 보상 {min}~{max}G', { a: feeBefore, b: feeAfter, min: range.min, max: range.max }),
+      unlocked && T('🔓 ×{x} 배수가 해금됐어요!', { x: unlocked.x }),
+      newTier !== oldTier && `${T('다음 판부터 난이도')} ${tierBadge(newTier)}`,
+      !resultMeta.streakCounted && T('🔁 이미 단서를 받은 스테이지라 연승은 그대로예요'),
     ].filter(Boolean);
     const choice = await showResultScreen({
       gold: resultMeta.goldEarned,
@@ -454,16 +456,16 @@
     page.style.zIndex = 98700;
     page.innerHTML = `
       <div class="ps-rays" aria-hidden="true"></div>
-      <div class="ps-body" role="dialog" aria-modal="true" aria-label="50연승 프레스티지 보상">
+      <div class="ps-body" role="dialog" aria-modal="true" aria-label="${T('50연승 프레스티지 보상')}">
         <h2 class="ps-title">50 WIN STREAK ACHIEVED!</h2>
         <p class="ps-sub">${isBack ? 'NEW CARD BACK UNLOCKED!' : 'ALL CARD BACKS COLLECTED!'}</p>
         ${isBack
           ? `<div class="ps-card"><img src="${result.back.src}" alt="${result.back.name}"></div>
-             <p class="ps-name">새 카드 뒷면: <b>${result.back.name}</b> (${TP.cardBacks.owned().length}/${TP.CARD_BACKS.length}) · 바로 장착했어요</p>`
+             <p class="ps-name">${T('새 카드 뒷면: <b>{name}</b> ({a}/{b}) · 바로 장착했어요', { name: result.back.name, a: TP.cardBacks.owned().length, b: TP.CARD_BACKS.length })}</p>`
           : `<div class="ps-fallback">${TP.describeStreakReward(result.reward)}</div>
-             <p class="ps-name">카드 뒷면 ${TP.CARD_BACKS.length}종을 모두 모아 대체 보상을 받았어요!</p>`}
-        <button class="ps-ok" data-nosfx aria-label="확인"><img src="game_assets/btn_collect.webp" alt=""></button>
-        <p class="ps-reset">🔥 연승이 0부터 다시 시작돼요. 다음 50연승에 도전!</p>
+             <p class="ps-name">${T('카드 뒷면 {n}종을 모두 모아 대체 보상을 받았어요!', { n: TP.CARD_BACKS.length })}</p>`}
+        <button class="ps-ok" data-nosfx aria-label="${T('확인')}"><img src="game_assets/btn_collect.webp" alt=""></button>
+        <p class="ps-reset">${T('🔥 연승이 0부터 다시 시작돼요. 다음 50연승에 도전!')}</p>
       </div>`;
     TP.ui.root().append(page);
     TP.audio.sfx('success');
@@ -483,36 +485,36 @@
   function showResultScreen({ gold, exp = 0, stars = 0, newBest = false, starTarget = 1, base = 0, mult = 1, streakGold = 0, streak, streakReward, notes = [], accusing }) {
     const A = 'game_assets/';
     const bonusParts = streakReward ? [
-      streakReward.life && `<img src="${A}icon_heart.webp" alt="하트"><b>+${streakReward.life}</b>`,
-      streakReward.hint && `<img src="${A}icon_hint_ticket.webp" alt="힌트권"><b>+${streakReward.hint}</b>`,
-      streakReward.gold && `<img src="${A}icon_gold.webp" alt="골드"><b>+${streakReward.gold}</b>`,
-      streakReward.undo && `<img src="${A}btn_booster_undo.webp" alt="되돌리기"><b>+${streakReward.undo}</b>`,
-      streakReward.wild && `<img src="${A}card_wild.webp" alt="와일드"><b>+${streakReward.wild}</b>`,
-      streakReward.prestigeResult?.type === 'cardBack' && `<img class="rs-back" src="${streakReward.prestigeResult.back.src}" alt="카드 뒷면"><b>NEW</b>`,
+      streakReward.life && `<img src="${A}icon_heart.webp" alt="${T('하트')}"><b>+${streakReward.life}</b>`,
+      streakReward.hint && `<img src="${A}icon_hint_ticket.webp" alt="${T('힌트권')}"><b>+${streakReward.hint}</b>`,
+      streakReward.gold && `<img src="${A}icon_gold.webp" alt="${T('골드')}"><b>+${streakReward.gold}</b>`,
+      streakReward.undo && `<img src="${A}btn_booster_undo.webp" alt="${T('되돌리기')}"><b>+${streakReward.undo}</b>`,
+      streakReward.wild && `<img src="${A}card_wild.webp" alt="${T('와일드')}"><b>+${streakReward.wild}</b>`,
+      streakReward.prestigeResult?.type === 'cardBack' && `<img class="rs-back" src="${streakReward.prestigeResult.back.src}" alt="${T('카드 뒷면')}"><b>NEW</b>`,
     ].filter(Boolean) : [];
     const tiles = [
-      { value: 'lobby', cls: 'red', icon: 'icon_home', label: 'btn_home', alt: '홈' },
-      { value: 'retry', cls: 'orange', icon: 'icon_replay', label: 'btn_replay', alt: '같은 판 다시' },
+      { value: 'lobby', cls: 'red', icon: 'icon_home', label: 'btn_home', alt: T('홈') },
+      { value: 'retry', cls: 'orange', icon: 'icon_replay', label: 'btn_replay', alt: T('같은 판 다시') },
       accusing
-        ? { value: 'accuse', cls: 'green hot', icon: 'icon_play', label: 'btn_continue', alt: '범인 지목하러 가기', caption: '범인 지목!' }
-        : { value: 'next', cls: 'green', icon: 'icon_play', label: 'btn_nextstage', alt: '다음 스테이지' },
+        ? { value: 'accuse', cls: 'green hot', icon: 'icon_play', label: 'btn_continue', alt: T('범인 지목하러 가기'), caption: T('범인 지목!') }
+        : { value: 'next', cls: 'green', icon: 'icon_play', label: 'btn_nextstage', alt: T('다음 스테이지') },
     ];
     const page = document.createElement('div');
     page.className = 'result-screen';
     page.style.zIndex = 98500;
     page.innerHTML = `
-      <div class="rs-panel" role="dialog" aria-modal="true" aria-label="스테이지 클리어">
+      <div class="rs-panel" role="dialog" aria-modal="true" aria-label="${T('스테이지 클리어')}">
         <img class="rs-badge" src="${TP.ASSETS.popupStageClear}" alt="INVESTIGATION SUCCESS!">
         ${bonusParts.length ? `<div class="rs-bonus"><small>BONUS</small><span>${bonusParts.join('')}</span></div>` : ''}
         <div class="rs-gold">
-          <img src="${A}icon_gold.webp" alt="골드">
-          <b data-roll="${gold}">+0</b>${streak ? `<i>+</i><b class="rs-streak">${streak}연승!</b>` : ''}
+          <img src="${A}icon_gold.webp" alt="${T('골드')}">
+          <b data-roll="${gold}">+0</b>${streak ? `<i>+</i><b class="rs-streak">${T('{n}연승!', { n: streak })}</b>` : ''}
         </div>
-        ${stars ? `<div class="rs-stars" data-no-icons aria-label="별 ${stars}개" title="★ 통과 · ★★ 이어하기 없이 통과 · ★★★ 이어하기 없이 덱 ${starTarget}장 이상 남기고 통과">
+        ${stars ? `<div class="rs-stars" data-no-icons aria-label="${T('별 {n}개', { n: stars })}" title="${T('★ 통과 · ★★ 이어하기 없이 통과 · ★★★ 이어하기 없이 덱 {n}장 이상 남기고 통과', { n: starTarget })}">
           ${[1, 2, 3].map(i => `<i class="${i <= stars ? 'on' : ''}" style="--d:${i}">${STAR_SVG}</i>`).join('')}${newBest ? '<b>NEW BEST!</b>' : ''}
         </div>` : ''}
         ${base || exp ? `<div class="rs-sub">
-          ${base ? `<p class="rs-calc">기본 보상 <b>${base}</b> × <b class="x${mult}">${mult}배</b>${streakGold ? ` + 연승 보너스 <b>${streakGold}</b>` : ''}</p>` : ''}
+          ${base ? `<p class="rs-calc">${T('기본 보상')} <b>${base}</b> × <b class="x${mult}">${T('{n}배', { n: mult })}</b>${streakGold ? ` + ${T('연승 보너스')} <b>${streakGold}</b>` : ''}</p>` : ''}
           ${exp ? `<div class="rs-exp"><span>EXP</span><b data-roll="${exp}">+0</b></div>` : ''}
         </div>` : ''}
         ${notes.length ? `<div class="rs-notes">${notes.map(n => `<p>${n}</p>`).join('')}</div>` : ''}
@@ -574,22 +576,22 @@
     page.className = 'result-screen fail';
     page.style.zIndex = 98500;
     page.innerHTML = `
-      <div class="rs-panel" role="dialog" aria-modal="true" aria-label="스테이지 실패">
+      <div class="rs-panel" role="dialog" aria-modal="true" aria-label="${T('스테이지 실패')}">
         <h2 class="rs-fail-title">STAGE FAILED</h2>
         <div class="rs-gold">
-          <img src="${A}icon_gold.webp" alt="골드">
+          <img src="${A}icon_gold.webp" alt="${T('골드')}">
           <b>+0</b>
         </div>
-        <p class="rs-calc">입장료 <b>${fee.toLocaleString()}</b> 골드(×${mult})가 소진됐어요</p>
-        ${lostStreak ? `<p class="rs-calc lost">🔥 ${lostStreak}연승이 끊겼어요</p>
-          <button class="rs-save" data-value="save">🔥 🪙 ${cost}으로 ${lostStreak}연승 지키기</button>` : ''}
-        <p class="rs-tip">✅ 이 판은 반드시 깰 수 있는 판이에요. ${deal && deal.solution ? '<button class="rs-solution" data-solution>🔍 정답 수순 보기</button>' : '다시 도전해 보세요!'}</p>
+        <p class="rs-calc">${T('입장료 <b>{fee}</b> 골드(×{m})가 소진됐어요', { fee: fee.toLocaleString(), m: mult })}</p>
+        ${lostStreak ? `<p class="rs-calc lost">${T('🔥 {n}연승이 끊겼어요', { n: lostStreak })}</p>
+          <button class="rs-save" data-value="save">${T('🔥 🪙 {c}으로 {n}연승 지키기', { c: cost, n: lostStreak })}</button>` : ''}
+        <p class="rs-tip">${T('✅ 이 판은 반드시 깰 수 있는 판이에요.')} ${deal && deal.solution ? `<button class="rs-solution" data-solution>${T('🔍 정답 수순 보기')}</button>` : T('다시 도전해 보세요!')}</p>
         <div class="rs-actions two">
-          <button class="rs-tile red" data-value="lobby" data-nosfx aria-label="로비로 가기">
+          <button class="rs-tile red" data-value="lobby" data-nosfx aria-label="${T('로비로 가기')}">
             <img class="rs-icon" src="${A}icon_home.webp" alt="">
             <img class="rs-label" src="${A}btn_home.webp" alt="">
           </button>
-          <button class="rs-tile orange hot" data-value="retry" data-nosfx aria-label="재도전">
+          <button class="rs-tile orange hot" data-value="retry" data-nosfx aria-label="${T('재도전')}">
             <img class="rs-icon" src="${A}icon_replay.webp" alt="">
             <img class="rs-label" src="${A}btn_replay.webp" alt="">
           </button>
@@ -625,20 +627,20 @@
   async function showSolution(deal) {
     let drawIdx = 0;
     const steps = deal.solution.map(m => (m.type === 'draw'
-      ? `<li class="sol-step draw"><small>덱</small>${cardChip(deal.pile[drawIdx++])}</li>`
-      : `<li class="sol-step"><small>보드</small>${cardChip(deal.board[m.slot])}</li>`));
+      ? `<li class="sol-step draw"><small>${T('덱')}</small>${cardChip(deal.pile[drawIdx++])}</li>`
+      : `<li class="sol-step"><small>${T('보드')}</small>${cardChip(deal.board[m.slot])}</li>`));
     for (;;) {
       const all = solutionUnlocked.has(deal.seed);
       const shown = all ? steps : steps.slice(0, SOLUTION_FREE_STEPS);
       const choice = await showDialog({
-        title: '정답 수순',
+        title: T('정답 수순'),
         className: 'solution',
         body: `
-          <p class="small">시작 카드 ${cardChip(deal.startCard)} 에서 출발해 이 순서대로 내면 반드시 클리어돼요. (총 ${steps.length}수)</p>
-          <ol class="sol-list">${shown.join('')}${all ? '' : `<li class="sol-more">… ${steps.length - shown.length}수 더</li>`}</ol>`,
+          <p class="small">${T('시작 카드 {card} 에서 출발해 이 순서대로 내면 반드시 클리어돼요. (총 {n}수)', { card: cardChip(deal.startCard), n: steps.length })}</p>
+          <ol class="sol-list">${shown.join('')}${all ? '' : `<li class="sol-more">… ${T('{n}수 더', { n: steps.length - shown.length })}</li>`}</ol>`,
         buttons: [
-          ...(all ? [] : [{ label: '📺 광고 보고 전체 수순 보기', value: 'ad', cls: 'primary' }]),
-          { label: '닫기', value: 'close', cls: all ? 'primary' : 'ghost' },
+          ...(all ? [] : [{ label: T('📺 광고 보고 전체 수순 보기'), value: 'ad', cls: 'primary' }]),
+          { label: T('닫기'), value: 'close', cls: all ? 'primary' : 'ghost' },
         ],
       });
       if (choice !== 'ad') return;
@@ -656,7 +658,7 @@
       page.innerHTML = `
         <img class="win-bg" src="${TP.ASSETS.uiWinPage}" alt="">
         <span class="win-amount">+${gold.toLocaleString()}</span>
-        <button class="win-collect" aria-label="보상 받기 (COLLECT)"></button>`;
+        <button class="win-collect" aria-label="${T('보상 받기 (COLLECT)')}"></button>`;
       const done = () => {
         page.classList.add('out');
         setTimeout(() => { page.remove(); resolve(); }, 250);
@@ -682,21 +684,21 @@
   async function offerContinue() {
     const s = store.state;
     const { cost, cards } = TP.CONTINUE_OFFER;
-    const loss = s.winStreak ? `입장료 ${run.fee} 골드와 🔥 ${s.winStreak}연승이` : `입장료 ${run.fee} 골드가`;
+    const loss = s.winStreak ? T('입장료 {fee} 골드와 🔥 {n}연승이', { fee: run.fee, n: s.winStreak }) : T('입장료 {fee} 골드가', { fee: run.fee });
     const choice = await showDialog({
-      title: '카드가 부족합니다!',
+      title: T('카드가 부족합니다!'),
       className: 'continue',
       body: `
-        <p class="continue-q">계속하시겠습니까?</p>
-        <div class="remaining-big">남은 카드 <b>${view.game.remaining}</b>장</div>
-        <p class="small">지금 포기하면 ${loss} 사라져요.</p>`,
+        <p class="continue-q">${T('계속하시겠습니까?')}</p>
+        <div class="remaining-big">${T('남은 카드 <b>{n}</b>장', { n: view.game.remaining })}</div>
+        <p class="small">${T('지금 포기하면 {loss} 사라져요.', { loss })}</p>`,
       buttons: [
-        { label: `<img class="btn-card" src="${TP.plusCardImage(cards)}" alt="">🪙 ${cost} 지불하고 +${cards}장 뽑기 <small>${s.gold < cost ? '(골드 부족)' : '(첫 장은 바로 낼 수 있는 카드)'}</small>`, value: 'buy', cls: 'primary hot' },
+        { label: `<img class="btn-card" src="${TP.plusCardImage(cards)}" alt="">${T('🪙 {c} 지불하고 +{n}장 뽑기', { c: cost, n: cards })} <small>${s.gold < cost ? T('(골드 부족)') : T('(첫 장은 바로 낼 수 있는 카드)')}</small>`, value: 'buy', cls: 'primary hot' },
         ...(view.game.canGrantAdCards()
-          ? [{ label: `<img class="btn-card" src="${TP.plusCardImage(TP.AD_REVIVE_CARDS)}" alt="">📺 광고 보고 +${TP.AD_REVIVE_CARDS}장 <small>(판당 1회)</small>`, value: 'ad' }] : []),
-        { label: `★ 와일드카드 사용하기 <span class="pill">${s.wildcardCount}</span>`, value: 'wild' },
-        { label: `↶ 되돌리기 <span class="pill">${s.undoCount}</span>`, value: 'undo' },
-        { label: '포기하기', value: 'giveup', cls: 'ghost' },
+          ? [{ label: `<img class="btn-card" src="${TP.plusCardImage(TP.AD_REVIVE_CARDS)}" alt="">${T('📺 광고 보고 +{n}장', { n: TP.AD_REVIVE_CARDS })} <small>${T('(판당 1회)')}</small>`, value: 'ad' }] : []),
+        { label: `${T('★ 와일드카드 사용하기')} <span class="pill">${s.wildcardCount}</span>`, value: 'wild' },
+        { label: `${T('↶ 되돌리기')} <span class="pill">${s.undoCount}</span>`, value: 'undo' },
+        { label: T('포기하기'), value: 'giveup', cls: 'ghost' },
       ],
     });
     if (!activeRun()) return;
@@ -709,18 +711,18 @@
 
   function buyContinue() {
     const { cost, cards } = TP.CONTINUE_OFFER;
-    if (!store.spend('gold', cost)) return askShop('골드가', 'coin');
+    if (!store.spend('gold', cost)) return askShop(T('골드가 없어요'), 'coin');
     view.buyCards(cards);                       // 첫 장은 지금 바로 낼 수 있는 카드 (사도 소용없는 5장 방지)
     run.continued = true;                       // 별 등급: 이어하기를 쓰면 ★1
     TP.audio.sfx('plus');
-    toast(`🂠 덱 +${cards}장! 🪙 -${cost}<br><small>첫 장은 바로 이어서 낼 수 있어요</small>`);
+    toast(`${T('🂠 덱 +{n}장!', { n: cards })} 🪙 -${cost}<br><small>${T('첫 장은 바로 이어서 낼 수 있어요')}</small>`);
   }
 
   // 보상형 광고 부활: 덱 +3장 (첫 장은 바로 낼 수 있는 구조 카드)
   async function adRevive() {
     await TP.ui.watchRewardedAd(5);
     if (!activeRun()) return;
-    if (view.grantAdExtraCards(TP.AD_REVIVE_CARDS)) run.continued = true, TP.audio.sfx('plus'), toast(`📺 덱 +${TP.AD_REVIVE_CARDS}장! 첫 장은 바로 이어서 낼 수 있어요`);
+    if (view.grantAdExtraCards(TP.AD_REVIVE_CARDS)) run.continued = true, TP.audio.sfx('plus'), toast(T('📺 덱 +{n}장! 첫 장은 바로 이어서 낼 수 있어요', { n: TP.AD_REVIVE_CARDS }));
   }
 
   // 실패 처리: 입장료는 이미 냈으므로 연승만 초기화
@@ -738,16 +740,16 @@
     const choice = await showFailScreen({ fee: run.fee, mult: run.mult, lostStreak, deal: view.deal });
     if (choice === 'save') {
       const r = TP.streak.save();
-      if (r.ok) toast(`🔥 ${r.streak}연승을 지켰어요! 🪙 -${cost}`);
+      if (r.ok) toast(T('🔥 {n}연승을 지켰어요! 🪙 -{c}', { n: r.streak, c: cost }));
       else if (r.reason === 'gold') {
         const go = await TP.ui.confirm({
-          title: '골드가 부족해요',
-          message: `연승 세이브에 필요한 골드가 부족합니다. (필요: ${cost} G / 보유: ${store.state.gold} G)\n골드를 충전할 수 있는 상점으로 이동하시겠습니까?`,
-          okLabel: '상점 이동',
+          title: T('골드가 부족해요'),
+          message: T('연승 세이브에 필요한 골드가 부족합니다. (필요: {need} G / 보유: {have} G)\n골드를 충전할 수 있는 상점으로 이동하시겠습니까?', { need: cost, have: store.state.gold }),
+          okLabel: T('상점 이동'),
         });
         if (go) {
           await openShop({ tab: 'coin' });
-          if (TP.streak.canSave() && TP.streak.save().ok) toast(`🔥 ${lostStreak}연승을 지켰어요!`);
+          if (TP.streak.canSave() && TP.streak.save().ok) toast(T('🔥 {n}연승을 지켰어요!', { n: lostStreak }));
         }
       }
       return openEntry({ seed: run.seed, tierId: run.tierId, stage: run.stage, episodeId: run.episodeId });
@@ -765,13 +767,13 @@
     confettiAt($('#chest'), { particleCount: 40, spread: 60, colors: ['#ffcf5a', '#ff9f43', '#fff'] });
     if (type === 'wild') {
       store.grant({ wild: value });
-      toast(`<img class="toast-card" src="${TP.ASSETS.cardWild}" alt="">🎁 ${target}콤보 달성! 와일드카드 +${value}`);
+      toast(`<img class="toast-card" src="${TP.ASSETS.cardWild}" alt="">${T('🎁 {t}콤보 달성! 와일드카드 +{v}', { t: target, v: value })}`);
     } else if (type === 'undo') {
       store.grant({ undo: value });
-      toast(`<img class="toast-card" src="${TP.ASSETS.btnUndo}" alt="">🎁 ${target}콤보 달성! 되돌리기 +${value}`);
+      toast(`<img class="toast-card" src="${TP.ASSETS.btnUndo}" alt="">${T('🎁 {t}콤보 달성! 되돌리기 +{v}', { t: target, v: value })}`);
     } else {
       TP.audio.sfx('plus');
-      toast(`<img class="toast-card" src="${TP.plusCardImage(value)}" alt="">🎁 ${target}콤보 달성! 덱 +${value}장`);
+      toast(`<img class="toast-card" src="${TP.plusCardImage(value)}" alt="">${T('🎁 {t}콤보 달성! 덱 +{v}장', { t: target, v: value })}`);
     }
   }
 
@@ -779,10 +781,10 @@
   // 인게임 아이템
   // =====================================================================
   async function useUndo() {
-    if (!activeRun()) return toast('진행 중인 게임이 없어요');
+    if (!activeRun()) return toast(T('진행 중인 게임이 없어요'));
     if (!view.ready) return;
-    if (!run.freeUndo && store.state.undoCount < 1) return askShop('되돌리기가', 'chance');
-    if (!view.game.canUndo()) return toast('되돌릴 수 있는 수가 없어요');
+    if (!run.freeUndo && store.state.undoCount < 1) return askShop(T('되돌리기가 없어요'), 'chance');
+    if (!view.game.canUndo()) return toast(T('되돌릴 수 있는 수가 없어요'));
     if (run.freeUndo) run.freeUndo--;      // 연승 버프 무료분부터
     else store.spend('undoCount', 1);
     const move = view.undo();
@@ -790,16 +792,16 @@
       // 무료 와일드였으면 무료분으로, 아이템이었으면 인벤토리로 돌려준다
       if (run.wildSources.pop() === 'free') run.freeWild++;
       else store.grant({ wild: 1 });
-      toast('와일드카드를 돌려받았어요');
+      toast(T('와일드카드를 돌려받았어요'));
     }
     refreshItemButtons();
   }
 
   async function useWild() {
-    if (!activeRun()) return toast('진행 중인 게임이 없어요');
+    if (!activeRun()) return toast(T('진행 중인 게임이 없어요'));
     if (!view.ready) return;
-    if (!run.freeWild && store.state.wildcardCount < 1) return askShop('와일드카드가', 'chance');
-    if (!view.game.canUseWild()) return toast('이미 와일드카드가 액티브 카드예요');
+    if (!run.freeWild && store.state.wildcardCount < 1) return askShop(T('와일드카드가 없어요'), 'chance');
+    if (!view.game.canUseWild()) return toast(T('이미 와일드카드가 액티브 카드예요'));
     if (run.freeWild) { run.freeWild--; run.wildSources.push('free'); }
     else { store.spend('wildcardCount', 1); run.wildSources.push('item'); }
     view.useWild();
@@ -809,11 +811,11 @@
 
   async function askShop(itemWithParticle, tab) {
     const ok = await showDialog({
-      title: `${itemWithParticle} 없어요`,
-      body: '<p>상점에서 구매할까요?</p>',
+      title: itemWithParticle,
+      body: `<p>${T('상점에서 구매할까요?')}</p>`,
       buttons: [
-        { label: '취소', value: false, cls: 'ghost' },
-        { label: '상점 열기', value: true, cls: 'primary' },
+        { label: T('취소'), value: false, cls: 'ghost' },
+        { label: T('상점 열기'), value: true, cls: 'primary' },
       ],
     });
     if (ok) await openShop({ tab });
@@ -874,28 +876,28 @@
     const { MAX, GOLD_REFILL_COST, AD_REFILL_AMOUNT, AD_DAILY_LIMIT } = TP.ENERGY;
     const hearts = Array.from({ length: MAX }, (_, i) =>
       `<img class="${st.infinite ? 'gold' : i < st.energy ? 'on' : 'off'}" src="${A}${st.infinite || i < st.energy ? 'icon_heart' : 'icon_heart_empty'}.webp" alt="">`).join('');
-    const timer = st.infinite ? `무한 하트 남은 시간 <b>${TP.formatDuration(st.infiniteLeftMs)}</b>`
-      : st.full ? '생명력이 가득 찼어요'
-      : `다음 1칸 <b>${TP.formatDuration(st.nextInMs)}</b> · 완충까지 <b>${TP.formatDuration(st.fullInMs)}</b>`;
+    const timer = st.infinite ? T('무한 하트 남은 시간 {t}', { t: `<b>${TP.formatDuration(st.infiniteLeftMs)}</b>` })
+      : st.full ? T('생명력이 가득 찼어요')
+      : T('다음 1칸 {a} · 완충까지 {b}', { a: `<b>${TP.formatDuration(st.nextInMs)}</b>`, b: `<b>${TP.formatDuration(st.fullInMs)}</b>` });
     const page = document.createElement('div');
     page.className = 'en-popup';
     page.style.zIndex = 98600;
     page.innerHTML = `
-      <div class="en-frame" role="dialog" aria-modal="true" aria-label="수사 생명력" data-no-icons>
-        <div class="en-head"><img class="en-heart" src="${A}icon_heart.webp" alt=""><img class="en-title" src="${A}txt_energy_title.webp" alt="수사생명력"></div>
+      <div class="en-frame" role="dialog" aria-modal="true" aria-label="${T('수사 생명력')}" data-no-icons>
+        <div class="en-head"><img class="en-heart" src="${A}icon_heart.webp" alt=""><img class="en-title" src="${TP.i18n ? TP.i18n.img(A + 'txt_energy_title.webp') : A + 'txt_energy_title.webp'}" alt="${T('수사생명력')}"></div>
         <div class="en-body">
           <div class="en-status">
             <div class="en-hearts">${hearts}</div>
-            <p class="en-big">${st.infinite ? `<img src="${A}icon_infinite_heart.webp" alt=""><span>무한 하트</span>` : `<b>${st.energy}</b> / ${MAX}`}</p>
+            <p class="en-big">${st.infinite ? `<img src="${A}icon_infinite_heart.webp" alt=""><span>${T('무한 하트')}</span>` : `<b>${st.energy}</b> / ${MAX}`}</p>
             <p class="en-timer">${timer}</p>
           </div>
           <div class="en-actions">
-            <button class="en-btn blue" data-v="gold" ${st.full ? 'disabled' : ''}><img src="${A}icon_gold.webp" alt="">${GOLD_REFILL_COST} 골드로 즉시 완충</button>
-            <button class="en-btn blue" data-v="ad" ${adCheck.ok ? '' : 'disabled'}><span class="tv">📺</span>광고 보고 +${AD_REFILL_AMOUNT}칸 <small>(오늘 ${st.adsLeftToday}/${AD_DAILY_LIMIT}회 남음)</small></button>
-            <button class="en-btn green" data-v="shop"><img src="${A}icon_infinite_heart.webp" alt="">무한 하트 팩 보기</button>
-            <button class="en-btn red" data-v="close">닫기</button>
+            <button class="en-btn blue" data-v="gold" ${st.full ? 'disabled' : ''}><img src="${A}icon_gold.webp" alt="">${T('{n} 골드로 즉시 완충', { n: GOLD_REFILL_COST })}</button>
+            <button class="en-btn blue" data-v="ad" ${adCheck.ok ? '' : 'disabled'}><span class="tv">📺</span>${T('광고 보고 +{n}칸', { n: AD_REFILL_AMOUNT })} <small>${T('(오늘 {a}/{b}회 남음)', { a: st.adsLeftToday, b: AD_DAILY_LIMIT })}</small></button>
+            <button class="en-btn green" data-v="shop"><img src="${A}icon_infinite_heart.webp" alt="">${T('무한 하트 팩 보기')}</button>
+            <button class="en-btn red" data-v="close">${T('닫기')}</button>
           </div>
-          <p class="en-rule">스테이지 입장 시 1칸 소모 (성공해도 돌아오지 않아요) · 20분마다 1칸 충전</p>
+          <p class="en-rule">${T('스테이지 입장 시 1칸 소모 (성공해도 돌아오지 않아요) · 20분마다 1칸 충전')}</p>
         </div>
       </div>`;
     TP.ui.root().append(page);
@@ -913,19 +915,19 @@
     const choice = await energyPage(st, adCheck);
     if (choice === 'gold') {
       const r = energy.refillWithGold();
-      if (r.ok) toast(`❤️ 수사 생명력 완충! 🪙 -${r.cost}`);
+      if (r.ok) toast(T('❤️ 수사 생명력 완충! 🪙 -{c}', { c: r.cost }));
       else if (r.reason === 'gold') {
         const go = await TP.ui.confirm({
-          title: '골드가 부족해요',
-          message: `생명력 완충에 필요한 골드가 부족합니다. (필요: ${r.cost} G / 보유: ${store.state.gold} G)\n골드를 충전할 수 있는 상점으로 이동하시겠습니까?`,
-          okLabel: '상점 이동',
+          title: T('골드가 부족해요'),
+          message: T('생명력 완충에 필요한 골드가 부족합니다. (필요: {need} G / 보유: {have} G)\n골드를 충전할 수 있는 상점으로 이동하시겠습니까?', { need: r.cost, have: store.state.gold }),
+          okLabel: T('상점 이동'),
         });
         if (go) await openShop({ tab: 'coin' });
       }
     } else if (choice === 'ad') {
       await TP.ui.watchRewardedAd(5);
       const r = energy.refillWithAd();
-      if (r.ok) toast(`❤️ 수사 생명력 +${AD_REFILL_AMOUNT}칸 (${r.energy}/${MAX})`);
+      if (r.ok) toast(T('❤️ 수사 생명력 +{n}칸 ({a}/{b})', { n: AD_REFILL_AMOUNT, a: r.energy, b: MAX }));
     } else if (choice === 'shop') {
       await openShop({ tab: 'chance' });
     }
@@ -977,11 +979,11 @@
     $('#clueDots').innerHTML = clueDotsHtml(cleared, total, !accusing);
     $('#clueCount').textContent = ep ? c.clueText.replace(/^CLUE\s*:\s*/, '') : `${total}/${total}`;
     if (!$('#avatarImg').src.endsWith(p.avatarUrl)) $('#avatarImg').src = p.avatarUrl;
-    $('#profileNick').textContent = TP.settings.get().nickname;
+    $('#profileNick').textContent = T(TP.settings.get().nickname);   // 기본 닉네임 '탐정님' 만 번역됨
 
     const stage = mystery.nextStage();
-    $('#playSub').textContent = accusing ? '🔎 범인 지목!'
-      : ep && stage ? `EP${s.episode.index + 1} · STAGE ${stage}/${total}` : '자유 플레이';
+    $('#playSub').textContent = accusing ? T('🔎 범인 지목!')
+      : ep && stage ? `EP${s.episode.index + 1} · STAGE ${stage}/${total}` : T('자유 플레이');
 
     // 연속 승리 보상 (3 · 5 · 10 · 15 · 20연승)
     const ws = rc.winStreak;
@@ -991,9 +993,9 @@
     const buffs = TP.describeBuffs(TP.streakBuffs(ws.current));
     const nextGift = TP.nextStreakMilestone(ws.current);
     $('#streakTip').innerHTML = `
-      <b>🔥 ${ws.current}연승</b><br>
-      ${buffs ? `⚡ 현재 혜택: ${buffs}` : '아직 연승 혜택이 없어요'}<br>
-      ${nextGift ? `🎁 ${nextGift.at}연승까지 <b>${nextGift.at - ws.current}승</b> → ${TP.describeStreakReward(nextGift.reward)}` : '최고 단계 혜택 유지 중'}`;
+      <b>${T('🔥 {n}연승', { n: ws.current })}</b><br>
+      ${buffs ? T('⚡ 현재 혜택: {b}', { b: buffs }) : T('아직 연승 혜택이 없어요')}<br>
+      ${nextGift ? T('🎁 {at}연승까지 <b>{left}승</b> → {r}', { at: nextGift.at, left: nextGift.at - ws.current, r: TP.describeStreakReward(nextGift.reward) }) : T('최고 단계 혜택 유지 중')}`;
   }
 
   // =====================================================================
@@ -1021,15 +1023,15 @@
     };
     const rewardText = t => {
       const r = t.reward;
-      if (!r) return `${TP.describeBuffs(t.buffs)} 버프`;
+      if (!r) return T('{b} 버프', { b: TP.describeBuffs(t.buffs) });
       const ic = (src, alt) => `<img class="ws-inline" src="${A}${src}" alt="${alt}">`;
       return [
-        r.prestige && `${ic('card_back.webp', '')}카드 뒷면 스킨`,
-        has(r.life) && `<b class="red">${ic('icon_heart.webp', '')}하트 +${amt(r.life)}</b>`,
-        has(r.gold) && `<b class="gold">${ic('icon_gold.webp', '')}${amt(r.gold)}골드</b>`,
-        has(r.undo) && `${ic('btn_booster_undo.webp', '')}되돌리기 +${amt(r.undo)}`,
-        has(r.wild) && `${ic('card_wild.webp', '')}와일드 +${amt(r.wild)}`,
-        has(r.hint) && `${ic('icon_hint_ticket.webp', '')}힌트권 +${amt(r.hint)}`,
+        r.prestige && `${ic('card_back.webp', '')}${T('카드 뒷면 스킨')}`,
+        has(r.life) && `<b class="red">${ic('icon_heart.webp', '')}${T('하트 +{n}', { n: amt(r.life) })}</b>`,
+        has(r.gold) && `<b class="gold">${ic('icon_gold.webp', '')}${T('{n}골드', { n: amt(r.gold) })}</b>`,
+        has(r.undo) && `${ic('btn_booster_undo.webp', '')}${T('되돌리기 +{n}', { n: amt(r.undo) })}`,
+        has(r.wild) && `${ic('card_wild.webp', '')}${T('와일드 +{n}', { n: amt(r.wild) })}`,
+        has(r.hint) && `${ic('icon_hint_ticket.webp', '')}${T('힌트권 +{n}', { n: amt(r.hint) })}`,
       ].filter(Boolean).join(' & ');
     };
     const nodes = tiers.map((t, i) => {
@@ -1039,8 +1041,8 @@
           <div class="ws-top">${state === 'done' ? `<div class="ws-tile claimed"><img src="${rewardIcon(t)}" alt=""><i class="ws-check">✔</i></div>` : ''}</div>
           <div class="ws-num"><b>${t.at}</b>${state === 'locked' ? `<img class="ws-lock" src="${A}icons/lock.webp" alt="">` : ''}</div>
           <div class="ws-bottom">
-            ${state === 'done' ? '<div class="ws-tile stamp"><span>달성 완료</span></div>'
-              : state === 'next' ? '<div class="ws-tile now"><b>진행 중!</b><small>(NEXT)</small></div>'
+            ${state === 'done' ? `<div class="ws-tile stamp"><span>${T('달성 완료')}</span></div>`
+              : state === 'next' ? `<div class="ws-tile now"><b>${T('진행 중!')}</b><small>(NEXT)</small></div>`
               : `<div class="ws-tile future"><img src="${rewardIcon(t)}" alt=""></div>`}
           </div>
         </div>`;
@@ -1062,23 +1064,23 @@
     page.className = 'ws-popup';
     page.style.zIndex = 98700;
     page.innerHTML = `
-      <div class="ws-frame" role="dialog" aria-modal="true" aria-label="연속 승리 보상" data-no-icons>
+      <div class="ws-frame" role="dialog" aria-modal="true" aria-label="${T('연속 승리 보상')}" data-no-icons>
         <img class="ws-cat" src="${A}mascot_cat.webp" alt="">
-        <h2 class="ws-title">${FIRE}<span>연속 승리 보상</span>${FIRE}</h2>
+        <h2 class="ws-title">${FIRE}<span>${T('연속 승리 보상')}</span>${FIRE}</h2>
         <div class="ws-board">
-          <div class="ws-current">${FIRE}<span>현재 <b>${streak}연승</b></span></div>
+          <div class="ws-current">${FIRE}<span>${T('현재 <b>{n}연승</b>', { n: streak })}</span></div>
           <div class="ws-track-wrap">
             <div class="ws-track"><i class="ws-track-fill" style="width:${Math.max(0, Math.min(1, fill)) * 100}%"></i></div>
             ${next ? `<img class="ws-runner" src="${A}icons/fire.webp" alt="" style="left:calc(4% + ${Math.max(0, Math.min(1, fill)) * 92}%)">` : ''}
-            ${next ? `<div class="ws-bubble${nextIdx >= 5 ? ' flip' : ''}" style="--x:${(nextIdx + 0.5) / n}">다음 보상: <b>${next.at}연승</b> 달성 시<br>${rewardText(next)} 획득 가능!</div>` : ''}
+            ${next ? `<div class="ws-bubble${nextIdx >= 5 ? ' flip' : ''}" style="--x:${(nextIdx + 0.5) / n}">${T('다음 보상: <b>{at}연승</b> 달성 시<br>{r} 획득 가능!', { at: next.at, r: rewardText(next) })}</div>` : ''}
             <div class="ws-nodes">${nodes}</div>
           </div>
           <div class="ws-foot">
-            ${nextGift ? `<p class="ws-line">${nextGift.at}연승까지 <b>${nextGift.at - streak}승</b> → ${rewardText({ reward: nextGift.reward, buffs: {} })}</p>` : '<p class="ws-line">모든 연승 보상 달성! 🏆</p>'}
-            ${next ? `<p class="ws-big">${FIRE}<span>다음 보상까지 <b>단 ${left}승</b> 남음!</span></p>` : ''}
+            ${nextGift ? `<p class="ws-line">${T('{at}연승까지 <b>{left}승</b> → {r}', { at: nextGift.at, left: nextGift.at - streak, r: rewardText({ reward: nextGift.reward, buffs: {} }) })}</p>` : `<p class="ws-line">${T('모든 연승 보상 달성! 🏆')}</p>`}
+            ${next ? `<p class="ws-big">${FIRE}<span>${T('다음 보상까지 <b>단 {n}승</b> 남음!', { n: left })}</span></p>` : ''}
           </div>
         </div>
-        <button class="ws-ok" data-nosfx>확인</button>
+        <button class="ws-ok" data-nosfx>${T('확인')}</button>
       </div>`;
     TP.ui.root().append(page);
     TP.audio.sfx('popup');
@@ -1092,8 +1094,8 @@
 
   // 별 기준 안내 (TP.stageStars: 이어하기 쓰면 ★1 · 안 쓰면 ★2 · 안 쓰고 덱 N장 이상 남기면 ★3) — 칩 3개 한 줄
   function starRuleHtml(target) {
-    const deck = target ? `덱 ${target}장 이상 남기고` : '덱을 많이 남기고';
-    return `<span class="sr-row"><b>★</b> 통과</span><span class="sr-row"><b>★★</b> 이어하기 없이 통과</span><span class="sr-row"><b>★★★</b> ${deck} 통과</span>`;
+    const three = target ? T('덱 {n}장 이상 남기고 통과', { n: target }) : T('덱을 많이 남기고 통과');
+    return `<span class="sr-row"><b>★</b> ${T('통과')}</span><span class="sr-row"><b>★★</b> ${T('이어하기 없이 통과')}</span><span class="sr-row"><b>★★★</b> ${three}</span>`;
   }
 
   function showStreakLadder() {
@@ -1110,19 +1112,19 @@
       const cleared = solved ? ep.clues.length : current ? s.episode.cleared : 0;
       return `
         <button class="ep-card ${cls}" data-ep="${i}">
-          <span class="ep-thumb">${cls === 'future' ? `<img class="locked-card" src="${TP.ASSETS.cardLocked}" alt="잠김">`
+          <span class="ep-thumb">${cls === 'future' ? `<img class="locked-card" src="${TP.ASSETS.cardLocked}" alt="${T('잠김')}">`
             : ep.thumb ? `<img src="${ep.thumb}" alt="" loading="lazy">` : `<span class="ep-placeholder">🗂️<small>${ep.country || ''}</small></span>`}
             ${solved ? '<span class="stamp">CASE CLOSED</span>' : cls === 'future' ? '<span class="stamp">🔒</span>' : ''}</span>
           <span class="ep-no">EPISODE ${i + 1}</span>
           <span class="ep-name">${ep.title}</span>
-          <span class="ep-desc">${cls === 'future' ? '이전 사건을 해결하면 열려요' : ep.subtitle}</span>
+          <span class="ep-desc">${cls === 'future' ? T('이전 사건을 해결하면 열려요') : ep.subtitle}</span>
           <span class="ep-progress"><span class="clue-dots">${clueDotsHtml(cleared, ep.clues.length, false)}</span></span>
-          <span class="ep-state">${solved ? '✔ 해결 완료' : current ? `수사 중 · 단서 ${cleared}/${ep.clues.length}` : '잠김'}</span>
+          <span class="ep-state">${solved ? T('✔ 해결 완료') : current ? T('수사 중 · 단서 {a}/{b}', { a: cleared, b: ep.clues.length }) : T('잠김')}</span>
         </button>`;
     });
     const upcoming = TP.EPISODE_ROADMAP.map(r => `
       <div class="ep-card future">
-        <span class="ep-thumb"><img class="locked-card" src="${TP.ASSETS.cardLocked}" alt="출시 예정"></span>
+        <span class="ep-thumb"><img class="locked-card" src="${TP.ASSETS.cardLocked}" alt="${T('출시 예정')}"></span>
         <span class="ep-no">EPISODE ${r.no}</span>
         <span class="ep-name">${r.title}</span>
         <span class="ep-desc">${r.teaser}</span>
@@ -1153,7 +1155,7 @@
 
   function openStages(episodeId) {
     const list = openableEpisodes();
-    if (!list.length) return toast('열 수 있는 사건이 없어요');
+    if (!list.length) return toast(T('열 수 있는 사건이 없어요'));
     stagesEp = list.find(ep => ep.episodeId === episodeId) || (mystery.episode && list.find(ep => ep.episodeId === mystery.episode.episodeId)) || list[list.length - 1];
     renderStages();
     openModal($('#stagesModal'));
@@ -1169,7 +1171,7 @@
     const stars = s.stageStars[ep.episodeId] || {};
     const accusing = isCurrent && mystery.isAccusationPhase();
     $('#stagesTitle').textContent = `EPISODE ${TP.EPISODES.indexOf(ep) + 1}`;
-    $('#stagesSub').textContent = `${ep.title}${isCurrent ? ` · 수사 중 (단서 ${cleared}/${ep.clues.length})` : ' · 해결 완료'}`;
+    $('#stagesSub').textContent = `${ep.title}${isCurrent ? T(' · 수사 중 (단서 {a}/{b})', { a: cleared, b: ep.clues.length }) : T(' · 해결 완료')}`;
     $('#stagesPrev').disabled = idx <= 0;
     $('#stagesNext').disabled = idx >= list.length - 1;
     $('#stageGrid').innerHTML = ep.clues.map((_, i) => {
@@ -1179,19 +1181,19 @@
       const next = isCurrent && n === cleared + 1;
       const cls = done ? 'done' : next ? 'next' : 'locked';
       return `<button class="st-tile ${cls}${best === 3 ? ' perfect' : ''}" data-stage="${n}" ${cls === 'locked' ? 'disabled' : ''}
-          aria-label="스테이지 ${n}${done ? ` · 별 ${best}개` : next ? ' · 다음 스테이지' : ' · 잠김'}">
+          aria-label="${T('스테이지 {n}', { n })}${done ? T(' · 별 {n}개', { n: best }) : next ? T(' · 다음 스테이지') : T(' · 잠김')}">
         <span class="st-no">${n}</span>
         ${done ? `<span class="st-stars">${[1, 2, 3].map(k => `<i class="${k <= best ? 'on' : ''}">${STAR_SVG}</i>`).join('')}</span>`
           : next ? '<span class="st-next">NEXT</span>' : '<span class="st-lock">🔒</span>'}
-        ${done && isCurrent ? '<small class="st-clue">단서</small>' : ''}
+        ${done && isCurrent ? `<small class="st-clue">${T('단서')}</small>` : ''}
       </button>`;
     }).join('');
     const total = episodeStarsOf(ep.episodeId);
     const perfect = Object.values(stars).filter(v => v === 3).length;
     $('#stagesFoot').innerHTML = `<span class="sf-total"><b>★</b> ${total}/${ep.clues.length * 3}</span>
-      <span>별 3개 ${perfect}/${ep.clues.length}스테이지</span>
+      <span>${T('별 3개 {a}/{b}스테이지', { a: perfect, b: ep.clues.length })}</span>
       <span class="sf-rule">${starRuleHtml()}</span>
-      ${accusing ? '<span class="sf-accuse">단서 20개 완료 — 수첩에서 범인을 지목하세요</span>' : ''}`;
+      ${accusing ? `<span class="sf-accuse">${T('단서 20개 완료 — 수첩에서 범인을 지목하세요')}</span>` : ''}`;
   }
 
   $('#stagesClose').onclick = () => closeModal($('#stagesModal'));
@@ -1207,7 +1209,7 @@
 
   // 홈 SPECIAL OFFER: 회차가 끝나면(닫기 · 구매) 10일 동안 버튼째 사라짐, 2회차 뒤엔 영영
   function updateOfferTimer() {
-    $('#offerTimer').textContent = '한정 판매';
+    $('#offerTimer').textContent = T('한정 판매');
     $('#hudOffer').hidden = !TP.homeOfferAvailable();
   }
   setInterval(updateOfferTimer, 1000);
@@ -1255,25 +1257,25 @@
     page.className = 'en-popup';
     page.style.zIndex = 98600;
     page.innerHTML = `
-      <div class="en-frame pause" role="dialog" aria-modal="true" aria-label="일시정지" data-no-icons>
-        <div class="en-head"><img class="en-title" src="${A}txt_pause_title.webp" alt="일시정지"></div>
+      <div class="en-frame pause" role="dialog" aria-modal="true" aria-label="${T('일시정지')}" data-no-icons>
+        <div class="en-head"><img class="en-title" src="${TP.i18n ? TP.i18n.img(A + 'txt_pause_title.webp') : A + 'txt_pause_title.webp'}" alt="${T('일시정지')}"></div>
         <div class="en-body">
           <div class="en-status pz-status">
             ${running && run ? `
-              ${stat('스테이지', run.stage ? `STAGE ${run.stage}` : '자유 플레이')}
-              ${stat('배수', `×${run.mult}`)}
-              ${stat('남은 카드', `${g.remaining}장`)}
-              ${stat('덱', `${g.stockCount}장`)}` : '<p class="en-timer">진행 중인 판이 없어요</p>'}
+              ${stat(T('스테이지'), run.stage ? `STAGE ${run.stage}` : T('자유 플레이'))}
+              ${stat(T('배수'), `×${run.mult}`)}
+              ${stat(T('남은 카드'), T('{n}장', { n: g.remaining }))}
+              ${stat(T('덱'), T('{n}장', { n: g.stockCount }))}` : `<p class="en-timer">${T('진행 중인 판이 없어요')}</p>`}
           </div>
           <div class="en-actions pz-actions">
-            ${btn('resume', 'green wide', '▶ ', '계속하기')}
-            ${btn('notebook', 'blue', `<img src="${A}icons/notebook.webp" alt="">`, '탐정 수첩')}
-            ${btn('shop', 'blue', `<img src="${A}btn_shop.webp" alt="">`, '상점')}
-            ${btn('settings', 'blue', `<img src="${A}btn_settings.webp" alt="">`, '설정')}
-            ${inGame ? btn('lobby', 'blue', `<img src="${A}icons/home.webp" alt="">`, '로비로 나가기') : ''}
-            ${running ? btn('giveup', 'red', '', '스테이지 포기') : ''}
+            ${btn('resume', 'green wide', '▶ ', T('계속하기'))}
+            ${btn('notebook', 'blue', `<img src="${A}icons/notebook.webp" alt="">`, T('탐정 수첩'))}
+            ${btn('shop', 'blue', `<img src="${A}btn_shop.webp" alt="">`, T('상점'))}
+            ${btn('settings', 'blue', `<img src="${A}btn_settings.webp" alt="">`, T('설정'))}
+            ${inGame ? btn('lobby', 'blue', `<img src="${A}icons/home.webp" alt="">`, T('로비로 나가기')) : ''}
+            ${running ? btn('giveup', 'red', '', T('스테이지 포기')) : ''}
           </div>
-          <p class="en-rule">${running ? '로비로 나가거나 포기하면 이 판은 실패 처리되고 입장료는 돌아오지 않아요' : '트라이픽스는 시간 제한이 없어요 — 천천히 생각해도 돼요'}</p>
+          <p class="en-rule">${running ? T('로비로 나가거나 포기하면 이 판은 실패 처리되고 입장료는 돌아오지 않아요') : T('트라이픽스는 시간 제한이 없어요 — 천천히 생각해도 돼요')}</p>
         </div>
       </div>`;
     TP.ui.root().append(page);
@@ -1293,19 +1295,19 @@
     else if (choice === 'lobby') {
       if (!activeRun()) return showScreen('lobby');
       const sure = await TP.ui.confirm({
-        title: '로비로 나가기',
-        message: '진행 중인 판은 실패 처리돼요.' +
-          (store.state.winStreak ? ` 🔥 ${store.state.winStreak}연승도 초기화돼요.` : '') + '\n그래도 나갈까요?',
-        okLabel: '나가기',
+        title: T('로비로 나가기'),
+        message: T('진행 중인 판은 실패 처리돼요.') +
+          (store.state.winStreak ? T(' 🔥 {n}연승도 초기화돼요.', { n: store.state.winStreak }) : '') + '\n' + T('그래도 나갈까요?'),
+        okLabel: T('나가기'),
       });
       if (sure) { failRun(); showScreen('lobby'); }
     } else if (choice === 'giveup' && activeRun()) {
       const sure = await TP.ui.confirm({
-        title: '스테이지 포기',
+        title: T('스테이지 포기'),
         message: (store.state.winStreak
-          ? `입장료 ${run.fee} 골드를 돌려받지 못하고 🔥 ${store.state.winStreak}연승이 초기화돼요.`
-          : `입장료 ${run.fee} 골드를 돌려받지 못해요.`) + '\n정말 포기할까요?',
-        okLabel: '포기하기',
+          ? T('입장료 {fee} 골드를 돌려받지 못하고 🔥 {n}연승이 초기화돼요.', { fee: run.fee, n: store.state.winStreak })
+          : T('입장료 {fee} 골드를 돌려받지 못해요.', { fee: run.fee })) + '\n' + T('정말 포기할까요?'),
+        okLabel: T('포기하기'),
       });
       if (sure) giveUp();
     }
@@ -1321,13 +1323,14 @@
 
   function fillSettings() {
     const s = TP.settings.get();
+    if (TP.i18n) field('setting-lang').value = TP.i18n.lang;
     field('setting-bgm-toggle').checked = s.bgmOn;
     field('setting-bgm-vol').value = s.bgmVol;
     field('setting-bgm-vol').disabled = !s.bgmOn;
     field('setting-sfx-toggle').checked = s.sfxOn;
     field('setting-sfx-vol').value = s.sfxVol;
     field('setting-sfx-vol').disabled = !s.sfxOn;
-    if (document.activeElement !== field('setting-nickname')) field('setting-nickname').value = s.nickname;
+    if (document.activeElement !== field('setting-nickname')) field('setting-nickname').value = T(s.nickname);
     renderCardBacks();
   }
 
@@ -1338,7 +1341,7 @@
     field('cardBackGrid').innerHTML = TP.CARD_BACKS.map(b => {
       const owned = TP.cardBacks.isOwned(b.id);
       return `<button class="cb-item ${owned ? 'owned' : 'locked'} ${b.id === equipped ? 'equipped' : ''}" data-id="${b.id}"
-                ${owned ? '' : 'disabled'} role="option" aria-selected="${b.id === equipped}" title="${owned ? b.name : '50연승 보상으로 얻을 수 있어요'}">
+                ${owned ? '' : 'disabled'} role="option" aria-selected="${b.id === equipped}" title="${owned ? b.name : T('50연승 보상으로 얻을 수 있어요')}">
           <img src="${b.src}" alt="${b.name}">
           ${owned ? '' : '<span class="cb-lock">🔒</span>'}
           ${b.id === equipped ? '<span class="cb-check">✔</span>' : ''}
@@ -1349,7 +1352,7 @@
     const item = e.target.closest('.cb-item.owned');
     if (!item || !TP.cardBacks.equip(item.dataset.id)) return;
     renderCardBacks();
-    toast(`🂠 카드 뒷면을 <b>${TP.cardBacks.get(item.dataset.id).name}</b>(으)로 바꿨어요`);
+    toast(T('🂠 카드 뒷면을 <b>{name}</b>(으)로 바꿨어요', { name: TP.cardBacks.get(item.dataset.id).name }));
   });
 
   // 바꾸는 즉시 저장
@@ -1362,13 +1365,15 @@
     const before = TP.settings.get().nickname;
     const after = TP.sanitizeNickname(field('setting-nickname').value);
     field('setting-nickname').value = after;
-    if (after !== before) {
+    if (after !== before && after !== T(before)) {   // 번역해 보여 준 기본 닉네임('탐정님' → Detective)은 그대로 둠
       TP.settings.set({ nickname: after });
-      toast(`닉네임을 <b>${after.replace(/[&<>"']/g, '')}</b>(으)로 바꿨어요`);
+      toast(T('닉네임을 <b>{name}</b>(으)로 바꿨어요', { name: after.replace(/[&<>"']/g, '') }));
     }
   };
   field('setting-nickname').onchange = saveNickname;
   field('setting-nickname').onkeydown = e => { if (e.key === 'Enter') e.target.blur(); };
+  // 언어 바꾸기 → 설정에 저장하고 새로 고침 (js/i18n.js)
+  field('setting-lang').onchange = e => { if (TP.i18n) TP.i18n.setLang(e.target.value); };
   settingsModal.addEventListener('click', e => { if (e.target === settingsModal) app.closeSettings(); });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && settingsModal.style.display !== 'none') app.closeSettings();
@@ -1393,46 +1398,49 @@
       const st = acc.state;
       if (!acc.available) {
         await showDialog({
-          title: '구글 계정 연동',
+          title: T('구글 계정 연동'),
           className: 'account',
-          body: `<p class="small">이 버전에서는 Google 로그인을 아직 쓸 수 없어요.</p>
-                 <p class="small">유저 ID <b data-no-icons>${acc.shortId()}</b> (이 기기)</p>`,
-        });
+          body: `<p class="small">${T('이 버전에서는 Google 로그인을 아직 쓸 수 없어요.')}</p>
+                 <p class="small">${T('유저 ID')} <b data-no-icons>${acc.shortId()}</b> ${T('(이 기기)')}</p>`,
+          buttons: [{ label: T('구매 복원'), value: 'restore' }, { label: T('닫기'), value: null, cls: 'ghost' }],
+        }).then(v => v === 'restore' && TP.ui.restorePurchases());
         return;
       }
       const google = st.provider === 'google';
       const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
       const choice = await showDialog({
-        title: '구글 계정 연동',
+        title: T('구글 계정 연동'),
         className: 'account',
-        body: `<p class="small">현재: <b>${google ? esc(st.email || st.displayName || 'Google 계정') : '게스트'}</b></p>
-               <p class="small">유저 ID <b data-no-icons>${acc.shortId()}</b></p>
-               <p class="small">${google ? 'Google 계정에 연결돼 있어요.' : 'Google 계정을 연결하면 같은 유저 ID 로 계속 식별돼요.'}<br>진행 상황은 이 기기에 저장돼요.</p>`,
+        body: `<p class="small">${T('현재:')} <b>${google ? esc(st.email || st.displayName || T('Google 계정')) : T('게스트')}</b></p>
+               <p class="small">${T('유저 ID')} <b data-no-icons>${acc.shortId()}</b></p>
+               <p class="small">${google ? T('Google 계정에 연결돼 있어요.') : T('Google 계정을 연결하면 같은 유저 ID 로 계속 식별돼요.')}<br>${T('진행 상황은 이 기기에 저장돼요.')}</p>`,
         buttons: [
-          ...(google ? [{ label: '로그아웃', value: 'logout' }] : [{ label: 'Google 계정 연결', value: 'link', cls: 'primary' }]),
-          { label: '계정 삭제', value: 'delete', cls: 'danger-link' },
-          { label: '닫기', value: null, cls: 'ghost' },
+          ...(google ? [{ label: T('로그아웃'), value: 'logout' }] : [{ label: T('Google 계정 연결'), value: 'link', cls: 'primary' }]),
+          { label: T('구매 복원'), value: 'restore' },
+          { label: T('계정 삭제'), value: 'delete', cls: 'danger-link' },
+          { label: T('닫기'), value: null, cls: 'ghost' },
         ],
       });
+      if (choice === 'restore') return TP.ui.restorePurchases();
       if (choice === 'link') {
         const r = await acc.linkGoogle();
-        if (r.ok) return toast('Google 계정을 연결했어요');
+        if (r.ok) return toast(T('Google 계정을 연결했어요'));
         if (r.conflict) {
-          const go = await TP.ui.confirm({ title: '이미 사용 중인 Google 계정', message: '이 Google 계정은 다른 유저 ID 에 연결돼 있어요.\n그 계정으로 전환할까요? (이 기기의 진행 상황은 그대로예요)', okLabel: '전환' });
-          if (go) { const s = await acc.switchToGoogle(); toast(s.ok ? 'Google 계정으로 전환했어요' : '전환하지 못했어요'); }
+          const go = await TP.ui.confirm({ title: T('이미 사용 중인 Google 계정'), message: T('이 Google 계정은 다른 유저 ID 에 연결돼 있어요.\n그 계정으로 전환할까요? (이 기기의 진행 상황은 그대로예요)'), okLabel: T('전환') });
+          if (go) { const s = await acc.switchToGoogle(); toast(s.ok ? T('Google 계정으로 전환했어요') : T('전환하지 못했어요')); }
           return;
         }
-        if (r.reason !== 'cancelled') toast('Google 계정을 연결하지 못했어요');
+        if (r.reason !== 'cancelled') toast(T('Google 계정을 연결하지 못했어요'));
       } else if (choice === 'logout') {
-        const ok = await TP.ui.confirm({ title: '로그아웃', message: '로그아웃하면 새 게스트 유저 ID 로 바뀌어요.\n(이 기기의 진행 상황은 그대로예요)', okLabel: '로그아웃' });
-        if (ok) toast((await acc.signOut()).ok ? '로그아웃했어요' : '로그아웃하지 못했어요');
+        const ok = await TP.ui.confirm({ title: T('로그아웃'), message: T('로그아웃하면 새 게스트 유저 ID 로 바뀌어요.\n(이 기기의 진행 상황은 그대로예요)'), okLabel: T('로그아웃') });
+        if (ok) toast((await acc.signOut()).ok ? T('로그아웃했어요') : T('로그아웃하지 못했어요'));
       } else if (choice === 'delete') {
-        const ok = await TP.ui.confirm({ title: '계정 삭제', message: '유저 ID 와 연결된 Google 계정 정보를 서버에서 영구 삭제해요.\n되돌릴 수 없어요. 계속할까요?', okLabel: '삭제' });
+        const ok = await TP.ui.confirm({ title: T('계정 삭제'), message: T('유저 ID 와 연결된 Google 계정 정보를 서버에서 영구 삭제해요.\n되돌릴 수 없어요. 계속할까요?'), okLabel: T('삭제') });
         if (!ok) return;
         const r = await acc.deleteAccount();
-        if (!r.ok) return toast(r.reason === 'cancelled' ? '삭제를 취소했어요' : '계정을 삭제하지 못했어요');
-        toast('계정을 삭제했어요');
-        const wipe = await TP.ui.confirm({ title: '진행 상황도 지울까요?', message: '이 기기에 저장된 게임 진행 상황(골드 · 레벨 · 사건)도 초기화할까요?', okLabel: '초기화', cancelLabel: '남겨두기' });
+        if (!r.ok) return toast(r.reason === 'cancelled' ? T('삭제를 취소했어요') : T('계정을 삭제하지 못했어요'));
+        toast(T('계정을 삭제했어요'));
+        const wipe = await TP.ui.confirm({ title: T('진행 상황도 지울까요?'), message: T('이 기기에 저장된 게임 진행 상황(골드 · 레벨 · 사건)도 초기화할까요?'), okLabel: T('초기화'), cancelLabel: T('남겨두기') });
         if (wipe) { await TP.localSave?.wipe(); try { localStorage.clear(); } catch { /* 무시 */ } location.reload(); }
       }
     },
@@ -1440,49 +1448,49 @@
     // 법적 고지 (GDD 8장): 이용약관 · 개인정보처리방침을 외부 웹뷰(새 창)로. 주소가 아직 없으면 안내
     async openLegal() {
       const choice = await showDialog({
-        title: '📜 법적 고지',
+        title: T('📜 법적 고지'),
         className: 'legal',
         body: `
           <div class="legal-text">
-            <p><b>결제 안내</b><br>프로토타입의 상품 구매는 실제 결제가 일어나지 않는 테스트 결제예요.</p>
-            <p><b>개인정보</b><br>게임 진행 상황은 이 기기에만 저장돼요. 유저 식별을 위해 Google Firebase 인증이 익명 유저 ID 를 만들고, Google 계정을 연결하면 그 계정의 이메일 · 이름을 함께 처리해요. 설정 → 계정 관리 → [계정 삭제] 로 언제든 지울 수 있어요.</p>
-            <p><b>오픈소스</b><br>canvas-confetti — ISC License</p>
-            <p><b>그림</b><br>일부 일러스트는 AI 이미지 생성 도구(Higgsfield)로 제작했어요.</p>
-            <p class="small">버전 ${TP.SUPPORT.version}</p>
+            <p><b>${T('결제 안내')}</b><br>${T('프로토타입의 상품 구매는 실제 결제가 일어나지 않는 테스트 결제예요.')}</p>
+            <p><b>${T('개인정보')}</b><br>${T('게임 진행 상황은 이 기기에 저장되고, 클라우드 저장을 쓰면 내 Google Play 게임즈 저장 공간에도 저장돼요. 유저 식별을 위해 Google Firebase 인증이 익명 유저 ID 를 만들고, Google 계정을 연결하면 그 계정의 이메일 · 이름을 함께 처리해요. 설정 → 계정 관리 → [계정 삭제] 로 언제든 지울 수 있어요. 자세한 내용은 [개인정보처리방침] 에서 볼 수 있어요.')}</p>
+            <p><b>${T('오픈소스')}</b><br>canvas-confetti — ISC License</p>
+            <p><b>${T('그림')}</b><br>${T('일부 일러스트는 AI 이미지 생성 도구(Higgsfield)로 제작했어요.')}</p>
+            <p class="small">${T('버전')} ${TP.SUPPORT.version}</p>
           </div>`,
         buttons: [
-          { label: '이용약관', value: 'terms', cls: 'primary' },
-          { label: '개인정보처리방침', value: 'privacy', cls: 'primary' },
-          { label: '닫기', value: null, cls: 'ghost' },
+          { label: T('이용약관'), value: 'terms', cls: 'primary' },
+          { label: T('개인정보처리방침'), value: 'privacy', cls: 'primary' },
+          { label: T('닫기'), value: null, cls: 'ghost' },
         ],
       });
       if (!choice) return;
-      const url = TP.LEGAL_URLS[choice];
+      const url = TP.legalUrl(choice);
       if (url) window.open(url, '_blank', 'noopener');
-      else toast('출시 전에 게시될 예정이에요');
+      else toast(T('출시 전에 게시될 예정이에요'));
     },
 
     // 클라우드 저장 (Google Play 게임즈 저장된 게임): 로그인 전이면 로그인, 로그인했으면 지금 올리기
     async cloudSave() {
       const sync = TP.playGamesSync;
-      if (!sync || sync.status.state === 'unavailable') return toast('이 버전에서는 클라우드 저장을 아직 쓸 수 없어요');
+      if (!sync || sync.status.state === 'unavailable') return toast(T('이 버전에서는 클라우드 저장을 아직 쓸 수 없어요'));
       if (!sync.status.signedIn) {
         const ok = await sync.signIn({ ask: askCloudRestore });
-        return toast(ok ? 'Play 게임즈에 로그인했어요' : 'Play 게임즈에 로그인하지 못했어요');
+        return toast(ok ? T('Play 게임즈에 로그인했어요') : T('Play 게임즈에 로그인하지 못했어요'));
       }
       const done = await sync.uploadNow();
-      toast(done ? '☁️ 클라우드에 저장했어요' : sync.status.lastError ? '저장하지 못했어요. 잠시 뒤 다시 시도해 주세요' : '방금 저장했어요');
+      toast(done ? T('☁️ 클라우드에 저장했어요') : sync.status.lastError ? T('저장하지 못했어요. 잠시 뒤 다시 시도해 주세요') : T('방금 저장했어요'));
     },
 
     // 고객 문의 (GDD 8장): 안내 후 기본 이메일 앱 호출
     contactUs() {
-      alert('문의 메일을 작성합니다.\n답변에는 영업일 기준 3~10일이 소요될 수 있습니다.');
+      alert(T('문의 메일을 작성합니다.\n답변에는 영업일 기준 3~10일이 소요될 수 있습니다.'));
       const email = TP.SUPPORT.email;   // dong2kids@gmail.com
-      const subject = encodeURIComponent('[온천 여관의 비밀] 고객 문의');
+      const subject = encodeURIComponent(T('[탐정 솔리테어] 고객 문의'));
       // 안내문 양식 그대로, 닉네임 · 기기 정보 칸은 자동으로 채운다
       const body = encodeURIComponent(
-        `게임 닉네임: ${TP.settings.get().nickname}\n유저 ID: ${TP.account ? TP.account.state.uid || '-' : '-'}\n기기 정보: ${navigator.userAgent} (버전 ${TP.SUPPORT.version})\n\n` +
-        '문의 내용을 아래에 적어주세요.\n(답변에는 3~10 working days가 소요됩니다.)\n--------------------------\n');
+        T('게임 닉네임: {nick}\n유저 ID: {uid}\n기기 정보: {ua} (버전 {ver})\n\n', { nick: TP.settings.get().nickname, uid: TP.account ? TP.account.state.uid || '-' : '-', ua: navigator.userAgent, ver: TP.SUPPORT.version }) +
+        T('문의 내용을 아래에 적어주세요.\n(답변에는 3~10 working days가 소요됩니다.)\n--------------------------\n'));
       window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
     },
   });
@@ -1498,38 +1506,38 @@
   async function askCloudRestore(cloud, local) {
     await afterSplash();
     return TP.ui.confirm({
-      title: '☁️ 클라우드 저장 데이터',
-      message: `클라우드 저장 데이터가 있습니다. 불러오시겠습니까?\n(진행도: 에피소드 ${cloud.episode}, 골드 ${cloud.gold.toLocaleString()})\n\n이 기기: 에피소드 ${local.episode}, 골드 ${local.gold.toLocaleString()}\n'아니요'를 고르면 다음 저장 때 이 기기 데이터로 클라우드를 덮어써요.`,
-      okLabel: '불러오기',
-      cancelLabel: '아니요',
+      title: T('☁️ 클라우드 저장 데이터'),
+      message: T("클라우드 저장 데이터가 있습니다. 불러오시겠습니까?\n(진행도: 에피소드 {ce}, 골드 {cg})\n\n이 기기: 에피소드 {le}, 골드 {lg}\n'아니요'를 고르면 다음 저장 때 이 기기 데이터로 클라우드를 덮어써요.", { ce: cloud.episode, cg: cloud.gold.toLocaleString(), le: local.episode, lg: local.gold.toLocaleString() }),
+      okLabel: T('불러오기'),
+      cancelLabel: T('아니요'),
     });
   }
   const cloudLabel = st => ({
-    unavailable: '이 버전에서는 사용할 수 없어요', off: '준비 중', error: '연결 오류',
-    'signed-out': 'Play 게임즈 로그인이 필요해요',
-    ready: st.lastUpload ? `마지막 저장 ${new Date(st.lastUpload).toLocaleTimeString()}${st.dirty ? ' · 저장 대기' : ''}` : (st.dirty ? '저장 대기 중' : '클라우드와 같아요'),
-  }[st.state] || '준비 중');
+    unavailable: T('이 버전에서는 사용할 수 없어요'), off: T('준비 중'), error: T('연결 오류'),
+    'signed-out': T('Play 게임즈 로그인이 필요해요'),
+    ready: st.lastUpload ? T('마지막 저장 {t}', { t: new Date(st.lastUpload).toLocaleTimeString() }) + (st.dirty ? T(' · 저장 대기') : '') : (st.dirty ? T('저장 대기 중') : T('클라우드와 같아요')),
+  }[st.state] || T('준비 중'));
   if (TP.playGamesSync) TP.playGamesSync.onChange(st => {
     $('#cloudSaveLabel').textContent = cloudLabel(st);
-    $('#cloudSaveBtn').textContent = st.state === 'signed-out' ? '로그인' : '지금 저장';
+    $('#cloudSaveBtn').textContent = st.state === 'signed-out' ? T('로그인') : T('지금 저장');
   });
   (async () => {
     const local = TP.localSave ? await TP.localSave.init() : { source: 'web' };
     if (local.restored) return location.reload();                 // 기기 파일이 더 최근 → 그 상태로 다시 시작
     if (!TP.playGamesSync) return;
     const st = await TP.playGamesSync.init({ ask: askCloudRestore });
-    if (st.result === 'restored') { toast('☁️ 클라우드 저장 데이터를 불러왔어요'); setTimeout(() => location.reload(), 600); }
+    if (st.result === 'restored') { toast(T('☁️ 클라우드 저장 데이터를 불러왔어요')); setTimeout(() => location.reload(), 600); }
   })();
 
   // 유저 식별: 첫 실행에 익명 계정 자동 생성 → 설정의 계정 줄 갱신
   if (TP.account) {
     const showAccount = st => {
-      $('#accountLabel').textContent = st.provider === 'google' ? (st.email || st.displayName || 'Google 계정') : '게스트';
+      $('#accountLabel').textContent = st.provider === 'google' ? (st.email || st.displayName || T('Google 계정')) : T('게스트');
       $('#accountId').textContent = TP.account.shortId();
     };
     TP.account.onChange(showAccount);
-    TP.account.init();
-  }
+    TP.account.init().then(() => TP.billing?.init());   // 결제: 유저 ID 가 정해진 뒤 RevenueCat 시작 (끝나지 않은 결제 복구 · 광고 제거 복원)
+  } else TP.billing?.init();
 
   // =====================================================================
   // 숨겨진 개발자 패널: 레벨 칩을 1.5초 안에 5번 터치
@@ -1573,7 +1581,7 @@
     notebook.open();
   };
   $('#devSolve').onclick = () => {
-    if (!activeRun()) return toast('진행 중인 게임이 없어요');
+    if (!activeRun()) return toast(T('진행 중인 게임이 없어요'));
     view.playSolution();
   };
   $('#devReset').onclick = async () => {
@@ -1596,7 +1604,7 @@
     if ($('#sbLevelNum').dataset.level !== String(top.level)) {        // level_frame 방패 안에 숫자 그림
       $('#sbLevelNum').dataset.level = top.level;
       $('#sbLevelNum').innerHTML = TP.levelDigitsHtml(top.level);
-      $('#sbLevelNum').setAttribute('aria-label', `레벨 ${top.level}`);
+      $('#sbLevelNum').setAttribute('aria-label', T('레벨 {n}', { n: top.level }));
     }
     $('#expFill').style.width = `${top.expPercent}%`;
     $('#expText').textContent = `${top.exp.toLocaleString()} / ${top.reqExp.toLocaleString()} EXP`;
@@ -1616,11 +1624,11 @@
     // 인게임 상단 단서 진행 바 (ui_episode_progress.webp)
     $('#hudEpisode').innerHTML = ep
       ? `<span class="ep-progress-bar" style="--p:${(s.episode.cleared / ep.clues.length) * 100}%"><i></i><b>EP${s.episode.index + 1} · ${s.episode.cleared}/${ep.clues.length}</b></span>`
-      : '📓 자유 플레이';
+      : T('📓 자유 플레이');
     $('#stagesStars').textContent = ep ? `${Object.values(s.stageStars[ep.episodeId] || {}).reduce((x, y) => x + y, 0)}/${ep.clues.length * 3}` : '';
     $('#notebookBadge').textContent = s.episode.unread;
     $('#notebookBadge').hidden = !s.episode.unread;
-    $('#clueProgress').textContent = ep ? `${s.episode.cleared} / ${ep.clues.length}` : '해결 완료';
+    $('#clueProgress').textContent = ep ? `${s.episode.cleared} / ${ep.clues.length}` : T('해결 완료');
     if ($('#stage').dataset.screen === 'lobby') renderLobby();
 
     refreshItemButtons();
@@ -1639,18 +1647,18 @@
     setTimeout(async () => {
       if (!saved.state) {
         store.update(s => { s.activeRun = null; s.gold += saved.fee || 0; });
-        toast(`중단된 판이 있어 입장료 🪙 ${saved.fee || 0}을 돌려드렸어요`);
+        toast(T('중단된 판이 있어 입장료 🪙 {n}을 돌려드렸어요', { n: saved.fee || 0 }));
         return;
       }
       const choice = await showResumePopup(saved);
-      if (choice === 'resume' && resumeRun(saved)) return toast('🔄 이어서 플레이해요!');
+      if (choice === 'resume' && resumeRun(saved)) return toast(T('🔄 이어서 플레이해요!'));
       if (choice === 'resume') {                     // 판을 다시 만들 수 없음 → 입장료 환불
         store.update(s => { s.activeRun = null; s.gold += saved.fee || 0; });
-        return toast(`판을 불러올 수 없어 입장료 🪙 ${saved.fee || 0}을 돌려드렸어요`);
+        return toast(T('판을 불러올 수 없어 입장료 🪙 {n}을 돌려드렸어요', { n: saved.fee || 0 }));
       }
       store.update(s => { s.activeRun = null; });
       const lost = TP.home.recordStageResult({ won: false, multiplier: saved.mult }).lostStreak;
-      if (lost) toast(`🔥 ${lost}연승이 끊겼어요`);
+      if (lost) toast(T('🔥 {n}연승이 끊겼어요', { n: lost }));
     }, 1400);
   }
 
@@ -1661,14 +1669,14 @@
     page.className = 'rsm-popup';
     page.style.zIndex = 99000;
     page.innerHTML = `
-      <div class="rsm-frame" role="dialog" aria-modal="true" aria-label="진행 중이던 판이 있어요">
-        <img class="rsm-title" src="${A}txt_resume_title.webp" alt="진행 중이던 판이 있어요">
+      <div class="rsm-frame" role="dialog" aria-modal="true" aria-label="${T('진행 중이던 판이 있어요')}">
+        <img class="rsm-title" src="${TP.i18n ? TP.i18n.img(A + 'txt_resume_title.webp') : A + 'txt_resume_title.webp'}" alt="${T('진행 중이던 판이 있어요')}">
         <div class="rsm-body" data-no-icons>
-          <p class="rsm-msg">앱이 종료되기 전 판을 그대로 이어서 할 수 있어요.</p>
-          <p class="rsm-info">${saved.stage ? `STAGE ${saved.stage} · ` : ''}×${saved.mult} · 입장료 <img src="${A}icon_gold.webp" alt="골드"> ${(saved.fee || 0).toLocaleString()} (이미 지불)</p>
+          <p class="rsm-msg">${T('앱이 종료되기 전 판을 그대로 이어서 할 수 있어요.')}</p>
+          <p class="rsm-info">${saved.stage ? `STAGE ${saved.stage} · ` : ''}×${saved.mult} · ${T('입장료')} <img src="${A}icon_gold.webp" alt="${T('골드')}"> ${(saved.fee || 0).toLocaleString()} ${T('(이미 지불)')}</p>
           <div class="rsm-actions">
-            <button class="rsm-go"><i>▶</i> 이어서 하기</button>
-            <button class="rsm-quit">포기하기 (실패 처리)</button>
+            <button class="rsm-go"><i>▶</i> ${T('이어서 하기')}</button>
+            <button class="rsm-quit">${T('포기하기 (실패 처리)')}</button>
           </div>
         </div>
       </div>`;
@@ -1691,7 +1699,7 @@
     const splash = document.createElement('div');
     splash.className = 'boot-splash';
     splash.style.zIndex = 99500;
-    splash.innerHTML = `<img src="${TP.ASSETS.uiLoading}" alt="불러오는 중"><div class="studio-logo"><img src="game_assets/logo_studio2.webp" alt="22FAM STUDIO"></div>`;
+    splash.innerHTML = `<img src="${TP.ASSETS.uiLoading}" alt="${T('불러오는 중')}"><div class="studio-logo"><img src="game_assets/logo_studio2.webp" alt="22FAM STUDIO"></div>`;
     TP.ui.root().append(splash);
     setTimeout(() => splash.querySelector('.studio-logo').classList.add('out'), LOGO_MS);
     const ep = mystery.episode;
@@ -1716,8 +1724,8 @@
     const st = TP.dailyBonus.status();
     if (!st.canClaim) return Promise.resolve(false);
     const A = 'game_assets/';
-    const icon = r => r.gold ? `<img src="${A}icon_gold.webp" alt="골드">` : r.undo ? `<img src="${A}btn_booster_undo.webp" alt="되돌리기">`
-      : r.hint ? `<img src="${A}icon_hint_ticket.webp" alt="힌트권">` : r.life ? `<img src="${A}icon_heart.webp" alt="하트">` : '';
+    const icon = r => r.gold ? `<img src="${A}icon_gold.webp" alt="${T('골드')}">` : r.undo ? `<img src="${A}btn_booster_undo.webp" alt="${T('되돌리기')}">`
+      : r.hint ? `<img src="${A}icon_hint_ticket.webp" alt="${T('힌트권')}">` : r.life ? `<img src="${A}icon_heart.webp" alt="${T('하트')}">` : '';
     const amount = r => r.gold ? r.gold.toLocaleString() : r.undo ? `X${r.undo}` : r.hint ? `X${r.hint}` : r.life ? `X${r.life}` : '';
     const tile = (r, i) => {
       const state = i < st.claimed ? 'done' : i === st.claimed ? 'today' : 'future';
@@ -1741,11 +1749,11 @@
     page.className = 'daily-bonus';
     page.style.zIndex = 98800;
     page.innerHTML = `
-      <div class="db-panel" role="dialog" aria-modal="true" aria-label="데일리 보너스">
+      <div class="db-panel" role="dialog" aria-modal="true" aria-label="${T('데일리 보너스')}">
         <h2 class="db-title"><span>DAILY</span><span>BONUS</span></h2>
-        <p class="db-sub">Day ${st.nextDay} 보상 · 설치 후 ${st.daysLeft}일 남음</p>
+        <p class="db-sub">${T('Day {d} 보상 · 설치 후 {n}일 남음', { d: st.nextDay, n: st.daysLeft })}</p>
         <div class="db-grid">${TP.DAILY_BONUS.map(tile).join('')}</div>
-        <button class="db-collect" data-nosfx aria-label="보상 받기 (COLLECT)"><img src="${A}btn_collect.webp" alt=""></button>
+        <button class="db-collect" data-nosfx aria-label="${T('보상 받기 (COLLECT)')}"><img src="${A}btn_collect.webp" alt=""></button>
         <img class="db-avatar" src="${TP.avatarOf ? TP.avatarOf(store.state) : A + 'avatar_1.webp'}" alt="">
       </div>`;
     TP.ui.root().append(page);
@@ -1756,7 +1764,7 @@
         if (r.ok) {
           TP.audio.sfx('collect');
           confettiAt(page.querySelector('.db-tile.today'), { particleCount: 70, colors: ['#ffcf5a', '#7ed84a', '#2bd2ff'] });
-          toast(`🎁 Day ${r.day} 보너스: ${TP.describeDailyReward(r.reward)} 지급`);
+          toast(T('🎁 Day {d} 보너스: {r} 지급', { d: r.day, r: TP.describeDailyReward(r.reward) }));
         }
         page.classList.add('out');
         setTimeout(() => { page.remove(); resolve(r.ok); }, 250);

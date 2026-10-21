@@ -104,9 +104,10 @@
 
   TP.playerTitle = function (level, solvedCount = 0) {
     const t = TP.titleTier(level, solvedCount);
+    const name = TP.t ? TP.t(t.name) : t.name;   // 칭호 이름은 표시 언어로 (I~V 는 그대로)
     // 레벨로 그 단계에 있을 때만 I~V 표기 (사건 해결로 승급한 경우는 단계명만)
-    if (t.numerals && t.rank === t.levelRank) return `${t.name} ${NUMERALS[Math.min(4, Math.ceil(level / 2) - 1)]}`;
-    return t.name;
+    if (t.numerals && t.rank === t.levelRank) return `${name} ${NUMERALS[Math.min(4, Math.ceil(level / 2) - 1)]}`;
+    return name;
   };
   TP.titleOf = state => TP.playerTitle(state.playerLevel, state.solvedEpisodes.length);
   TP.costumeNameOf = state => TP.titleTier(state.playerLevel, state.solvedEpisodes.length).costumeName;

@@ -3,6 +3,7 @@
 require('../js/store.js');
 require('../js/energy.js');
 require('../js/shop.js');
+require('../js/billing.js');   // 휴대폰이 아니면 가짜 결제 (바로 지급)
 const { TP } = globalThis;
 // 힌트권: 골드 상품(결제 대신 골드 차감 · 부족하면 실패) + 현금 팩
 {
