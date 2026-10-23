@@ -283,6 +283,7 @@ TP.LANG_DATA.en = {
   "버전": "Version",
   "이용약관": "Terms of Service",
   "개인정보처리방침": "Privacy Policy",
+  "특정상거래법 표기": "Specified Commercial Transactions Act",
   "출시 전에 게시될 예정이에요": "Coming before launch",
   "문의 메일을 작성합니다.\n답변에는 영업일 기준 3~10일이 소요될 수 있습니다.": "Opening an email to our support team.\nReplies may take 3–10 business days.",
   "[탐정 솔리테어] 고객 문의": "[Detective Solitaire] Support request",

@@ -1475,6 +1475,8 @@
         buttons: [
           { label: T('이용약관'), value: 'terms', cls: 'primary' },
           { label: T('개인정보처리방침'), value: 'privacy', cls: 'primary' },
+          // 일본어로 볼 때만: 特定商取引法に基づく表記 (일본 통신판매 표시 의무)
+          ...(TP.i18n?.lang === 'ja' ? [{ label: T('특정상거래법 표기'), value: 'tokushoho', cls: 'primary' }] : []),
           { label: T('닫기'), value: null, cls: 'ghost' },
         ],
       });

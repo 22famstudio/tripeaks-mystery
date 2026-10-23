@@ -57,7 +57,7 @@
   };
 
   // 고객 문의 (GDD 8장): 기본 이메일 앱 호출, 답변 3~10 working days
-  TP.SUPPORT = { email: 'dong2kids@gmail.com', version: '0.9.8' };   // 버전은 mobile/package.json 과 맞춤
+  TP.SUPPORT = { email: 'dong2kids@gmail.com', version: '0.9.9' };   // 버전은 mobile/package.json 과 맞춤
 
   // 법적 고지 (GDD 8장): 외부 브라우저로 여는 이용약관 · 개인정보처리방침 주소 — 언어별 (없는 언어는 en → ko 순으로)
   //   개인정보처리방침 원문: docs/legal/privacy_policy_{ko,en,ja}.md → Notion 게시
@@ -71,6 +71,9 @@
       ko: 'https://brash-sleet-4e0.notion.site/4002c16d20c48021ac99e29e06fdb8c1',
       en: 'https://brash-sleet-4e0.notion.site/Privacy-Policy-4002c16d20c48040afd6fa18b964fe43',
       ja: 'https://brash-sleet-4e0.notion.site/4002c16d20c48004b6cad64b3153a12c',
+    },
+    tokushoho: { // 일본 特定商取引法に基づく表記 (일본어만) — 원문: docs/legal/tokushoho_ja.md
+      ja: 'https://brash-sleet-4e0.notion.site/4022c16d20c480caa3ccebfa0967cd91',
     },
   };
   TP.legalUrl = kind => {
