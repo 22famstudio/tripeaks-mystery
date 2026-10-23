@@ -865,6 +865,30 @@
     if (!$('#entryModal').hidden) renderEntryEnergy();
   }
   setInterval(updateEnergyHud, 1000);
+
+  // 홈 [광고 보고 골드] (js/ad-gold.js): 1회 200골드 · 24시간에 3번 · 남은 횟수 배지
+  function updateAdGold() {
+    const st = TP.adGold.status();
+    $('#adGoldLeft').textContent = st.left;
+    $('#hudAdGold').classList.toggle('done', st.left <= 0);
+  }
+  async function watchAdForGold() {
+    const st = TP.adGold.status();
+    if (st.left <= 0) {
+      return toast(T('오늘 광고 보상은 끝났어요. 내일 다시 오세요!') + `<br><small>${T('{t} 뒤에 다시 받을 수 있어요', { t: TP.formatDuration(st.resetInMs) })}</small>`);
+    }
+    const ok = await TP.ui.confirm({
+      title: T('📺 광고 보고 골드 받기'),
+      message: T('광고를 끝까지 보면 골드 {g}을 받아요.\n(남은 횟수 {n}/{max})', { g: TP.AD_GOLD.REWARD.toLocaleString(), n: st.left, max: st.max }),
+      okLabel: T('광고 보기'),
+    });
+    if (!ok || !(await TP.ads.showRewarded('adGold'))) return updateAdGold();   // 끝까지 봤을 때만
+    const r = TP.adGold.claim();
+    updateAdGold();
+    if (r.ok) { TP.audio?.sfx?.('purchase'); toast(`🪙 +${r.gold.toLocaleString()}<br><small>${T('남은 횟수 {n}/{max}', { n: r.left, max: TP.AD_GOLD.MAX })}</small>`); bump($('#sbGoldChip')); }
+  }
+  updateAdGold();
+  setInterval(updateAdGold, 1000);
   $('#sbEnergy').onclick = () => openEnergyPanel();
 
   // 수사 생명력(하트) 팝업 — frame_resume.webp(파란 패널 + 고양이) · 제목 글씨 txt_energy_title.webp (Higgsfield)
@@ -943,6 +967,7 @@
   $('#hudShop').onclick = () => openShop();
   $('#hudOffer').onclick = () => TP.ui.showHomeOffer();     // 홈 상시 SPECIAL OFFER (상점 상품과 별개)
   $('#hudEpisodes').onclick = () => openEpisodes();
+  $('#hudAdGold').onclick = () => watchAdForGold();
   // 톱니: 로비에서는 설정, 게임 중에는 일시정지 메뉴(그 안에 '설정')
   $('#btnSettings').onclick = () => ($('#stage').dataset.screen === 'game' ? settingsMenu() : app.openSettings());
   $('#sbStreakChip').onclick = () => showStreakLadder();
@@ -1327,6 +1352,7 @@
     field('setting-sfx-toggle').checked = s.sfxOn;
     field('setting-sfx-vol').value = s.sfxVol;
     field('setting-sfx-vol').disabled = !s.sfxOn;
+    field('setting-notify-toggle').checked = s.notifyOn !== false;
     if (document.activeElement !== field('setting-nickname')) field('setting-nickname').value = T(s.nickname);
     renderCardBacks();
   }
@@ -1354,6 +1380,11 @@
 
   // 바꾸는 즉시 저장
   field('setting-bgm-toggle').onchange = e => { TP.settings.set({ bgmOn: e.target.checked }); fillSettings(); };
+  field('setting-notify-toggle').onchange = async e => {
+    const r = await TP.notifications?.setEnabled(e.target.checked);
+    if (e.target.checked && r && !r.ok) toast(T('알림 권한이 꺼져 있어요. 휴대폰 설정 → 앱 → 탐정 솔리테어 → 알림에서 켜 주세요'));
+    fillSettings();
+  };
   field('setting-sfx-toggle').onchange = e => { TP.settings.set({ sfxOn: e.target.checked }); fillSettings(); TP.audio.sfx('click'); };
   field('setting-bgm-vol').oninput = e => TP.settings.set({ bgmVol: Number(e.target.value) });
   field('setting-sfx-vol').oninput = e => TP.settings.set({ sfxVol: Number(e.target.value) });
@@ -1554,6 +1585,9 @@
     TP.account.onChange(showAccount);
     TP.account.init().then(() => TP.billing?.init());   // 결제: 유저 ID 가 정해진 뒤 RevenueCat 시작 (끝나지 않은 결제 복구 · 광고 제거 복원)
   } else TP.billing?.init();
+
+  // 알림 (하트 충전 · 아침 08:30 · 3일 복귀 — js/notifications.js): 나갈 때 예약, 들어오면 취소, 튜토리얼 뒤 권한 1번
+  TP.notifications?.init();
 
   // =====================================================================
   // 숨겨진 개발자 패널: 레벨 칩을 1.5초 안에 5번 터치

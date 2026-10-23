@@ -40,6 +40,7 @@
         </button>
         <button class="round-btn img-btn" id="hudShop" aria-label="상점"><img src="game_assets/btn_shop.webp" alt=""></button>
         <button class="round-btn img-btn" id="hudEpisodes" aria-label="에피소드"><img src="game_assets/btn_episode.webp" alt=""></button>
+        <button class="round-btn img-btn ad-gold-btn" id="hudAdGold" aria-label="광고 보고 골드 받기"><img src="game_assets/btn_ad_gold.webp" alt=""><b class="ag-left" id="adGoldLeft">3</b></button>
       </div>
       <button class="level-box" id="sbLevel" title="레벨 · 경험치">
         <span class="level-star"><b id="sbLevelNum" aria-label="레벨"></b><small>LEVEL</small></span>
@@ -303,6 +304,16 @@
           <input type="range" id="setting-sfx-vol" min="0" max="100" value="80" style="width:100%;" aria-label="효과음 볼륨">
         </div>
 
+        <!-- 알림 (js/notifications.js) -->
+        <h3 style="margin: 10px 0; color: #bdc3c7;">🔔 알림</h3>
+        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+          <div style="display:flex; justify-content:space-between;">
+            <label for="setting-notify-toggle">알림 받기</label>
+            <input type="checkbox" id="setting-notify-toggle" checked>
+          </div>
+          <p style="margin:6px 0 0; font-size:11px; opacity:.75;">하트 충전 완료 · 아침 8시 30분 · 3일 미접속 알림 (밤 8시 30분~아침 8시 30분에는 보내지 않아요)</p>
+        </div>
+
         <!-- 계정 및 프로필 -->
         <h3 style="margin: 10px 0; color: #bdc3c7;">👤 프로필 및 계정</h3>
         <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
@@ -367,6 +378,7 @@
   <script src="js/lang/en.js"></script>
   <script src="js/lang/ja.js"></script>
   <script src="js/energy.js"></script>
+  <script src="js/ad-gold.js"></script>
   <script src="js/core/home_progression_system.js"></script>
   <script src="js/economy.js"></script>
   <script src="js/streak.js"></script>
@@ -389,6 +401,7 @@
   <script src="js/settings.js"></script>
   <script src="js/account.js"></script>
   <script src="js/play-games-sync.js"></script>
+  <script src="js/notifications.js"></script>
   <script src="js/audio-helper.js"></script>
   <script src="js/emoji-icons.js"></script>
   <script src="js/font-lang.js"></script>

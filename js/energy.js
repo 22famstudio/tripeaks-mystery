@@ -53,6 +53,15 @@
   };
 
   TP.energy = {
+    // 저장하지 않고 상태만 계산 (알림 예약 등 — js/notifications.js)
+    statusOf(state, t) {
+      const { MAX, REGEN_MS } = TP.ENERGY;
+      const s = TP.computeEnergy(state, t);
+      const full = s.energy >= MAX;
+      const nextInMs = full ? 0 : REGEN_MS - (t - s.lastEnergyTime);
+      return { energy: s.energy, max: MAX, full, fullInMs: full ? 0 : nextInMs + (MAX - s.energy - 1) * REGEN_MS, infinite: (state.infiniteEnergyUntil || 0) > t };
+    },
+
     // 자연 충전을 저장소에 반영 (값이 바뀔 때만 저장)
     sync(t = now()) {
       const s = store().state;

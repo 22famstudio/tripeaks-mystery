@@ -120,7 +120,8 @@
 /* 공통 상단 바: 레벨 · 특별 할인 · 에피소드 버튼은 홈에서만 */
 .stage[data-screen="game"] .hud-top .level-box,
 .stage[data-screen="game"] .hud-top #hudOffer,
-.stage[data-screen="game"] .hud-top #hudEpisodes { display: none; }
+.stage[data-screen="game"] .hud-top #hudEpisodes,
+.stage[data-screen="game"] .hud-top #hudAdGold { display: none; }
 .stage[data-screen="game"] .hud-top { height: 13cqh; background: linear-gradient(#2b1a0ecc, #0000); }
 .stage[data-screen="game"] .hud-top .hud-right { grid-column: 3; justify-self: end; }   /* 가운데(레벨) 칸이 비어도 골드 · 설정은 오른쪽 끝에 */
 .stage[data-screen="game"] .hud-top .round-btn.img-btn { width: 10.5cqh; height: 10.5cqh; }

@@ -7,11 +7,11 @@ const assert = require('assert');
 const store = TP.store;
 
 store.reset();
-assert.deepEqual(store.state.settings, { bgmOn: true, bgmVol: 70, sfxOn: true, sfxVol: 80, nickname: '탐정님', lang: '' }, '기본값');
+assert.deepEqual(store.state.settings, { bgmOn: true, bgmVol: 70, sfxOn: true, sfxVol: 80, nickname: '탐정님', lang: '', notifyOn: true }, '기본값');
 
 // 저장 · 값 검증 (볼륨은 0~100 정수, 켜기/끄기는 불리언)
 store.update(s => { s.settings = { ...s.settings, bgmOn: false, bgmVol: 140, sfxVol: -5.7, nickname: '셜록' }; });
-assert.deepEqual(store.state.settings, { bgmOn: false, bgmVol: 100, sfxOn: true, sfxVol: 0, nickname: '셜록', lang: '' });
+assert.deepEqual(store.state.settings, { bgmOn: false, bgmVol: 100, sfxOn: true, sfxVol: 0, nickname: '셜록', lang: '', notifyOn: true });
 store.update(s => { s.settings.sfxVol = 'abc'; });
 assert.equal(store.state.settings.sfxVol, 80, '숫자가 아니면 기본값');
 

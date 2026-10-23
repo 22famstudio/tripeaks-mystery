@@ -9,6 +9,7 @@
       "@capacitor/app",
       "@revenuecat/purchases-capacitor",
       "@capacitor-community/admob",
+      "@capacitor/local-notifications",
       "@capacitor-firebase/authentication"
     ]
   },
@@ -18,6 +19,10 @@
       "providers": [
         "google.com"
       ]
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_notify",
+      "iconColor": "#E8A33C"
     }
   }
 }

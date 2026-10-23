@@ -3,9 +3,14 @@
    layout.css 다음에 불러온다 (16:9 스테이지 기준 cqw/cqh)
    ===================================================================== */
 
-/* 홈: [대륙 챕터] <제목> [추리 수첩 보기] */
-.title-row { display: flex; align-items: center; justify-content: center; gap: 0.8cqw; min-width: 0; }
-.title-row .episode-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1rem; }
+/* 홈: [대륙 챕터] <제목> [추리 수첩 보기]
+   양쪽 칸을 같은 폭(--tr-side)으로 고정: 챕터 칩은 아래 단서 블록과 왼쪽 끝을 맞추고, 추리 수첩 버튼과 같은 크기 */
+.title-row { --tr-side: 15cqw; --tr-h: 6.4cqh; display: grid; grid-template-columns: var(--tr-side) minmax(0, 1fr) var(--tr-side); align-items: center; gap: 0.8cqw; min-width: 0; }
+.title-row .episode-title { justify-self: center; max-width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1rem; }
+.title-row > .chapter-chip, .title-row > .board-btn { box-sizing: border-box; width: 100%; height: var(--tr-h); justify-content: center; min-width: 0; }
+.title-row > .chapter-chip { justify-self: start; overflow: hidden; white-space: nowrap; }
+.title-row > .board-btn { justify-self: end; white-space: nowrap; }
+.title-row > .chapter-chip[hidden] { display: inline-flex; visibility: hidden; }   /* 칸 자리는 지켜서 제목이 가운데에 남게 */
 .chapter-chip {
   flex: none;
   display: inline-flex;

@@ -30,11 +30,14 @@
     infiniteEnergyUntil: 0,
     energyAdDay: '',
     energyAdCount: 0,
+    adGoldStart: 0,          // 홈 [광고 보고 골드] 24시간 주기 시작 시각 (js/ad-gold.js)
+    adGoldCount: 0,          // 그 주기에 받은 횟수 (최대 3)
     purchasedOnce: [],   // 1회 한정 상품 구매 기록
     paidTx: [],          // 보상을 지급한 결제 거래 ID (js/billing.js — 같은 결제를 두 번 지급하지 않게 · 최근 300건)
     offerPurchased: false, // 스페셜 오퍼(스타터팩 · 특가 팩)를 한 번이라도 샀는지 → 홈의 SPECIAL OFFER 버튼 숨김
     tutorialDone: null,      // 첫 실행 튜토리얼을 끝냈거나 건너뜀 (js/tutorial.js) — null = 이 필드가 생기기 전 세이브 (sanitize 가 판정)
     tutorialRewarded: false, // 튜토리얼을 끝까지 보고 500G 를 받았는지 (계정당 1번)
+    notifyAsked: false,      // 알림 권한을 한 번 물어봤는지 (js/notifications.js — 튜토리얼 뒤 1번)
     adClearCounter: 0,       // 전면 광고 규칙: 보호 구간(5판) 뒤 마지막 전면 광고 이후 클리어 수 (js/ad-manager.js)
     ownedCardBacks: ['default'], // 보유한 카드 뒷면 스킨 (js/card-backs.js · 50연승 프레스티지 보상)
     equippedCardBack: 'default', // 장착 중인 카드 뒷면
@@ -59,7 +62,7 @@
     solvedEpisodes: [],  // 해결한 에피소드 id (칭호 승급에 반영)
     stageStars: {},      // 스테이지 최고 별 { [episodeId]: { [stage]: 1~3 } }
     dailyBonus: { installDay: '', claimed: 0, lastClaimDay: '' },   // 설치 후 7일 로그인 보너스 (js/daily-bonus.js)
-    settings: { bgmOn: true, bgmVol: 70, sfxOn: true, sfxVol: 80, nickname: N_('탐정님'), lang: '' },   // lang: '' = 기기 언어 (js/i18n.js)   // 플레이어 설정 (settings.js)
+    settings: { bgmOn: true, bgmVol: 70, sfxOn: true, sfxVol: 80, nickname: N_('탐정님'), lang: '', notifyOn: true },   // lang: '' = 기기 언어 (js/i18n.js)   // 플레이어 설정 (settings.js)
   });
 
   // 닉네임: 앞뒤 공백 제거, 제어문자·꺾쇠 제거, 최대 12자, 비면 기본값
@@ -104,6 +107,8 @@
       energy: int(s.energy, 0, 99, DEFAULTS.energy),
       lastEnergyTime: int(s.lastEnergyTime, 0, 8.64e15, 0),
       infiniteEnergyUntil: int(s.infiniteEnergyUntil, 0, 8.64e15, 0),
+      adGoldStart: int(s.adGoldStart, 0, 9e15, 0),
+      adGoldCount: int(s.adGoldCount, 0, 99, 0),
       energyAdDay: typeof s.energyAdDay === 'string' ? s.energyAdDay : '',
       energyAdCount: int(s.energyAdCount, 0, 99, 0),
       purchasedOnce: Array.isArray(s.purchasedOnce) ? s.purchasedOnce.filter(x => typeof x === 'string') : [],
@@ -112,6 +117,7 @@
       // 튜토리얼이 생기기 전 세이브: 이미 플레이한 사람에게는 자동으로 띄우지 않음 (설정에서 다시 보기 가능)
       tutorialDone: s.tutorialDone === true || (s.tutorialDone == null && ((s.totalStagesCleared || 0) > 0 || (s.playerLevel || 1) > 1)),
       tutorialRewarded: s.tutorialRewarded === true,
+      notifyAsked: s.notifyAsked === true,
       adClearCounter: int(s.adClearCounter, 0, 99, 0),
       gridGuideSeen: s.gridGuideSeen === true,
       ownedCardBacks: [...new Set(['default', ...(Array.isArray(s.ownedCardBacks) ? s.ownedCardBacks.filter(x => typeof x === 'string') : [])])],
@@ -149,6 +155,7 @@
       sfxVol: int(st.sfxVol, 0, 100, d.sfxVol),
       nickname: TP.sanitizeNickname(st.nickname),
       lang: ['ko', 'en', 'ja'].includes(st.lang) ? st.lang : '',
+      notifyOn: st.notifyOn !== false,   // 알림 (하트 충전 · 아침 · 복귀 — js/notifications.js)
     };
   }
 
