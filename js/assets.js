@@ -53,10 +53,10 @@
     iconGift: `${DIR}icon_gift.webp`,
     // 상점 상품 그림 (Higgsfield 생성, 기존 그림체에 맞춤) — 없으면 이모지
     products: {
-      // 골드 코인 8종 (Higgsfield GPT Image 2.5, icon_gold · pack_chance_mini 그림체 참조) — 9 · 10단계는 7 · 8 재사용
+      // 골드 코인 10종 (Higgsfield GPT Image 2.5, icon_gold · pack_chance_mini 그림체 참조 · 9 · 10단계는 7 · 8 참조해 더 많은 금으로)
       coin_tier_01: `${DIR}pack_coin_01.webp`, coin_tier_02: `${DIR}pack_coin_02.webp`, coin_tier_03: `${DIR}pack_coin_03.webp`,
       coin_tier_04: `${DIR}pack_coin_04.webp`, coin_tier_05: `${DIR}pack_coin_05.webp`, coin_tier_06: `${DIR}pack_coin_06.webp`,
-      coin_tier_07: `${DIR}pack_coin_07.webp`, coin_tier_08: `${DIR}pack_coin_08.webp`, coin_tier_09: `${DIR}pack_coin_07.webp`, coin_tier_10: `${DIR}pack_coin_08.webp`,
+      coin_tier_07: `${DIR}pack_coin_07.webp`, coin_tier_08: `${DIR}pack_coin_08.webp`, coin_tier_09: `${DIR}pack_coin_09.webp`, coin_tier_10: `${DIR}pack_coin_10.webp`,
       starter_novice: `${DIR}pack_starter_novice.webp`,
       starter_elite: `${DIR}pack_starter_elite.webp`,
       hint_single: `${DIR}pack_hint_single.webp`,

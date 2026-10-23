@@ -25,16 +25,16 @@
   //   (실제 ID 로 개발 중에 광고를 누르면 계정이 정지될 수 있다 — 테스트는 늘 테스트 ID 나 테스트 기기로)
   // ---------------------------------------------------------------------
   TP.ADS_CONFIG = {
-    USE_TEST_ADS: true,
+    USE_TEST_ADS: false,
     TEST: {   // Google 공식 테스트 ID (https://developers.google.com/admob/android/test-ads)
       APP_ID: 'ca-app-pub-3940256099942544~3347511713',
       REWARDED: 'ca-app-pub-3940256099942544/5224354917',
       INTERSTITIAL: 'ca-app-pub-3940256099942544/1033173712',
     },
     LIVE: {   // AdMob 콘솔 → 앱 → 광고 단위 (APP_ID 는 strings.xml 의 admob_app_id 에도 같은 값)
-      APP_ID: '',
-      REWARDED: '',
-      INTERSTITIAL: '',
+      APP_ID: 'ca-app-pub-3154824293592161~6595672743',
+      REWARDED: 'ca-app-pub-3154824293592161/9207550332',
+      INTERSTITIAL: 'ca-app-pub-3154824293592161/1524054327',
     },
   };
 

@@ -28,8 +28,8 @@ mobile/android/local.properties
 !.env.example
 *.pem
 *.p12
-# Firebase 등 클라이언트 설정에 키가 들어 있다면 (공개 저장소일 때)
-# google-services.json
+# Firebase 설정 (API 키 포함) — git 에 넣지 않는다. 원본 보관: Desktop/TriPeaks-keys/google-services.json
+google-services.json
 
 # ---- 에셋 원본 (tools/optimize_assets.py 가 프로젝트 바깥 ../assets_original_backup/ 로 옮김) ----
 # 바깥 폴더라 원래 추적되지 않지만, 실수로 안으로 복사됐을 때를 대비

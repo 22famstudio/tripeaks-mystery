@@ -41,6 +41,14 @@ assert.equal(TP.store.state.adClearCounter, 0);
 
 // 5) 웹(브라우저 · Node)에는 AdMob 이 없다 → available false (보상형은 미리보기용 바로 지급, 전면은 생략)
 assert.equal(TP.ads.available, false);
-assert.equal(TP.ADS_CONFIG.USE_TEST_ADS, true, '출시 전에는 테스트 ID');
+// 실제 ID 를 쓸 때는 앱 ID · 광고 단위가 모두 같은 퍼블리셔(pub-…)여야 한다 (strings.xml 의 admob_app_id 와도 같게)
+const cfg = TP.ADS_CONFIG;
+if (!cfg.USE_TEST_ADS) {
+  const pub = id => (id.match(/^ca-app-pub-(\d+)[~/]\d+$/) || [])[1];
+  assert.ok(pub(cfg.LIVE.APP_ID) && pub(cfg.LIVE.APP_ID) === pub(cfg.LIVE.REWARDED) && pub(cfg.LIVE.APP_ID) === pub(cfg.LIVE.INTERSTITIAL), '실제 광고 ID 형식');
+  assert.ok(cfg.LIVE.APP_ID.includes('~') && cfg.LIVE.REWARDED.includes('/') && cfg.LIVE.INTERSTITIAL.includes('/'), '앱 ID 는 ~, 광고 단위는 /');
+  const xml = require('fs').readFileSync(require('path').join(__dirname, '../mobile/android/app/src/main/res/values/strings.xml'), 'utf8');
+  assert.ok(xml.includes(cfg.LIVE.APP_ID), 'strings.xml admob_app_id = LIVE.APP_ID');
+}
 
 console.log('광고 규칙 (초반 5판 보호 · 2판마다 · 광고 제거 생략 · 실패 화면 없음) 통과');

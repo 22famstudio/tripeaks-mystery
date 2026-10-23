@@ -5,5 +5,5 @@
   예: <string name="game_services_project_id" translatable="false">123456789012</string>
 -->
 <resources>
-    <string name="game_services_project_id" translatable="false"></string>
+    <string name="game_services_project_id" translatable="false">939066363361</string>
 </resources>

@@ -13,3 +13,6 @@ project(':revenuecat-purchases-capacitor').projectDir = new File('../node_module
 
 include ':capacitor-community-admob'
 project(':capacitor-community-admob').projectDir = new File('../node_modules/@capacitor-community/admob/android')
+
+include ':capacitor-firebase-authentication'
+project(':capacitor-firebase-authentication').projectDir = new File('../node_modules/@capacitor-firebase/authentication/android')

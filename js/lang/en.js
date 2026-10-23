@@ -274,7 +274,7 @@ TP.LANG_DATA.en = {
   // ---------- 법적 고지 · 문의 ----------
   "📜 법적 고지": "📜 Legal Notice",
   "결제 안내": "Payments",
-  "프로토타입의 상품 구매는 실제 결제가 일어나지 않는 테스트 결제예요.": "Purchases in this prototype are test payments — no real money is charged.",
+  "상품은 Google Play 결제로 구매해요. 환불 · 구매 취소 기준은 [이용약관]에서 볼 수 있어요.": "Items are purchased through Google Play. See the [Terms of Service] for refunds and cancellations.",
   "개인정보": "Privacy",
   "게임 진행 상황은 이 기기에 저장되고, 클라우드 저장을 쓰면 내 Google Play 게임즈 저장 공간에도 저장돼요. 유저 식별을 위해 Google Firebase 인증이 익명 유저 ID 를 만들고, Google 계정을 연결하면 그 계정의 이메일 · 이름을 함께 처리해요. 설정 → 계정 관리 → [계정 삭제] 로 언제든 지울 수 있어요. 자세한 내용은 [개인정보처리방침] 에서 볼 수 있어요.": "Your game progress is saved on this device, and if you use cloud save, also in your own Google Play Games storage. To identify players, Google Firebase Authentication creates an anonymous user ID, and if you link a Google account, its email and name are processed too. You can delete this anytime in Settings → Manage → [Delete account]. See the [Privacy Policy] for details.",
   "오픈소스": "Open source",

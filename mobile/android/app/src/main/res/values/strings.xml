@@ -3,7 +3,7 @@
     <string name="app_name">Detective Solitaire</string>
     <string name="title_activity_main">Detective Solitaire</string>
     <!-- AdMob 앱 ID (js/ad-manager.js 의 TP.ADS_CONFIG 와 같게). 지금은 Google 공식 테스트 앱 ID — 출시 전 실제 ID 로 -->
-    <string name="admob_app_id" translatable="false">ca-app-pub-3940256099942544~3347511713</string>
+    <string name="admob_app_id" translatable="false">ca-app-pub-3154824293592161~6595672743</string>
     <string name="package_name">com.twotwofam.mystery</string>
     <string name="custom_url_scheme">com.twotwofam.mystery</string>
 </resources>

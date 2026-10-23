@@ -8,7 +8,8 @@
       "@capacitor/filesystem",
       "@capacitor/app",
       "@revenuecat/purchases-capacitor",
-      "@capacitor-community/admob"
+      "@capacitor-community/admob",
+      "@capacitor-firebase/authentication"
     ]
   },
   "plugins": {
