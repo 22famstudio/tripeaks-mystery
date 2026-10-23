@@ -1,7 +1,7 @@
 {
   "name": "tripeaks-mystery-android",
   "private": true,
-  "version": "0.9.3",
+  "version": "0.9.8",
   "description": "탐정 솔리테어: 세계 사건 수첩 (Detective Solitaire: World Case Files) 안드로이드 앱 래퍼 — 웹 게임을 Capacitor로 감싼다",
   "scripts": {
     "www": "python ../tools/build_www.py",
@@ -17,7 +17,6 @@
     "@capacitor/core": "^7.6.9",
     "@capacitor/filesystem": "^7.1.9",
     "@revenuecat/purchases-capacitor": "^11.3.3",
-    "canvas-confetti": "^1.9.3",
     "fflate": "^0.8.3"
   },
   "devDependencies": {

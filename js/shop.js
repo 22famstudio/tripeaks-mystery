@@ -20,7 +20,7 @@
     { id: 'coin', name: N_('골드 코인') },
     { id: 'chance', name: N_('찬스 팩') },
     { id: 'hint', name: N_('힌트권') },
-    { id: 'noads', name: N_('광고 제거') },
+    { id: 'noads', name: N_('광고 제거'), includes: ['noads', 'adpass'] },   // 광고 패스권 묶음도 이 탭에
   ];
 
   const coin = (n, name, price, gold, bonusPct, tag) =>
@@ -66,13 +66,21 @@
     { id: 'chance_master', category: 'chance', name: N_('마스터 찬스 팩'), icon: '🏆', price: 24.99, rewards: { undo: 250, wild: 35, infiniteMinutes: 120 } },
 
     // ---- 4. 광고 제거 팩 ----
-    { id: 'noads_basic', category: 'noads', name: N_('광고 제거'), icon: '🚫', price: 4.99, rewards: { removeAds: true } },
-    { id: 'noads_plus', category: 'noads', name: N_('광고 제거 플러스'), icon: '🚫', price: 5.99, rewards: { removeAds: true, gold: 1000 } },
-    { id: 'noads_deluxe', category: 'noads', name: N_('광고 제거 디럭스'), icon: '🚫', price: 7.99, rewards: { removeAds: true, gold: 2500, undo: 5 } },
+    //   광고 제거는 전면 광고만 없앤다 — 보상형 광고는 남으므로 '광고 패스권'(보상형 광고 대신 1장)을 함께 준다
+    { id: 'noads_basic', category: 'noads', name: N_('광고 제거'), icon: '🚫', price: 4.99, rewards: { removeAds: true, adPass: 1 } },
+    { id: 'noads_plus', category: 'noads', name: N_('광고 제거 플러스'), icon: '🚫', price: 5.99, rewards: { removeAds: true, gold: 1000, adPass: 2 } },
+    { id: 'noads_deluxe', category: 'noads', name: N_('광고 제거 디럭스'), icon: '🚫', price: 7.99, rewards: { removeAds: true, gold: 2500, undo: 5, adPass: 3 } },
     {
       id: 'noads_vip', category: 'noads', name: N_('광고 제거 VIP'), icon: '👑', price: 11.99, tag: 'VIP',
       rewards: { removeAds: true, gold: 6000, undo: 12, wild: 4, adPass: 10 },
     },
+
+    // ---- 5. 광고 패스권 묶음 (소비형) — 보상형 광고를 보지 않고 바로 보상. 광고 제거 탭에 함께 보인다 ----
+    //   많이 살수록 장당 싸게: 10장 $0.99(장당 0.099) · 20장 $1.79(0.090) · 50장 $3.99(0.080) · 100장 $6.99(0.070)
+    { id: 'adpass_10', category: 'adpass', name: N_('광고 패스권 10장'), icon: '🎫', price: 0.99, rewards: { adPass: 10 } },
+    { id: 'adpass_20', category: 'adpass', name: N_('광고 패스권 20장'), icon: '🎫', price: 1.79, rewards: { adPass: 20 } },
+    { id: 'adpass_50', category: 'adpass', name: N_('광고 패스권 50장'), icon: '🎫', price: 3.99, tag: N_('인기'), rewards: { adPass: 50 } },
+    { id: 'adpass_100', category: 'adpass', name: N_('광고 패스권 100장'), icon: '🎫', price: 6.99, tag: 'BEST DEAL', rewards: { adPass: 100 } },
   ];
 
   // ---------- 스페셜 오퍼 (상점 진입 시 일정 확률로 먼저 노출) ----------
@@ -136,7 +144,11 @@
   TP.shop = {
     findProduct: id => allProducts().find(p => p.id === id) || null,
     isOfferProduct: product => product.category === 'starter' || product.category === 'offer' || !!product.special,
-    productsIn: category => TP.SHOP_PRODUCTS.filter(p => p.category === category),
+    // 탭 하나에 여러 상품 종류를 보일 수 있다 (광고 제거 탭 = 광고 제거 + 광고 패스권)
+    productsIn: category => {
+      const cats = TP.SHOP_CATEGORIES.find(c => c.id === category)?.includes || [category];
+      return TP.SHOP_PRODUCTS.filter(p => cats.includes(p.category));
+    },
 
     // 상점 진입 시 스페셜 오퍼 추첨: chance 확률로 (보유하지 않은) 오퍼 하나, 아니면 null
     rollSpecialOffer(rng = Math.random, chance = TP.SPECIAL_OFFER_CHANCE) {

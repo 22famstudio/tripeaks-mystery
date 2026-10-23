@@ -17,6 +17,10 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(PlayGamesSavesPlugin.class);   // 앱 안 플러그인: Play 게임즈 저장된 게임 (js/play-games-sync.js)
         super.onCreate(savedInstanceState);
+        // WebView 그래픽 메모리(타일) 예산: 기본값은 '화면에 보이는 영역'으로 계산되는데, 전체 화면(몰입 모드) · 일부 기기
+        // (Exynos 갤럭시 등)에서 그 값이 비정상적으로 작게 잡혀 'tile memory limits exceeded' → 카드 · 덱 · 화면 전체가 하얗게
+        // 깜빡였다. 미리 그리기를 켜면 WebView 크기 전체로 예산을 잡는다.
+        getBridge().getWebView().getSettings().setOffscreenPreRaster(true);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         enterFullscreen();
     }

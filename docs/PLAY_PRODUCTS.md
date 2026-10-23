@@ -1,6 +1,6 @@
 # Play Console 인앱 상품 등록표
 
-Play Console → 수익 창출 → 제품 → 인앱 상품(일회성 상품) → **상품 만들기** 에서 아래 25개를 하나씩 만든다.
+Play Console → 수익 창출 → 제품 → 인앱 상품(일회성 상품) → **상품 만들기** 에서 아래 상품을 하나씩 만든다 (광고 패스권 4종 adpass_* 는 2026-10-24 추가).
 
 | 칸 | 넣을 값 |
 | --- | --- |
@@ -212,9 +212,9 @@ Play Console → 수익 창출 → 제품 → 인앱 상품(일회성 상품) �
 
 | 언어 | 이름 | 설명 |
 | --- | --- | --- |
-| 한국어 | 광고 제거 | 게임 중 전면 광고와 배너 광고를 없애요. 같은 Google 계정이면 다시 설치해도 복원돼요. 보상형 광고는 원할 때 계속 볼 수 있어요. |
-| English | No Ads | Removes interstitial and banner ads. Restores on reinstall with the same Google account. Rewarded ads stay available when you want them. |
-| 日本語 | 広告削除 | ゲーム中のインタースティシャル広告とバナー広告を削除します。同じGoogleアカウントなら再インストールしても復元できます。リワード広告は引き続き視聴できます。 |
+| 한국어 | 광고 제거 | 게임 중 전면 광고와 배너 광고를 없애요. 같은 Google 계정이면 다시 설치해도 복원돼요. 보상형 광고는 원할 때 계속 볼 수 있어요. 함께 받는 것: 광고 패스권 1장. |
+| English | No Ads | Removes interstitial and banner ads. Restores on reinstall with the same Google account. Rewarded ads stay available when you want them. Also includes 1 Ad Passes. |
+| 日本語 | 広告削除 | ゲーム中のインタースティシャル広告とバナー広告を削除します。同じGoogleアカウントなら再インストールしても復元できます。リワード広告は引き続き視聴できます。さらに広告スキップ券1枚も付いてきます。 |
 
 ## 21. `noads_plus` — 광고 제거 플러스
 
@@ -222,9 +222,9 @@ Play Console → 수익 창출 → 제품 → 인앱 상품(일회성 상품) �
 
 | 언어 | 이름 | 설명 |
 | --- | --- | --- |
-| 한국어 | 광고 제거 플러스 | 게임 중 전면 광고와 배너 광고를 없애요. 같은 Google 계정이면 다시 설치해도 복원돼요. 보상형 광고는 원할 때 계속 볼 수 있어요. 함께 받는 것: 골드 1,000. |
-| English | No Ads Plus | Removes interstitial and banner ads. Restores on reinstall with the same Google account. Rewarded ads stay available when you want them. Also includes 1,000 Gold. |
-| 日本語 | 広告削除プラス | ゲーム中のインタースティシャル広告とバナー広告を削除します。同じGoogleアカウントなら再インストールしても復元できます。リワード広告は引き続き視聴できます。さらにゴールド1,000も付いてきます。 |
+| 한국어 | 광고 제거 플러스 | 게임 중 전면 광고와 배너 광고를 없애요. 같은 Google 계정이면 다시 설치해도 복원돼요. 보상형 광고는 원할 때 계속 볼 수 있어요. 함께 받는 것: 골드 1,000, 광고 패스권 2장. |
+| English | No Ads Plus | Removes interstitial and banner ads. Restores on reinstall with the same Google account. Rewarded ads stay available when you want them. Also includes 1,000 Gold, 2 Ad Passes. |
+| 日本語 | 広告削除プラス | ゲーム中のインタースティシャル広告とバナー広告を削除します。同じGoogleアカウントなら再インストールしても復元できます。リワード広告は引き続き視聴できます。さらにゴールド1,000、広告スキップ券2枚も付いてきます。 |
 
 ## 22. `noads_deluxe` — 광고 제거 디럭스
 
@@ -232,9 +232,9 @@ Play Console → 수익 창출 → 제품 → 인앱 상품(일회성 상품) �
 
 | 언어 | 이름 | 설명 |
 | --- | --- | --- |
-| 한국어 | 광고 제거 디럭스 | 게임 중 전면 광고와 배너 광고를 없애요. 같은 Google 계정이면 다시 설치해도 복원돼요. 보상형 광고는 원할 때 계속 볼 수 있어요. 함께 받는 것: 골드 2,500, 되돌리기 5. |
-| English | No Ads Deluxe | Removes interstitial and banner ads. Restores on reinstall with the same Google account. Rewarded ads stay available when you want them. Also includes 2,500 Gold, 5 Undo. |
-| 日本語 | 広告削除デラックス | ゲーム中のインタースティシャル広告とバナー広告を削除します。同じGoogleアカウントなら再インストールしても復元できます。リワード広告は引き続き視聴できます。さらにゴールド2,500、元に戻す5回も付いてきます。 |
+| 한국어 | 광고 제거 디럭스 | 게임 중 전면 광고와 배너 광고를 없애요. 같은 Google 계정이면 다시 설치해도 복원돼요. 보상형 광고는 원할 때 계속 볼 수 있어요. 함께 받는 것: 골드 2,500, 되돌리기 5, 광고 패스권 3장. |
+| English | No Ads Deluxe | Removes interstitial and banner ads. Restores on reinstall with the same Google account. Rewarded ads stay available when you want them. Also includes 2,500 Gold, 5 Undo, 3 Ad Passes. |
+| 日本語 | 広告削除デラックス | ゲーム中のインタースティシャル広告とバナー広告を削除します。同じGoogleアカウントなら再インストールしても復元できます。リワード広告は引き続き視聴できます。さらにゴールド2,500、元に戻す5回、広告スキップ券3枚も付いてきます。 |
 
 ## 23. `noads_vip` — 광고 제거 VIP
 
@@ -246,7 +246,47 @@ Play Console → 수익 창출 → 제품 → 인앱 상품(일회성 상품) �
 | English | No Ads VIP | Removes interstitial and banner ads. Restores on reinstall with the same Google account. Rewarded ads stay available when you want them. Also includes 6,000 Gold, 12 Undo, 4 Wild, 10 Ad Passes. |
 | 日本語 | 広告削除VIP | ゲーム中のインタースティシャル広告とバナー広告を削除します。同じGoogleアカウントなら再インストールしても復元できます。リワード広告は引き続き視聴できます。さらにゴールド6,000、元に戻す12回、ワイルド4枚、広告スキップ券10枚も付いてきます。 |
 
-## 24. `offer_detective_emergency` — 탐정 긴급 지원 팩
+## 24. `adpass_10` — 광고 패스권 10장
+
+- 가격 **$0.99** · 소비형 · 아이콘 `store/iap_icons/adpass_10.png`
+
+| 언어 | 이름 | 설명 |
+| --- | --- | --- |
+| 한국어 | 광고 패스권 10장 | 보상형 광고를 보지 않고 바로 보상을 받는 광고 패스권 묶음이에요. 구성: 광고 패스권 10장. 하트 충전, 덱 추가, 결정적 힌트 같은 광고 보상을 한 장으로 바로 받아요. |
+| English | 10 Ad Passes | Ad Passes let you skip a rewarded ad and get the reward instantly. Includes 10 Ad Passes. Use one for hearts, extra cards, key hints and other ad rewards. |
+| 日本語 | 広告スキップ券10枚 | リワード広告を見ずにすぐ報酬を受け取れる広告スキップ券のセットです。内容：広告スキップ券10枚。ハート回復やカード追加、決定的ヒントなどの広告報酬に1枚ずつ使えます。 |
+
+## 25. `adpass_20` — 광고 패스권 20장
+
+- 가격 **$1.79** · 소비형 · 아이콘 `store/iap_icons/adpass_20.png`
+
+| 언어 | 이름 | 설명 |
+| --- | --- | --- |
+| 한국어 | 광고 패스권 20장 | 보상형 광고를 보지 않고 바로 보상을 받는 광고 패스권 묶음이에요. 구성: 광고 패스권 20장. 하트 충전, 덱 추가, 결정적 힌트 같은 광고 보상을 한 장으로 바로 받아요. |
+| English | 20 Ad Passes | Ad Passes let you skip a rewarded ad and get the reward instantly. Includes 20 Ad Passes. Use one for hearts, extra cards, key hints and other ad rewards. |
+| 日本語 | 広告スキップ券20枚 | リワード広告を見ずにすぐ報酬を受け取れる広告スキップ券のセットです。内容：広告スキップ券20枚。ハート回復やカード追加、決定的ヒントなどの広告報酬に1枚ずつ使えます。 |
+
+## 26. `adpass_50` — 광고 패스권 50장
+
+- 가격 **$3.99** · 소비형 · 아이콘 `store/iap_icons/adpass_50.png`
+
+| 언어 | 이름 | 설명 |
+| --- | --- | --- |
+| 한국어 | 광고 패스권 50장 | 보상형 광고를 보지 않고 바로 보상을 받는 광고 패스권 묶음이에요. 구성: 광고 패스권 50장. 하트 충전, 덱 추가, 결정적 힌트 같은 광고 보상을 한 장으로 바로 받아요. |
+| English | 50 Ad Passes | Ad Passes let you skip a rewarded ad and get the reward instantly. Includes 50 Ad Passes. Use one for hearts, extra cards, key hints and other ad rewards. |
+| 日本語 | 広告スキップ券50枚 | リワード広告を見ずにすぐ報酬を受け取れる広告スキップ券のセットです。内容：広告スキップ券50枚。ハート回復やカード追加、決定的ヒントなどの広告報酬に1枚ずつ使えます。 |
+
+## 27. `adpass_100` — 광고 패스권 100장
+
+- 가격 **$6.99** · 소비형 · 아이콘 `store/iap_icons/adpass_100.png`
+
+| 언어 | 이름 | 설명 |
+| --- | --- | --- |
+| 한국어 | 광고 패스권 100장 | 보상형 광고를 보지 않고 바로 보상을 받는 광고 패스권 묶음이에요. 구성: 광고 패스권 100장. 하트 충전, 덱 추가, 결정적 힌트 같은 광고 보상을 한 장으로 바로 받아요. |
+| English | 100 Ad Passes | Ad Passes let you skip a rewarded ad and get the reward instantly. Includes 100 Ad Passes. Use one for hearts, extra cards, key hints and other ad rewards. |
+| 日本語 | 広告スキップ券100枚 | リワード広告を見ずにすぐ報酬を受け取れる広告スキップ券のセットです。内容：広告スキップ券100枚。ハート回復やカード追加、決定的ヒントなどの広告報酬に1枚ずつ使えます。 |
+
+## 28. `offer_detective_emergency` — 탐정 긴급 지원 팩
 
 - 가격 **₩3,300** · 소비형 · 아이콘 `store/iap_icons/offer_detective_emergency.png`
 
@@ -256,7 +296,7 @@ Play Console → 수익 창출 → 제품 → 인앱 상품(일회성 상품) �
 | English | Detective Emergency Kit | A special bundle of must-have items for your investigation. Includes 2,500 Gold, 3 Wild, 3 Hint Tickets. Solve that stuck case right now. |
 | 日本語 | 探偵緊急サポートパック | 事件捜査に欠かせないアイテムを集めた特別パックです。内容：ゴールド2,500、ワイルド3枚、ヒントチケット3枚。行き詰まった事件を今すぐ解決しましょう。 |
 
-## 25. `offer_home_always` — 명탐정 상시 특별 지원
+## 29. `offer_home_always` — 명탐정 상시 특별 지원
 
 - 가격 **$3.99** · 소비형 · 아이콘 `store/iap_icons/offer_home_always.png`
 

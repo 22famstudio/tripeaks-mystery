@@ -10,6 +10,7 @@
   TP.createCardEl = function (card, faceUp) {
     const div = document.createElement('div');
     div.className = 'card' + (faceUp ? '' : ' face-down');
+    div._faceUp = !!faceUp;
     let front;
     if (card.special === 'bonus') {
       // +1 덱 보너스 카드 (game_assets/card_plus1.webp)
@@ -22,6 +23,22 @@
     }
     div.innerHTML = `<div class="card-inner">${front}<div class="face back"></div></div>`;
     return div;
+  };
+
+  // 카드 앞/뒷면 바꾸기 (2D 뒤집기): 가로로 접히는 중간에 면을 바꾼다. 같은 면이면 아무것도 안 함.
+  //   --flip 이 0 (움직임 줄이기)이면 바로 바꾼다.
+  TP.setCardFace = function (el, faceUp) {
+    faceUp = !!faceUp;
+    if (el._faceUp === undefined) el._faceUp = !el.classList.contains('face-down');
+    if (el._faceUp === faceUp) return;
+    el._faceUp = faceUp;
+    const ms = (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--flip')) || 0) * 1000;
+    if (!ms) { el.classList.toggle('face-down', !faceUp); return; }
+    clearTimeout(el._flipT1); clearTimeout(el._flipT2);
+    el.classList.remove('flipping'); void el.offsetWidth;   // 연달아 뒤집어도 처음부터 다시
+    el.classList.add('flipping');
+    el._flipT1 = setTimeout(() => el.classList.toggle('face-down', !el._faceUp), ms / 2);
+    el._flipT2 = setTimeout(() => el.classList.remove('flipping'), ms);
   };
 
   // 콤보 목표 보상 표시: 덱 +1~3 (목표 5·7) / 덱 +5 · 와일드 · 되돌리기 (목표 10·15)
@@ -329,7 +346,7 @@
         }
         if (chest) openChest(chest);
         busy = false;
-        refresh(); // 새로 드러난 카드는 face-down 클래스가 빠지면서 뒤집힌다
+        refresh(); // 새로 드러난 카드는 TP.setCardFace 로 뒤집힌다
       });
     }
 
@@ -407,7 +424,7 @@
         { duration: FLY_MS, easing: 'ease-out' }
       );
       void node.offsetWidth;
-      node.classList.remove('face-down'); // 날아오면서 앞면으로 뒤집힘
+      TP.setCardFace(node, true); // 날아오면서 앞면으로 뒤집힘
       refresh();
       setTimeout(() => {
         busy = false;
@@ -439,7 +456,7 @@
         if (!slotEls[i]) return;
         const faceUp = game.isFaceUp(i);
         const playable = game.canPlay(i);
-        slotEls[i].classList.toggle('face-down', !faceUp);
+        TP.setCardFace(slotEls[i], faceUp);
         // 그리는 순서: 앞면 카드는 항상 모든 뒷면 카드 위층.
         //   좁은 화면에서는 카드를 줄이지 않고 간격을 좁혀 겹치므로, 퍼즐상 서로 덮지 않는 카드끼리도 화면에서 겹친다.
         //   앞면 = 덮고 있던 카드가 다 치워진 카드라 맨 위로 올려도 규칙과 어긋나지 않고,

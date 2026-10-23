@@ -158,8 +158,8 @@
         const finish = v => {
           if (finished) return;
           finished = true;
-          handles.forEach(h => h.then(x => x.remove()).catch(() => {}));
           resolve(v);
+          removeListeners(handles);
         };
         handles.push(AdMob.addListener(EV.rewarded, () => { got = true; }));
         // 닫힘: 보상 이벤트가 닫힘 직후에 오는 기기도 있어 잠깐 기다렸다가 결과를 정한다
@@ -182,6 +182,12 @@
     }
   }
 
+  // addListener 가 돌려주는 것: @capacitor/core 를 쓰면 Promise<handle>, 앱처럼 네이티브 브리지만 쓰면 handle 객체 그대로.
+  //   예전엔 h.then(...) 으로만 지워서 휴대폰에서 'h.then is not a function' → 광고를 닫은 뒤 다음 화면으로 넘어가지 못하고 멈췄다.
+  const removeListeners = handles => handles.forEach(h => {
+    Promise.resolve(h).then(x => x && x.remove && x.remove()).catch(() => {});
+  });
+
   // ---------------- 전면 ----------------
   //   스테이지 결과 뒤에 부른다. 규칙(초반 5판 · 2판마다 · 광고 제거)은 interstitialDecision.
   //   광고가 없거나 실패하면 조용히 넘어간다 (유저가 원한 광고가 아니므로 안내도 하지 않음).
@@ -197,7 +203,7 @@
     try {
       await new Promise(resolve => {
         const handles = [];
-        const finish = () => { handles.forEach(h => h.then(x => x.remove()).catch(() => {})); resolve(); };
+        const finish = () => { resolve(); removeListeners(handles); };
         handles.push(AdMob.addListener(EV.interDismissed, finish));
         handles.push(AdMob.addListener(EV.interFailedToShow, finish));
         AdMob.showInterstitial().catch(finish);

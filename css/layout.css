@@ -8,6 +8,7 @@
    ===================================================================== */
 
 html {
+  background: #0b0f0e;   /* 그리는 중인 영역이 흰색이 아니라 어둡게 보이도록 */
   /* 스테이지 너비 = min(100vw, 100vh×16/9, 1920px) → 그 1/80 */
   font-size: clamp(10px, calc(min(100vw, 177.78vh, 1920px) / 73), 26px);   /* 글씨 전반 약 10% 키움 (예전 /80) */
 }
@@ -112,7 +113,7 @@ body {
   font-size: 0.55rem; font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .offer-btn[hidden] { display: none; }   /* 스페셜 오퍼를 산 뒤: 버튼이 빠지고 SHOP · EPISODE 가 왼쪽으로 */
-@keyframes offer-pulse { 50% { filter: drop-shadow(0 0 8px #ff3caccc); } }
+@keyframes offer-pulse { 50% { transform: scale(1.07); } }   /* filter 애니메이션은 WebView 깜빡임 원인 → 크기만 */
 
 .round-btn {
   display: flex;
@@ -412,7 +413,7 @@ body {
   text-shadow: 0 2px 0 #0008;
 }
 .streak-badge.hot { animation: streak-flare 1.4s ease-in-out infinite; }
-@keyframes streak-flare { 50% { filter: drop-shadow(0 3px 0 #0006) drop-shadow(0 0 10px #ff7a3c); } }
+@keyframes streak-flare { 50% { transform: scale(1.06); } }
 .streak-tip {
   position: absolute;
   right: 110%;
@@ -755,7 +756,7 @@ body {
 @keyframes reward-pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .combo-gauge.almost .gauge-fill { animation: gauge-throb 0.6s infinite; }
-@keyframes gauge-throb { 50% { filter: brightness(1.5); } }
+@keyframes gauge-throb { 50% { opacity: 0.6; } }
 .combo-gauge.lit .gauge-track { animation: gauge-lit 0.45s ease-out; }
 @keyframes gauge-lit {
   0% { box-shadow: inset 0 2px 4px #0008, 0 0 0 0 #ffcf5a; }

@@ -72,6 +72,9 @@
       noads_plus: `${DIR}pack_noads.webp`,
       noads_deluxe: `${DIR}pack_noads.webp`,
       noads_vip: `${DIR}pack_noads_vip.webp`,
+      // 광고 패스권 묶음 4종 (Higgsfield GPT Image 2.5, icon_ad · pack_hint 그림체 참조)
+      adpass_10: `${DIR}pack_adpass_10.webp`, adpass_20: `${DIR}pack_adpass_20.webp`,
+      adpass_50: `${DIR}pack_adpass_50.webp`, adpass_100: `${DIR}pack_adpass_100.webp`,
       offer_detective_emergency: `${DIR}pack_emergency.webp`,
     },
   };

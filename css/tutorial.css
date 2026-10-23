@@ -7,11 +7,12 @@
 .tut-block { position: absolute; pointer-events: auto; background: transparent; }
 .tut-hole {
   position: absolute; border-radius: 14px; pointer-events: none;
-  box-shadow: 0 0 0 200vmax #000b, 0 0 0 4px #ffd34d, 0 0 26px 8px #ffd34daa;
-  animation: tut-glow 1.4s ease-in-out infinite;
+  box-shadow: 0 0 0 200vmax #000b, 0 0 0 4px #ffd34d;
   transition: left .25s, top .25s, width .25s, height .25s;
 }
-@keyframes tut-glow { 50% { box-shadow: 0 0 0 200vmax #000b, 0 0 0 5px #ffe58a, 0 0 40px 14px #ffd34dcc; } }
+/* 빛나는 테두리는 따로 그려 opacity 만 깜빡 — 화면 전체 그림자를 매 프레임 다시 그리면 WebView 가 하얗게 깜빡인다 */
+.tut-hole::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: 0 0 0 5px #ffe58a, 0 0 40px 14px #ffd34dcc; animation: tut-glow 1.4s ease-in-out infinite; }
+@keyframes tut-glow { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
 
 /* ---------- 말풍선 ---------- */
 .tut-bubble { position: absolute; display: flex; align-items: flex-end; gap: 1cqw; width: min(62cqw, 110cqh); pointer-events: auto; transition: left .25s, top .25s; }
@@ -71,9 +72,11 @@
 .tp-deck .tp-card:nth-child(1) { translate: -0.6cqh -0.6cqh; }
 .tp-deck .tp-card:nth-child(2) { translate: -0.3cqh -0.3cqh; }
 .tp-deck .tp-card:nth-child(3) { position: relative; }
-.tp-deck.pulse .tp-card:nth-child(3) { animation: tut-deck 1s ease-in-out infinite; }
-@keyframes tut-deck { 50% { box-shadow: 0 0 0 4px #ffd34d, 0 0 26px 8px #ffd34d; } }
+.tp-deck.pulse .tp-card:nth-child(3) { box-shadow: 0 0 0 4px #ffd34d, 0 0 26px 8px #ffd34d; animation: tut-deck 1s ease-in-out infinite; }
+@keyframes tut-deck { 50% { transform: translateY(-0.8cqh) scale(1.04); } }
 .tp-deck small, .tp-open small { color: #fff4c7; background: #3b2a14e6; border-radius: 999px; padding: .15em .9em; font-weight: 900; font-size: clamp(10px, 2.3cqh, 16px); margin-top: .4cqh; }
 .tp-open .tp-card { box-shadow: 0 0 0 3px #ffd34d, 0 4px 10px #0008; }
 
 @media (prefers-reduced-motion: reduce) { .tut-hole, .tut-mascot, .tp-deck.pulse .tp-card { animation: none; } }
+/* 별 등급 ★ — 와일드카드 그림으로 바뀌지 않게 글자 그대로(data-no-icons), 스테이지 창의 별과 같은 금색 */
+.tut-star { font-style: normal; color: #ffc93a; -webkit-text-stroke: 0.5px #8a4b00; }

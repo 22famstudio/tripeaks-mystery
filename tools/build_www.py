@@ -8,7 +8,6 @@
       game_assets/characters_background (생성 원본 2.9GB — 웹용 변환본은 game_assets/episodes)
       game_assets/_replaced (교체 전 원본) · game_assets/sheets (시트 원본)
       game_assets/background (에피소드 배경 원본 295MB — 게임은 압축본 game_assets/episodes/ep_bg 사용)
-  - canvas-confetti 를 CDN 대신 앱 안에 넣는다 (오프라인에서도 동작)
 
   옵션 (환경 변수로도 줄 수 있음 — npm run sync 가 그대로 넘겨받는다)
     --cdn <version.json 주소>   (TP_CDN_URL)  에피소드 그림(약 98MB)과 사운드(sounds/sfx · bgm_mp3)를 APK 에서 빼고
@@ -36,8 +35,6 @@ OUT = os.path.join(ROOT, 'mobile', 'www')
 # 하위 경로 단위로 빼는 것: episodes/bg = 예전 도시별 공용 배경 (300화 모두 전용 배경 episodes/ep_bg 를 써서 미사용)
 SKIP_ASSET_PATHS = {'episodes/bg', 'episodes/suspect', 'sounds/bgm'}   # 안 쓰는 예전 공용 배경·초상화 풀 / BGM 원본 WAV (게임은 sounds/bgm_mp3)
 SKIP_ASSET_DIRS = {'characters_background', '_replaced', 'sheets', 'background', 'characters'}   # characters = 용의자 초상화 원본 777MB (압축본은 episodes/portraits)   # background = 에피소드 배경 원본 (압축본은 episodes/ep_bg)
-CONFETTI_CDN = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js'
-CONFETTI_LOCAL = os.path.join(ROOT, 'mobile', 'node_modules', 'canvas-confetti', 'dist', 'confetti.browser.js')
 FFLATE_LOCAL = os.path.join(ROOT, 'mobile', 'node_modules', 'fflate', 'umd', 'index.js')
 CDN_IMAGE_PATHS = {'episodes/ep_bg', 'episodes/portraits', 'episodes/ep_thumb', 'episodes/clue'}   # tools/build_cdn_pack.py 의 IMAGE_DIRS
 CDN_AUDIO_PATHS = {'sounds/sfx', 'sounds/bgm_mp3'}                                                  # tools/build_cdn_pack.py 의 AUDIO_DIRS
@@ -89,13 +86,7 @@ def main():
     shutil.copytree(os.path.join(ROOT, 'game_assets'), os.path.join(OUT, 'game_assets'), ignore=ignore)
 
     html = open(os.path.join(ROOT, 'tripeaks.html'), encoding='utf-8').read()
-    if os.path.exists(CONFETTI_LOCAL):
-        os.makedirs(os.path.join(OUT, 'vendor'), exist_ok=True)
-        shutil.copy(CONFETTI_LOCAL, os.path.join(OUT, 'vendor', 'confetti.browser.js'))
-        assert CONFETTI_CDN in html, 'tripeaks.html 의 canvas-confetti 주소가 바뀌었습니다'
-        html = html.replace(CONFETTI_CDN, 'vendor/confetti.browser.js')
-    else:
-        print('경고: canvas-confetti 로컬 파일이 없어 CDN을 그대로 씀 (mobile 폴더에서 npm install 먼저)')
+    # 꽃가루는 js/ui-kit.js 가 직접 그린다 (canvas-confetti 는 일부 WebView 에서 화면을 하얗게 덮어 뺐다)
     if a.cdn:                                     # CDN 에셋 켜기: fflate 를 넣고 설정을 켠다
         os.makedirs(os.path.join(OUT, 'vendor'), exist_ok=True)
         shutil.copy(FFLATE_LOCAL, os.path.join(OUT, 'vendor', 'fflate.js'))

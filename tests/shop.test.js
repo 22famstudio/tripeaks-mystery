@@ -19,7 +19,7 @@ const COUNTED = { gold: 'gold', undo: 'undoCount', wild: 'wildcardCount', hint: 
 
   // 1) 카탈로그: 카테고리별 개수, id 중복 없음, 골드 보너스율이 실제 지급량과 맞는지 (오타 방지)
   const count = id => TP.shop.productsIn(id).length;
-  assert.deepEqual(TP.SHOP_CATEGORIES.map(c => count(c.id)), [2, 10, 5, 4, 4]);
+  assert.deepEqual(TP.SHOP_CATEGORIES.map(c => count(c.id)), [2, 10, 5, 4, 8]);
   const ids = [...TP.SHOP_PRODUCTS, ...TP.SPECIAL_OFFERS].map(p => p.id);
   assert.equal(new Set(ids).size, ids.length, '상품 id 중복');
   for (const p of TP.shop.productsIn('coin')) {

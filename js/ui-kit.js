@@ -90,15 +90,50 @@
     setTimeout(() => t.remove(), 2600);
   }
 
-  // canvas-confetti(CDN)가 없으면(오프라인 등) 조용히 생략
+  // 꽃가루: 작은 div 조각을 Web Animations 로 날린다 (canvas 를 쓰지 않음).
+  //   예전엔 canvas-confetti(CDN)였는데, 화면 전체를 덮는 <canvas> 를 일부 안드로이드 WebView(Exynos 갤럭시 등)가 그리지 못해
+  //   클리어 직후 화면 전체가 몇 초 하얗게 · 콤보 때 카드 위가 하얗게 깜빡였다. 오프라인에서도 동작.
+  //   옵션은 예전 이름 그대로: particleCount · spread(도) · startVelocity · origin{x,y}(0~1) · colors
+  const CONFETTI_COLORS = ['#ffcf5a', '#ff9f43', '#ff3cac', '#2bd2ff', '#7ed84a', '#ffffff'];
+  const CONFETTI_MAX = 70;                      // 한 번에 날리는 최대 조각 수 (휴대폰 부담 줄이기)
+  let confettiLayer = null, confettiLive = 0;
   function confettiAt(node, opts = {}) {
-    if (typeof confetti !== 'function') return;
-    let origin = { x: 0.5, y: 0.4 };
+    if (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    let origin = opts.origin || { x: 0.5, y: 0.4 };
     if (node) {
       const r = node.getBoundingClientRect();
       origin = { x: (r.left + r.width / 2) / innerWidth, y: (r.top + r.height / 2) / innerHeight };
     }
-    confetti({ particleCount: 80, spread: 70, origin, zIndex: 100000, disableForReducedMotion: true, ...opts });
+    if (!confettiLayer || !confettiLayer.isConnected) {
+      confettiLayer = document.createElement('div');
+      confettiLayer.className = 'confetti-layer';
+      confettiLayer.setAttribute('aria-hidden', 'true');
+      document.body.append(confettiLayer);
+    }
+    const colors = opts.colors || CONFETTI_COLORS;
+    const count = Math.max(0, Math.min(Math.round((opts.particleCount || 80) * 0.6), CONFETTI_MAX - confettiLive));
+    const spread = (opts.spread || 70) * Math.PI / 180;
+    const speed0 = (opts.startVelocity || 45) * 11;                       // px/s (화면 높이 기준으로 적당히)
+    const H = innerHeight, ox = origin.x * innerWidth, oy = origin.y * H;
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('i');
+      const w = 5 + Math.random() * 5;
+      p.style.cssText = `left:${ox}px;top:${oy}px;width:${w}px;height:${w * 1.5}px;background:${colors[i % colors.length]};`;
+      confettiLayer.append(p);
+      confettiLive++;
+      const ang = -Math.PI / 2 + (Math.random() - 0.5) * spread;
+      const v = speed0 * (0.55 + Math.random() * 0.45);
+      const vx = Math.cos(ang) * v, vy = Math.sin(ang) * v;
+      const dur = 1.6 + Math.random() * 0.9, g = H * 1.6, k = 1.8;          // 중력 · 공기 저항
+      const spin = (Math.random() < 0.5 ? -1 : 1) * (360 + Math.random() * 540);
+      const frames = [];
+      for (let s = 0; s <= 6; s++) {
+        const t = (s / 6) * dur, drag = (1 - Math.exp(-k * t)) / k;
+        frames.push({ transform: `translate(${vx * drag}px, ${vy * drag + 0.5 * g * t * t * 0.35}px) rotate(${spin * s / 6}deg) scaleY(${s % 2 ? 0.4 : 1})`, opacity: s === 6 ? 0 : 1 });
+      }
+      p.animate(frames, { duration: dur * 1000, easing: 'linear', fill: 'forwards' })
+        .finished.catch(() => {}).finally(() => { p.remove(); confettiLive--; });
+    }
   }
 
   function bigCelebration(x) {
@@ -192,7 +227,12 @@
     foot.innerHTML = `<button class="shop-restore">${T('구매 복원')}</button>`
       + (TP.billing.status.mode === 'dummy' ? `<small>${T('개발용: 실제 결제 없이 바로 지급돼요')}</small>` : '');
     foot.querySelector('.shop-restore').onclick = restorePurchases;
-    grid.replaceChildren(...shelves, foot);
+    // 광고 제거 탭: 보상형 광고는 남는다는 안내 (산 뒤 '왜 광고가 나오지?' 오해 방지)
+    const note = shopTab === 'noads' ? Object.assign(document.createElement('p'), {
+      className: 'shop-note',
+      innerHTML: T('광고 제거를 사면 전면 광고가 사라져요. 보상형 광고(보고 보상 받기)는 원할 때 계속 볼 수 있어요.<br>광고 패스권이 있으면 보상형 광고 대신 1장을 쓰고 바로 보상을 받아요.'),
+    }) : null;
+    grid.replaceChildren(...(note ? [note] : []), ...shelves, foot);
   }
 
   // 구매 복원 (광고 제거 · 스타터팩 보유 상태를 Google Play 구매 내역에서 되살림 — js/billing.js)

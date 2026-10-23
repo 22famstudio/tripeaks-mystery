@@ -248,7 +248,7 @@
       { sel: '.board-tab[data-tab="grid"]', title: T('논리 그리드'), text: T('<b>논리 그리드</b>에서 단서를 <b>✕ · ○</b>로 정리하면 누가 어디서 무엇을 가졌는지 보여요.<br>범인 = <b>사건 현장</b>에서 <b>범행 도구</b>를 가진 사람!'),
         after: async () => { $('#nbClose')?.click(); await waitFor(() => $('#notebookModal').hidden, 1500); await sleep(250); } },
       { sel: '#sbEnergy', title: T('하트 (수사 생명력)'), text: T('스테이지에 들어갈 때마다 <b>하트 1개</b>를 써요.<br>하트는 <b>20분마다 1개씩</b> 다시 차고(최대 5개), 모자라면 광고나 골드로 채울 수 있어요.') },
-      { sel: '#btnStages', title: T('별'), text: T('스테이지마다 <b>별을 최대 3개</b> 받아요.<br>★ 클리어 · ★★ 이어하기 없이 클리어 · ★★★ 거기에 덱을 넉넉히 남기고 클리어.<br>여기서 지난 스테이지를 다시 도전할 수 있어요.') },
+      { sel: '#btnStages', title: T('별'), text: T('스테이지마다 <b>별을 최대 3개</b> 받아요.<br><i class=tut-star data-no-icons>★</i> 클리어 · <i class=tut-star data-no-icons>★★</i> 이어하기 없이 클리어 · <i class=tut-star data-no-icons>★★★</i> 거기에 덱을 넉넉히 남기고 클리어.<br>여기서 지난 스테이지를 다시 도전할 수 있어요.') },
       { sel: '#sbStreakChip', title: T('연승'), text: T('실패 없이 연속으로 깨면 <b>연승</b>이 쌓여요. 3 · 7 · 10 · 20 · 30 · 50연승마다 선물이 있어요!') },
       { sel: '.profile', title: T('탐정 칭호'), text: T('레벨이 오르고 사건을 해결할수록 <b>탐정 칭호</b>와 옷차림이 바뀌어요.<br>위쪽 <b>LEVEL</b>은 스테이지를 깨며 얻는 경험치로 올라요.') },
       { sel: '#hudEpisodes', title: T('사건 파일'), text: T('<b>사건 파일</b>에서 세계 여러 도시의 사건을 볼 수 있어요.<br>사건을 해결하면 다음 도시의 사건이 열려요.') },

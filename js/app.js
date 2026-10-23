@@ -1468,7 +1468,7 @@
           <div class="legal-text">
             <p><b>${T('결제 안내')}</b><br>${T('상품은 Google Play 결제로 구매해요. 환불 · 구매 취소 기준은 [이용약관]에서 볼 수 있어요.')}</p>
             <p><b>${T('개인정보')}</b><br>${T('게임 진행 상황은 이 기기에 저장되고, 클라우드 저장을 쓰면 내 Google Play 게임즈 저장 공간에도 저장돼요. 유저 식별을 위해 Google Firebase 인증이 익명 유저 ID 를 만들고, Google 계정을 연결하면 그 계정의 이메일 · 이름을 함께 처리해요. 설정 → 계정 관리 → [계정 삭제] 로 언제든 지울 수 있어요. 자세한 내용은 [개인정보처리방침] 에서 볼 수 있어요.')}</p>
-            <p><b>${T('오픈소스')}</b><br>canvas-confetti — ISC License</p>
+            <p><b>${T('오픈소스')}</b><br>Capacitor · @capacitor/app · @capacitor/filesystem · @capacitor-community/admob · RevenueCat Purchases — MIT License<br>Capacitor Firebase Authentication — Apache License 2.0</p>
             <p><b>${T('그림')}</b><br>${T('일부 일러스트는 AI 이미지 생성 도구(Higgsfield)로 제작했어요.')}</p>
             <p class="small">${T('버전')} ${TP.SUPPORT.version}</p>
           </div>`,
@@ -1639,7 +1639,8 @@
     $('#hudEpisode').innerHTML = ep
       ? `<span class="ep-progress-bar" style="--p:${(s.episode.cleared / ep.clues.length) * 100}%"><i></i><b>EP${s.episode.index + 1} · ${s.episode.cleared}/${ep.clues.length}</b></span>`
       : T('📓 자유 플레이');
-    $('#stagesStars').textContent = ep ? `${Object.values(s.stageStars[ep.episodeId] || {}).reduce((x, y) => x + y, 0)}/${ep.clues.length * 3}` : '';
+    // 홈 [STAGES] 버튼: 지금 플레이할 스테이지 / 20 (예전엔 별 합계 / 60 이라 '12/60' 처럼 헷갈렸다 — 별은 스테이지 창에서)
+    $('#stagesStars').textContent = ep ? `${mystery.nextStage() || Math.min(s.episode.cleared, ep.clues.length)}/${ep.clues.length}` : '';
     $('#notebookBadge').textContent = s.episode.unread;
     $('#notebookBadge').hidden = !s.episode.unread;
     $('#clueProgress').textContent = ep ? `${s.episode.cleared} / ${ep.clues.length}` : T('해결 완료');
