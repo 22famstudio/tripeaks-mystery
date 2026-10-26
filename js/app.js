@@ -1634,6 +1634,16 @@
     if (!activeRun()) return toast(T('진행 중인 게임이 없어요'));
     view.playSolution();
   };
+  // Crashlytics 연결 확인: 앱을 일부러 종료시킨다 → 다시 켜면 보고서가 올라감 (js/crash-report.js)
+  $('#devCrash').onclick = async () => {
+    if (!TP.crash?.available) return toast('Crashlytics 를 쓸 수 없는 빌드예요 (휴대폰 · google-services.json 필요)');
+    const ok = await showDialog({
+      title: '테스트 충돌',
+      body: '<p>앱을 일부러 종료시켜 Crashlytics 연결을 확인해요. 앱을 다시 켜면 보고서가 올라가요.</p>',
+      buttons: [{ label: '취소', value: false, cls: 'ghost' }, { label: '종료시키기', value: true, cls: 'primary' }],
+    });
+    if (ok) { TP.crash.report(new Error('Test non-fatal (개발자 패널)'), 'dev'); setTimeout(() => TP.crash.testCrash(), 800); }
+  };
   $('#devReset').onclick = async () => {
     const ok = await showDialog({
       title: '데이터 초기화',

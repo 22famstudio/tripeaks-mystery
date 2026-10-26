@@ -10,7 +10,8 @@
       "@revenuecat/purchases-capacitor",
       "@capacitor-community/admob",
       "@capacitor/local-notifications",
-      "@capacitor-firebase/authentication"
+      "@capacitor-firebase/authentication",
+      "@capacitor-firebase/crashlytics"
     ]
   },
   "plugins": {

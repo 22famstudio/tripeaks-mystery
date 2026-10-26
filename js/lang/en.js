@@ -641,6 +641,7 @@ TP.LANG_DATA.en = {
   "정답 수순 재생": "Play the solution",
   "챕터 마지막 화로 (단서 20)": "Jump to chapter finale (20 clues)",
   "데이터 초기화": "Reset data",
+  "테스트 충돌": "Test crash",
   "📓 탐정 수첩": "📓 Detective Notebook",
   "용의자": "Suspects",
   "논리 그리드": "Logic Grid",

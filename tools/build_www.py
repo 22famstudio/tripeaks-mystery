@@ -42,7 +42,7 @@ BACKUP = os.path.join(os.path.dirname(ROOT), 'assets_original_backup')
 CAP_CONFIG = os.path.join(ROOT, 'mobile', 'capacitor.config.json')
 GOOGLE_SERVICES = os.path.join(ROOT, 'mobile', 'android', 'app', 'google-services.json')
 BASE_PLUGINS = ['@capacitor/filesystem', '@capacitor/app', '@revenuecat/purchases-capacitor', '@capacitor-community/admob', '@capacitor/local-notifications']  # 늘 넣는 네이티브 플러그인 (세이브 파일 · 백그라운드 감지 · 결제 · 광고 · 로컬 알림)
-FIREBASE_PLUGINS = ['@capacitor-firebase/authentication']  # google-services.json 이 있을 때만
+FIREBASE_PLUGINS = ['@capacitor-firebase/authentication', '@capacitor-firebase/crashlytics']  # google-services.json 이 있을 때만
 
 
 def sync_plugin_allowlist():

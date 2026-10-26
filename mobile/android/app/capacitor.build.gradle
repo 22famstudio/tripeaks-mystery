@@ -15,6 +15,7 @@ dependencies {
     implementation project(':capacitor-community-admob')
     implementation project(':capacitor-local-notifications')
     implementation project(':capacitor-firebase-authentication')
+    implementation project(':capacitor-firebase-crashlytics')
 
 }
 

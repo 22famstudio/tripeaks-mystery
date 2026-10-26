@@ -132,6 +132,7 @@ We use the service providers below to run the Game. Their servers are located ou
 | Recipient | Country | Purpose | Information transferred | Retention |
 | --- | --- | --- | --- | --- |
 | Google LLC — Firebase Authentication | United States and other countries where Google has data centers | Identifying players, linking and authenticating Google accounts | User ID; if linked, Google account email, name, and profile photo URL; IP address; device information | Until account deletion |
+| Google LLC — Firebase Crashlytics | United States and other countries where Google has data centers | Analyzing app crashes and errors (stability improvements) | Crash and error records (where and when), device information (model, OS, memory state), app version, installation ID, user ID, game screen, episode and stage number | 90 days from collection |
 | Google LLC — Google Play Games Services | United States, etc. | Sign-in, cloud save | Player ID, gamer name, saved game data | Until you delete it |
 | Google LLC — Google Cloud Storage | United States (us-west1, Oregon) | Delivering game artwork and sound files (CDN) | IP address, request time, device and app information | According to Google Cloud's policies |
 | Google LLC — Google AdMob | United States, etc. | Showing and measuring ads, verifying rewarded-ad rewards | Advertising ID, IP address, device information, ad interaction records | According to Google's policies |

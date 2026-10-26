@@ -9,6 +9,7 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:8.9.1'   // compileSdk 36 을 지원하는 버전 (Gradle 8.11.1 과 맞음)
         classpath 'com.google.gms:google-services:4.4.2'
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:3.0.7'   // Crashlytics: 릴리스 R8 매핑 파일 자동 업로드
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files

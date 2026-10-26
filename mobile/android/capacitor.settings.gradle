@@ -19,3 +19,6 @@ project(':capacitor-local-notifications').projectDir = new File('../node_modules
 
 include ':capacitor-firebase-authentication'
 project(':capacitor-firebase-authentication').projectDir = new File('../node_modules/@capacitor-firebase/authentication/android')
+
+include ':capacitor-firebase-crashlytics'
+project(':capacitor-firebase-crashlytics').projectDir = new File('../node_modules/@capacitor-firebase/crashlytics/android')

@@ -132,6 +132,7 @@
 | 이전받는 자 (연락처) | 이전 국가 | 위탁 업무 | 이전 항목 | 보유 · 이용 기간 |
 | --- | --- | --- | --- | --- |
 | Google LLC — Firebase Authentication | 미국 등 Google 데이터센터 소재국 | 이용자 식별, Google 계정 연결 · 인증 | 유저 ID, (연결 시) Google 계정 이메일 · 이름 · 프로필 사진 주소, IP 주소, 기기 정보 | 계정 삭제 시까지 |
+| Google LLC — Firebase Crashlytics | 미국 등 Google 데이터센터 소재국 | 앱 충돌 · 오류 분석 (안정성 개선) | 충돌 · 오류 기록(발생 위치 · 시각), 기기 정보(기종 · OS · 메모리 상태), 앱 버전, 설치 ID, 유저 ID, 게임 화면 · 에피소드 · 스테이지 번호 | 수집일로부터 90일 |
 | Google LLC — Google Play 게임즈 서비스 | 미국 등 | 로그인, 클라우드 저장 | 플레이어 ID, 게이머 이름, 게임 저장 데이터 | 이용자가 삭제할 때까지 |
 | Google LLC — Google Cloud Storage | 미국(us-west1, 오리건) | 게임 그림 · 사운드 파일 전송(CDN) | IP 주소, 요청 시각, 기기 · 앱 정보 | Google Cloud 정책에 따름 |
 | Google LLC — Google AdMob | 미국 등 | 광고 표시 · 측정, 보상형 광고 보상 확인 | 광고 식별자, IP 주소, 기기 정보, 광고 이용 기록 | Google 정책에 따름 |
