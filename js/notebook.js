@@ -665,6 +665,19 @@
     }
 
     // ---------- 스테이지 클리어 시 단서 획득 연출 ----------
+    // 긴 단서: 양피지 안에 다 들어갈 때까지 글씨를 줄인다 (COLLECT 버튼이 화면 밖으로 밀리지 않게 · 최소 크기까지)
+    function fitClueText(note) {
+      const p = note && note.querySelector('p');
+      if (!p) return;
+      p.style.fontSize = '';
+      let size = parseFloat(getComputedStyle(p).fontSize);
+      const min = size * 0.5;
+      while (note.scrollHeight > note.clientHeight + 1 && size > min) {
+        size -= 1;
+        p.style.fontSize = `${size}px`;
+      }
+    }
+
     // 단서 획득 팝업 (세로 파란 패널 · '단서 획득' 배지 · 집게로 집은 양피지에 큰 단서 글씨 · COLLECT)
     //   그림: popup_clue_badge.webp · clue_note_paper.webp (Higgsfield, 기존 배지 그림체) · derived/frame_result.webp · btn_collect.webp
     //   효과음: 뜰 때 clue_popup.ogg / COLLECT 를 누르면 clue_received.ogg (수첩에 저장)
@@ -686,6 +699,8 @@
           <button class="cs-collect" data-nosfx aria-label="${T('확인')}"><img src="game_assets/btn_collect.webp" alt=""></button>
         </div>`;
       TP.ui.root().append(page);
+      fitClueText(page.querySelector('.cs-note'));
+      globalThis.document?.fonts?.ready?.then(() => fitClueText(page.querySelector('.cs-note')));   // 글꼴이 늦게 오면 다시
       return new Promise(resolve => {
         page.querySelector('.cs-collect').onclick = () => {
           TP.audio?.sfx?.('clueSaved');            // 수첩에 저장되는 소리

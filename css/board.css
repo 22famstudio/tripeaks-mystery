@@ -393,12 +393,14 @@
   color: #3b2a1a;
   text-align: center;
   filter: drop-shadow(0 6px 8px #0006);
+  flex: none;
+  overflow: hidden;   /* 양피지 크기는 고정 — 긴 단서는 글씨를 줄여 맞춘다 (notebook.js fitClueText). 예전엔 늘어나서 COLLECT 를 밀어냈다 */
 }
 .cs-note b { color: #c62828; font-size: 2.2rem; }
 .cs-note p { margin: 0; font-size: 1.9rem; line-height: 1.5; word-break: keep-all; }
 .cs-saved { display: flex; align-items: center; gap: 0.5em; margin: 2cqh 0 0; color: #fff; font-size: 1.35rem; white-space: nowrap; text-shadow: 0 2px 3px #000; }
 .cs-saved img { height: 2.2em; width: auto; }
-.cs-collect { margin-top: auto; padding: 0; border: 0; background: none; width: 32cqh; transition: transform 0.12s; }
+.cs-collect { flex: none; margin-top: auto; padding: 0; border: 0; background: none; width: 32cqh; transition: transform 0.12s; }
 .cs-collect:active { transform: translateY(3px); }
 .cs-collect img { width: 100%; height: auto; filter: drop-shadow(0 4px 0 #0007); }
 @media (prefers-reduced-motion: reduce) { .cs-panel, .cs-badge img, .cs-badge span { animation: none; } }
