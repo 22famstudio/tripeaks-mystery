@@ -38,22 +38,27 @@
     },
   };
 
-  // 전면 광고 규칙
+  // 전면 광고 규칙 — 테스터 의견 "광고가 너무 잦다" (예전: 클리어 2판마다) → 3판마다 + 5분 간격
   TP.INTERSTITIAL_RULES = {
-    PROTECTED_CLEARS: 5,   // 처음 스테이지 5판(누적 클리어 1~5)은 전면 광고 없음 — 온보딩 이탈 방지
-    EVERY_CLEARS: 2,       // 그 뒤로는 클리어 2판마다 1번 (6 · 7판째 → 7판째에, 8 · 9 → 9판째에 …)
-    ON_FAIL: false,        // 실패 화면에서는 띄우지 않음 (카운트도 안 셈)
+    PROTECTED_CLEARS: 5,       // 처음 스테이지 5판(누적 클리어 1~5)은 전면 광고 없음 — 온보딩 이탈 방지
+    EVERY_CLEARS: 3,           // 그 뒤로는 클리어 3판마다 1번
+    MIN_GAP_MS: 5 * 60 * 1000, // 마지막 광고(전면 · 끝까지 본 보상형)에서 5분이 안 지났으면 다음 클리어로 미룬다
+                               //   → 보통은 3판마다, 빨리 깨는 사람 · 방금 보상형을 본 사람은 4~5판마다
+    ON_FAIL: false,            // 실패 화면에서는 띄우지 않음 (카운트도 안 셈) — 진 직후 광고는 이탈 · 나쁜 리뷰로 이어지기 쉽다
   };
 
   // 전면 광고를 띄울지 (순수 함수 — tests/ads.test.js). state 는 이번 판 결과가 반영된 뒤의 세이브
   //   반환: { show, counter } — counter 는 저장할 새 카운터 값
-  TP.interstitialDecision = (state, result, rules = TP.INTERSTITIAL_RULES) => {
+  TP.interstitialDecision = (state, result, rules = TP.INTERSTITIAL_RULES, now = Date.now()) => {
     const counter = state.adClearCounter || 0;
+    const last = state.lastAdAt || 0;
+    const gapOk = !last || now < last || now - last >= (rules.MIN_GAP_MS || 0);   // 기기 시계를 되돌렸으면 간격은 지난 것으로
+    const past = (state.totalStagesCleared || 0) > rules.PROTECTED_CLEARS;
     if (state.noAdsActive) return { show: false, counter };                          // 광고 제거 구매 → 전면 광고 영구 생략
-    if (result !== 'clear') return { show: !!rules.ON_FAIL && state.totalStagesCleared > rules.PROTECTED_CLEARS, counter };
-    if ((state.totalStagesCleared || 0) <= rules.PROTECTED_CLEARS) return { show: false, counter: 0 };
-    const next = counter + 1;
-    return next >= rules.EVERY_CLEARS ? { show: true, counter: 0 } : { show: false, counter: next };
+    if (result !== 'clear') return { show: !!rules.ON_FAIL && past && gapOk, counter };
+    if (!past) return { show: false, counter: 0 };
+    const next = Math.min(counter + 1, 99);
+    return next >= rules.EVERY_CLEARS && gapOk ? { show: true, counter: 0 } : { show: false, counter: next };
   };
 
   // ---------------------------------------------------------------------
@@ -125,6 +130,9 @@
   // 광고가 화면을 덮는 동안 배경음악 멈춤 (광고 소리와 겹치지 않게)
   const setAdPlaying = on => TP.audio?.setAdPlaying?.(on);
 
+  // 광고를 본 시각 — 전면 광고 5분 간격(MIN_GAP_MS) 계산용
+  const markAdSeen = () => TP.store.update(s => { s.lastAdAt = Date.now(); });
+
   // ---------------- 보상형 ----------------
   //   placement: 'heart' · 'gridCheck' · 'keyHint' · 'revive' · 'solution' · 'reaccuse' … (로그용)
   async function showRewarded(placement = '') {
@@ -168,7 +176,8 @@
         // showRewardVideoAd 는 보상을 받았을 때만 끝나는 Promise (중간에 닫으면 끝나지 않음) → 결과는 위 이벤트로 판단
         AdMob.showRewardVideoAd().then(() => { got = true; }).catch(e => { console.warn('[ads] 보상형 표시 실패', e); TP.ui?.toast?.(FAIL_MSG()); finish(false); });
       });
-      if (!earned) TP.ui?.toast?.(T('광고를 끝까지 봐야 보상을 받을 수 있어요'));
+      if (earned) markAdSeen();
+      else TP.ui?.toast?.(T('광고를 끝까지 봐야 보상을 받을 수 있어요'));
       return earned;
     } catch (e) {
       done?.();
@@ -189,16 +198,17 @@
   });
 
   // ---------------- 전면 ----------------
-  //   스테이지 결과 뒤에 부른다. 규칙(초반 5판 · 2판마다 · 광고 제거)은 interstitialDecision.
+  //   스테이지 결과 뒤에 부른다. 규칙(초반 5판 · 3판마다 · 5분 간격 · 광고 제거)은 interstitialDecision.
   //   광고가 없거나 실패하면 조용히 넘어간다 (유저가 원한 광고가 아니므로 안내도 하지 않음).
   async function maybeShowInterstitial(result = 'clear') {
-    const d = TP.interstitialDecision(TP.store.state, result);
+    const d = TP.interstitialDecision(TP.store.state, result, TP.INTERSTITIAL_RULES, Date.now());
     if (d.counter !== (TP.store.state.adClearCounter || 0)) TP.store.update(s => { s.adClearCounter = d.counter; });
     if (!d.show || !AdMob || showing || !online()) return false;
     await init();
     if (!status.initialized || !ready.interstitial) { preload('interstitial'); return false; }
     showing = true;
     ready.interstitial = false;
+    markAdSeen();
     setAdPlaying(true);
     try {
       await new Promise(resolve => {

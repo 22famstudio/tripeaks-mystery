@@ -39,6 +39,7 @@
     tutorialRewarded: false, // 튜토리얼을 끝까지 보고 500G 를 받았는지 (계정당 1번)
     notifyAsked: false,      // 알림 권한을 한 번 물어봤는지 (js/notifications.js — 튜토리얼 뒤 1번)
     adClearCounter: 0,       // 전면 광고 규칙: 보호 구간(5판) 뒤 마지막 전면 광고 이후 클리어 수 (js/ad-manager.js)
+    lastAdAt: 0,             // 마지막으로 광고(전면 · 끝까지 본 보상형)를 본 시각 ms — 전면 광고 5분 간격
     ownedCardBacks: ['default'], // 보유한 카드 뒷면 스킨 (js/card-backs.js · 50연승 프레스티지 보상)
     equippedCardBack: 'default', // 장착 중인 카드 뒷면
     gridGuideSeen: false,        // 논리 그리드 사용법 안내를 봤는지 (처음 한 번 자동으로 띄움)
@@ -119,6 +120,7 @@
       tutorialRewarded: s.tutorialRewarded === true,
       notifyAsked: s.notifyAsked === true,
       adClearCounter: int(s.adClearCounter, 0, 99, 0),
+      lastAdAt: Number.isFinite(s.lastAdAt) && s.lastAdAt > 0 ? s.lastAdAt : 0,
       gridGuideSeen: s.gridGuideSeen === true,
       ownedCardBacks: [...new Set(['default', ...(Array.isArray(s.ownedCardBacks) ? s.ownedCardBacks.filter(x => typeof x === 'string') : [])])],
       equippedCardBack: typeof s.equippedCardBack === 'string' && (s.ownedCardBacks || ['default']).includes(s.equippedCardBack)

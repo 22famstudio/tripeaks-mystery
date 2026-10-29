@@ -427,7 +427,7 @@
       notes,
       accusing,
     });
-    // 전면 광고 (js/ad-manager.js: 누적 클리어 5판까지 없음 · 그 뒤 2판마다 · 광고 제거 구매 시 영구 생략)
+    // 전면 광고 (js/ad-manager.js: 누적 클리어 5판까지 없음 · 그 뒤 3판마다 · 광고 사이 5분 · 광고 제거 구매 시 영구 생략)
     await TP.ads.maybeShowInterstitial('clear');
     if (choice === 'accuse') notebook.open();
     else if (choice === 'lobby') showScreen('lobby');
